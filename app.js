@@ -181,7 +181,13 @@ async function removeBackground(img) {
             canvas.width = img.width;
             canvas.height = img.height;
 
+            // 1. Dibujar máscara con suavizado (Feathering)
+            ctx.save();
+            ctx.filter = 'blur(3px)'; // Suaviza los bordes de la máscara
             ctx.drawImage(results.segmentationMask, 0, 0, canvas.width, canvas.height);
+            ctx.restore();
+            
+            // 2. Extraer jugador con bordes suaves
             ctx.globalCompositeOperation = 'source-in';
             ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
             
@@ -200,13 +206,25 @@ async function generateLayouts(playerCanvas, player) {
     // Fondo Tech/Deportivo
     drawBackground(ctxOut, player.color);
 
-    // Jugador (Escalado inteligente)
+    // Jugador (Escalado inteligente con efectos de profundidad)
     const scale = (CONFIG.outputHeight * 0.85) / playerCanvas.height;
     const pW = playerCanvas.width * scale;
     const pH = playerCanvas.height * scale;
+    
     ctxOut.save();
-    ctxOut.shadowColor = "rgba(0,0,0,0.5)";
-    ctxOut.shadowBlur = 30;
+    // Efecto 1: Sombra profunda para despegar del fondo
+    ctxOut.shadowColor = "rgba(0,0,0,0.8)";
+    ctxOut.shadowBlur = 40;
+    ctxOut.shadowOffsetX = 0;
+    ctxOut.shadowOffsetY = 20;
+    
+    // Efecto 2: Brillo sutil en los bordes (Rim Light) para disimular recortes
+    // (Dibujamos el jugador dos veces, una con glow)
+    ctxOut.drawImage(playerCanvas, (CONFIG.outputWidth - pW) / 2, CONFIG.outputHeight - pH, pW, pH);
+    
+    ctxOut.globalCompositeOperation = 'source-over';
+    ctxOut.shadowBlur = 10;
+    ctxOut.shadowColor = "rgba(255,255,255,0.2)";
     ctxOut.drawImage(playerCanvas, (CONFIG.outputWidth - pW) / 2, CONFIG.outputHeight - pH, pW, pH);
     ctxOut.restore();
 
@@ -327,4 +345,9 @@ function resetApp() {
     elements.resultArea.classList.add('hidden');
     elements.uploadSection.classList.remove('hidden');
     elements.imageInput.value = '';
+}
+
+function toggleUpdates() {
+    const modal = document.getElementById('updatesModal');
+    modal.classList.toggle('hidden');
 }

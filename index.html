@@ -22,7 +22,10 @@
     <div class="app-container">
         <header>
             <div class="logo">SPORTS<span>HUB</span></div>
-            <div class="status-badge">MODO PRO</div>
+            <div class="header-actions">
+                <button class="update-btn" onclick="toggleUpdates()">v1.2 UPDATES</button>
+                <div class="status-badge">MODO PRO</div>
+            </div>
         </header>
 
         <main>
@@ -120,6 +123,30 @@
         <div class="ticker-footer">
             <div class="ticker-content">
                 GENERADOR AUTOMÁTICO DE CROMOS DEPORTIVOS • IA POWERED • DETECCIÓN DE NÚMERO • RECORTE INTELIGENTE • SPORTS HUB V1.0
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Actualizaciones -->
+    <div id="updatesModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>HISTORIAL DE MEJORAS</h3>
+                <button onclick="toggleUpdates()" class="close-btn">&times;</button>
+            </div>
+            <div class="updates-list">
+                <div class="update-item">
+                    <span class="update-ver">v1.2</span>
+                    <p>Refinamiento de bordes por IA con Feathering y Rim Light.</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v1.1</span>
+                    <p>Panel de corrección manual de datos (Nombre/Dorsal/Equipo).</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v1.0</span>
+                    <p>Diseño Mobile-First, soporte PWA y optimización de carga.</p>
+                </div>
             </div>
         </div>
     </div>
