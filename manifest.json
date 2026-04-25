@@ -1,0 +1,17 @@
+{
+  "name": "Sports Hub Pro",
+  "short_name": "SportsHub",
+  "description": "Generador automático de tarjetas deportivas con IA",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0e14",
+  "theme_color": "#00ff88",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/5351/5351333.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

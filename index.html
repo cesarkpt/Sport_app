@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sports Hub - Pro Card Generator</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Oswald:wght@700&display=swap" rel="stylesheet">
+    <!-- Librerías de IA -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0e14">
+</head>
+<body>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js');
+        }
+    </script>
+    <div class="app-container">
+        <header>
+            <div class="logo">SPORTS<span>HUB</span></div>
+            <div class="status-badge">MODO PRO</div>
+        </header>
+
+        <main>
+            <section class="upload-section" id="uploadDropzone">
+                <div class="upload-card">
+                    <div class="icon-pulse">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                        </svg>
+                    </div>
+                    <h2>Procesar Jugador</h2>
+                    <p>Captura o sube la foto para generar la tarjeta pro.</p>
+                    <input type="file" id="imageInput" accept="image/*" hidden>
+                    <button class="btn-primary" onclick="document.getElementById('imageInput').click()">SUBIR FOTO</button>
+                </div>
+            </section>
+
+            <section class="processing-section hidden" id="processingArea">
+                <div class="preview-panel">
+                    <div class="canvas-wrapper">
+                        <canvas id="inputCanvas"></canvas>
+                    </div>
+                </div>
+
+                <div class="controls-panel">
+                    <div class="step active" id="step1">
+                        <span class="step-num">1</span>
+                        <div class="step-info">
+                            <h4>Escaneo OCR</h4>
+                            <p id="ocrStatus">Identificando dorsal...</p>
+                        </div>
+                    </div>
+                    <div class="step" id="step2">
+                        <span class="step-num">2</span>
+                        <div class="step-info">
+                            <h4>IA Background</h4>
+                            <p id="segStatus">Removiendo fondo...</p>
+                        </div>
+                    </div>
+                    <div class="step" id="step3">
+                        <span class="step-num">3</span>
+                        <div class="step-info">
+                            <h4>Composición</h4>
+                            <p id="layoutStatus">Aplicando branding...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="result-section hidden" id="resultArea">
+                <div class="result-card">
+                    <h3>Tarjeta Pro HD</h3>
+                    <div class="canvas-container main-result">
+                        <canvas id="outputCanvas"></canvas>
+                    </div>
+                    <button class="btn-secondary" onclick="downloadImage('outputCanvas', 'transmision')">DESCARGAR HD</button>
+                </div>
+
+                <div class="result-card mini">
+                    <h3>Carnet de Jugador</h3>
+                    <div class="canvas-container carnet-result">
+                        <canvas id="carnetCanvas"></canvas>
+                    </div>
+                    <button class="btn-secondary" onclick="downloadImage('carnetCanvas', 'carnet')">DESCARGAR CARNET</button>
+                </div>
+                
+                <div class="final-actions">
+                    <button class="btn-primary" onclick="resetApp()">OTRO JUGADOR</button>
+                </div>
+            </section>
+        </main>
+
+        <div class="ticker-footer">
+            <div class="ticker-content">
+                GENERADOR AUTOMÁTICO DE CROMOS DEPORTIVOS • IA POWERED • DETECCIÓN DE NÚMERO • RECORTE INTELIGENTE • SPORTS HUB V1.0
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de jugadores (Simulación de DB) -->
+    <script>
+        window.PLAYER_DATABASE = {
+            "10": { name: "LIONEL MESSI", team: "ARGENTINA", color: "#43a047" },
+            "7": { name: "CRISTIANO RONALDO", team: "PORTUGAL", color: "#e53935" },
+            "11": { name: "NEYMAR JR", team: "BRASIL", color: "#fdd835" },
+            "9": { name: "ERLING HAALAND", team: "NORUEGA", color: "#1e88e5" },
+            "DEFAULT": { name: "JUGADOR DESCONOCIDO", team: "DRAFT", color: "#777" }
+        };
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>
