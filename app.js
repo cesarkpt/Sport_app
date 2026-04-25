@@ -371,13 +371,21 @@ async function processPlayerPhoto(processingImg, originalImg) {
     const finalData = await waitForManualCorrection(playerData, detectedNumber);
     
     // 2. Segmentación - Quitar Fondo
-    updateStep(2, "IA de recorte...");
-    const transparentPlayer = await removeBackground(originalImg);
-    updateStep(2, "Recorte completado");
+    const shouldRemoveBg = document.getElementById('bgToggle').checked;
+    let finalPlayerImg;
+    
+    if (shouldRemoveBg) {
+        updateStep(2, "IA de recorte...");
+        finalPlayerImg = await removeBackground(originalImg);
+        updateStep(2, "Recorte completado");
+    } else {
+        updateStep(2, "Fondo original conservado");
+        finalPlayerImg = originalImg;
+    }
 
     // 3. Composición de Layout
     updateStep(3, "Creando arte HD...");
-    await generateLayouts(transparentPlayer, finalData);
+    await generateLayouts(finalPlayerImg, finalData, shouldRemoveBg);
     
     // 4. Guardado Automático en Drive
     updateStep(3, "Subiendo a Drive...");
@@ -498,7 +506,7 @@ async function removeBackground(img) {
     });
 }
 
-async function generateLayouts(playerCanvas, player) {
+async function generateLayouts(playerCanvas, player, shouldRemoveBg = true) {
     // --- 1. SMART CROP PARA CARNET (Cara y Hombros) ---
     const carnetCrop = createSmartCrop(playerCanvas);
     
@@ -506,17 +514,25 @@ async function generateLayouts(playerCanvas, player) {
     const ctxOut = elements.outputCanvas.getContext('2d');
     elements.outputCanvas.width = CONFIG.outputWidth;
     elements.outputCanvas.height = CONFIG.outputHeight;
-    drawBackground(ctxOut, player.color);
     
-    // Jugador en Plano Americano (Cuerpo completo/medio)
-    const scale = (CONFIG.outputHeight * 0.85) / playerCanvas.height;
-    const pW = playerCanvas.width * scale;
-    const pH = playerCanvas.height * scale;
-    ctxOut.save();
-    ctxOut.shadowColor = "rgba(0,0,0,0.6)";
-    ctxOut.shadowBlur = 30;
-    ctxOut.drawImage(playerCanvas, (CONFIG.outputWidth - pW) / 2, CONFIG.outputHeight - pH, pW, pH);
-    ctxOut.restore();
+    if (shouldRemoveBg) {
+        drawBackground(ctxOut, player.color);
+    } else {
+        // Dibujar original como fondo
+        ctxOut.drawImage(playerCanvas, 0, 0, CONFIG.outputWidth, CONFIG.outputHeight);
+    }
+    
+    // Jugador en Plano Americano
+    if (shouldRemoveBg) {
+        const scale = (CONFIG.outputHeight * 0.85) / playerCanvas.height;
+        const pW = playerCanvas.width * scale;
+        const pH = playerCanvas.height * scale;
+        ctxOut.save();
+        ctxOut.shadowColor = "rgba(0,0,0,0.6)";
+        ctxOut.shadowBlur = 30;
+        ctxOut.drawImage(playerCanvas, (CONFIG.outputWidth - pW) / 2, CONFIG.outputHeight - pH, pW, pH);
+        ctxOut.restore();
+    }
     
     drawSportsTicker(ctxOut, player);
     if (player.shield) await drawShield(ctxOut, player.shield);
