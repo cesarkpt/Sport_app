@@ -7,6 +7,80 @@ const CONFIG = {
     carnetHeight: 800
 };
 
+// --- GESTIÓN DE EQUIPO ---
+let currentTeam = JSON.parse(localStorage.getItem('sportshub_team')) || {
+    name: "",
+    color1: "#00ff88",
+    color2: "#00d4ff",
+    shield: null,
+    roster: {}
+};
+
+function toggleTeamManager() {
+    const tm = document.getElementById('teamManager');
+    tm.classList.toggle('hidden');
+    if (!tm.classList.contains('hidden')) {
+        loadTeamIntoUI();
+    }
+}
+
+function loadTeamIntoUI() {
+    document.getElementById('teamNameInput').value = currentTeam.name;
+    document.getElementById('teamColor1').value = currentTeam.color1;
+    document.getElementById('teamColor2').value = currentTeam.color2;
+    renderRosterList();
+}
+
+function addPlayerToRoster() {
+    const num = document.getElementById('playerNum').value;
+    const name = document.getElementById('playerName').value;
+    if (!num || !name) return;
+    
+    currentTeam.roster[num] = name.toUpperCase();
+    document.getElementById('playerNum').value = '';
+    document.getElementById('playerName').value = '';
+    renderRosterList();
+}
+
+function renderRosterList() {
+    const list = document.getElementById('rosterList');
+    list.innerHTML = '';
+    Object.entries(currentTeam.roster).forEach(([num, name]) => {
+        const item = document.createElement('div');
+        item.className = 'roster-item';
+        item.innerHTML = `<span>#${num}</span> ${name} <button onclick="removePlayer('${num}')">ELIMINAR</button>`;
+        list.appendChild(item);
+    });
+}
+
+function removePlayer(num) {
+    delete currentTeam.roster[num];
+    renderRosterList();
+}
+
+async function saveTeam() {
+    currentTeam.name = document.getElementById('teamNameInput').value;
+    currentTeam.color1 = document.getElementById('teamColor1').value;
+    currentTeam.color2 = document.getElementById('teamColor2').value;
+    
+    const shieldInput = document.getElementById('shieldInput');
+    if (shieldInput.files[0]) {
+        currentTeam.shield = await imageToBase64(shieldInput.files[0]);
+    }
+    
+    localStorage.setItem('sportshub_team', JSON.stringify(currentTeam));
+    alert("Equipo guardado correctamente");
+    toggleTeamManager();
+}
+
+async function imageToBase64(file) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(file);
+    });
+}
+
 const elements = {
     imageInput: document.getElementById('imageInput'),
     uploadSection: document.querySelector('.upload-section'),
@@ -102,16 +176,18 @@ async function processPlayerPhoto(processingImg, originalImg) {
     elements.inputCanvas.height = processingImg.height;
     ctxIn.drawImage(processingImg, 0, 0);
 
-    // 1. OCR - Detectar Número
     updateStep(1, "Escaneando dorsal...");
     const ocrResult = await Tesseract.recognize(processingImg, 'eng');
     const detectedNumber = extractNumber(ocrResult.data.text);
-    const playerData = window.PLAYER_DATABASE[detectedNumber] || { ...window.PLAYER_DATABASE["DEFAULT"] };
     
-    // Si no está en DB, poner el número detectado en el nombre temporalmente
-    if (detectedNumber !== "??" && !window.PLAYER_DATABASE[detectedNumber]) {
-        playerData.name = "JUGADOR #" + detectedNumber;
-    }
+    // Buscar en Nómina del Equipo Primero
+    let playerData = {
+        name: currentTeam.roster[detectedNumber] || "JUGADOR #" + detectedNumber,
+        team: currentTeam.name || "DRAFT",
+        color: currentTeam.color1,
+        color2: currentTeam.color2,
+        number: detectedNumber
+    };
 
     updateStep(1, "Dorsal detectado: #" + detectedNumber);
 
@@ -156,7 +232,8 @@ async function waitForManualCorrection(initialData, detectedNumber) {
                 name: editName.value.toUpperCase(),
                 team: editTeam.value.toUpperCase(),
                 number: editNumber.value,
-                color: initialData.color || "#00ff88"
+                color: initialData.color || "#00ff88",
+                color2: initialData.color2 || "#00d4ff"
             };
             editPanel.classList.add('hidden');
             resolve(updatedData);
@@ -228,6 +305,19 @@ async function generateLayouts(playerCanvas, player) {
     ctxOut.drawImage(playerCanvas, (CONFIG.outputWidth - pW) / 2, CONFIG.outputHeight - pH, pW, pH);
     ctxOut.restore();
 
+    // Dibujar Escudo arriba a la derecha
+    if (currentTeam.shield) {
+        const shieldImg = new Image();
+        shieldImg.src = currentTeam.shield;
+        await new Promise(r => shieldImg.onload = r);
+        
+        ctxOut.save();
+        ctxOut.shadowColor = "rgba(0,0,0,0.3)";
+        ctxOut.shadowBlur = 20;
+        ctxOut.drawImage(shieldImg, CONFIG.outputWidth - 250, 50, 200, 200);
+        ctxOut.restore();
+    }
+
     // Ticker Pro
     drawSportsTicker(ctxOut, player);
 
@@ -289,13 +379,12 @@ function drawSportsTicker(ctx, player) {
     // Glassmorphism Ticker
     ctx.fillStyle = "rgba(0,0,0,0.85)";
     ctx.fillRect(100, bY, 1720, 120);
-    ctx.strokeStyle = "rgba(255,255,255,0.1)";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(100, bY, 1720, 120);
     
-    // Acento Color
+    // Barra de colores bicolor tipo ticker
     ctx.fillStyle = player.color;
-    ctx.fillRect(100, bY, 15, 120);
+    ctx.fillRect(100, bY, 15, 60);
+    ctx.fillStyle = player.color2 || player.color;
+    ctx.fillRect(100, bY + 60, 15, 60);
 
     // Texto Nombre
     ctx.fillStyle = "white";
@@ -305,7 +394,7 @@ function drawSportsTicker(ctx, player) {
     
     // Team
     ctx.font = "400 35px Outfit";
-    ctx.fillStyle = "rgba(0, 255, 136, 1)";
+    ctx.fillStyle = player.color;
     ctx.fillText(player.team, 150, bY + 35);
 
     // Escudo/Círculo Número

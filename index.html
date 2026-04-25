@@ -23,12 +23,54 @@
         <header>
             <div class="logo">SPORTS<span>HUB</span></div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()">v1.2 UPDATES</button>
+                <button class="update-btn" onclick="toggleUpdates()">v1.3 UPDATES</button>
+                <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPO</button>
                 <div class="status-badge">MODO PRO</div>
             </div>
         </header>
 
         <main>
+            <!-- Panel de Gestión de Equipo -->
+            <section id="teamManager" class="team-manager hidden">
+                <div class="modal-header">
+                    <h3>CONFIGURAR EQUIPO</h3>
+                    <button onclick="toggleTeamManager()" class="close-btn">&times;</button>
+                </div>
+                
+                <div class="team-config-grid">
+                    <div class="config-card">
+                        <h5>DATOS GENERALES</h5>
+                        <input type="text" id="teamNameInput" placeholder="Nombre del Equipo">
+                        <div class="color-pickers">
+                            <div class="color-field">
+                                <label>Color 1</label>
+                                <input type="color" id="teamColor1" value="#00ff88">
+                            </div>
+                            <div class="color-field">
+                                <label>Color 2</label>
+                                <input type="color" id="teamColor2" value="#00d4ff">
+                            </div>
+                        </div>
+                        <div class="shield-upload">
+                            <label>Escudo (PNG)</label>
+                            <input type="file" id="shieldInput" accept="image/*">
+                        </div>
+                    </div>
+
+                    <div class="config-card">
+                        <h5>NÓMINA (JUGADORES)</h5>
+                        <div class="roster-input">
+                            <input type="number" id="playerNum" placeholder="#">
+                            <input type="text" id="playerName" placeholder="Nombre completo">
+                            <button class="add-btn" onclick="addPlayerToRoster()">+</button>
+                        </div>
+                        <div id="rosterList" class="roster-list">
+                            <!-- Los jugadores aparecerán aquí -->
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="saveTeam()">GUARDAR EQUIPO</button>
+            </section>
             <section class="upload-section" id="uploadDropzone">
                 <div class="upload-card">
                     <div class="icon-pulse">
@@ -135,6 +177,10 @@
                 <button onclick="toggleUpdates()" class="close-btn">&times;</button>
             </div>
             <div class="updates-list">
+                <div class="update-item">
+                    <span class="update-ver">v1.3</span>
+                    <p>Gestión de Equipos: Escudo, colores personalizados y nómina inteligente.</p>
+                </div>
                 <div class="update-item">
                     <span class="update-ver">v1.2</span>
                     <p>Refinamiento de bordes por IA con Feathering y Rim Light.</p>
