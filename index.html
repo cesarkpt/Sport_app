@@ -90,16 +90,13 @@
                             <div class="roster-input">
                                 <input type="number" id="playerNum" placeholder="#">
                                 <input type="text" id="playerName" placeholder="Nombre">
-                                <select id="playerPosition" class="pos-select">
-                                    <option value="POR">POR</option>
-                                    <option value="DEF">DEF</option>
-                                    <option value="VOL">VOL</option>
-                                    <option value="DEL">DEL</option>
-                                </select>
-                                <div class="captain-toggle">
-                                    <input type="checkbox" id="isCaptain">
-                                    <label for="isCaptain" title="Capitán">©</label>
+                                <div class="btn-group" id="rosterPosBtns">
+                                    <button class="pos-btn active" onclick="setPos(this, 'POR')">POR</button>
+                                    <button class="pos-btn" onclick="setPos(this, 'DEF')">DEF</button>
+                                    <button class="pos-btn" onclick="setPos(this, 'VOL')">VOL</button>
+                                    <button class="pos-btn" onclick="setPos(this, 'DEL')">DEL</button>
                                 </div>
+                                <button class="cap-btn" id="rosterCapBtn" onclick="toggleCap(this)">©</button>
                                 <button class="add-btn" onclick="addPlayerToRoster()">+</button>
                             </div>
                             <div id="rosterList" class="roster-list"></div>
@@ -194,7 +191,13 @@
                             </div>
                             <div class="input-group">
                                 <label>Posición</label>
-                                <input type="text" id="editPosition" placeholder="POR/DEF...">
+                                <div class="btn-group" id="editPosBtns">
+                                    <button class="pos-btn" onclick="setPos(this, 'POR')">POR</button>
+                                    <button class="pos-btn" onclick="setPos(this, 'DEF')">DEF</button>
+                                    <button class="pos-btn" onclick="setPos(this, 'VOL')">VOL</button>
+                                    <button class="pos-btn" onclick="setPos(this, 'DEL')">DEL</button>
+                                </div>
+                                <button class="cap-btn" id="editCapBtn" onclick="toggleCap(this)" style="margin-top:10px">CAPITÁN ©</button>
                             </div>
                         </div>
                         <button class="btn-primary" id="confirmEditBtn" style="margin-top:15px">CONFIRMAR Y CONTINUAR</button>

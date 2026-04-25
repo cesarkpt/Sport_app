@@ -131,17 +131,29 @@ function renderRosterList(roster) {
     });
 }
 
+function setPos(btn, pos) {
+    const parent = btn.parentElement;
+    parent.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    btn.dataset.val = pos;
+}
+
+function toggleCap(btn) {
+    btn.classList.toggle('active');
+}
+
 function addPlayerToRoster() {
     const num = document.getElementById('playerNum').value;
     const name = document.getElementById('playerName').value;
-    const pos = document.getElementById('playerPosition').value;
-    const isCap = document.getElementById('isCaptain').checked;
-    if (!num || !name || !editingTeamId) return;
-    
+    const activePosBtn = document.querySelector('#rosterPosBtns .pos-btn.active');
+    const pos = activePosBtn ? activePosBtn.innerText : "DEL";
+    const isCap = document.getElementById('rosterCapBtn').classList.contains('active');
+
+    if (!num || !name) return alert("Completa número y nombre");
+
     const roster = (editingTeamId && allTeams[editingTeamId]) ? allTeams[editingTeamId].roster : {};
-    const tempRoster = document.getElementById('teamEditor')._tempRoster || roster;
     
-    tempRoster[num] = { 
+    roster[num] = { 
         name: name.toUpperCase(), 
         position: pos,
         isCaptain: isCap 
@@ -291,10 +303,16 @@ async function handleImageUpload(e) {
 
     const img = await loadImage(file);
     
-    // Optimizar imagen para procesamiento (Redimensionar si es muy grande)
+    // 1. Mostrar preview inmediato
+    const ctx = elements.inputCanvas.getContext('2d');
+    elements.inputCanvas.width = img.width;
+    elements.inputCanvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+
+    // 2. Optimizar para IA
     const processingImg = await resizeImage(img, CONFIG.maxProcessingSize);
     
-    processPlayerPhoto(processingImg, img); // Usamos la original para el resultado final HD
+    processPlayerPhoto(processingImg, img);
 }
 
 async function loadImage(file) {
@@ -350,6 +368,14 @@ function extractNumber(text) {
 
 async function processPlayerPhoto(processingImg, originalImg) {
     try {
+        // Dibujar en canvas de entrada por si acaso no se hizo
+        const ctxIn = elements.inputCanvas.getContext('2d');
+        if (elements.inputCanvas.width === 0) {
+            elements.inputCanvas.width = processingImg.width;
+            elements.inputCanvas.height = processingImg.height;
+            ctxIn.drawImage(processingImg, 0, 0);
+        }
+
         updateStep(1, "Analizando dorsal...");
         const ocrResult = await recognizeText(processingImg);
         let detectedNumber = extractNumber(ocrResult.data.text);
@@ -460,14 +486,23 @@ async function waitForManualCorrection(initialData, detectedNumber) {
     const editName = document.getElementById('editName');
     const editNumber = document.getElementById('editNumber');
     const editTeam = document.getElementById('editTeam');
-    const editPosition = document.getElementById('editPosition');
+    const editCapBtn = document.getElementById('editCapBtn');
     const confirmBtn = document.getElementById('confirmEditBtn');
 
     // Poblar campos iniciales
-    editName.value = initialData.name;
+    editName.value = initialData.name.replace(" (C)", "");
     editNumber.value = detectedNumber === "??" ? "" : detectedNumber;
     editTeam.value = initialData.team;
-    editPosition.value = initialData.position || "";
+    
+    // Setear posición inicial en los botones
+    const pos = initialData.position || "DEL";
+    document.querySelectorAll('#editPosBtns .pos-btn').forEach(b => {
+        b.classList.toggle('active', b.innerText === pos);
+    });
+    
+    // Setear capitán
+    const isCap = initialData.name.includes("(C)");
+    editCapBtn.classList.toggle('active', isCap);
 
     // Lógica Dinámica: Al cambiar el número, buscar en la nómina activa
     const team = allTeams[activeTeamId];
@@ -476,11 +511,15 @@ async function waitForManualCorrection(initialData, detectedNumber) {
         if (team && team.roster[num]) {
             const p = team.roster[num];
             const name = typeof p === 'string' ? p : p.name;
-            const pos = typeof p === 'string' ? "" : (p.position || "");
+            const pos = typeof p === 'string' ? "DEL" : (p.position || "DEL");
+            const cap = typeof p === 'string' ? false : p.isCaptain;
             
-            editName.value = name + (p.isCaptain ? " (C)" : "");
-            editPosition.value = pos;
-            // Destello visual de éxito
+            editName.value = name;
+            editCapBtn.classList.toggle('active', cap);
+            document.querySelectorAll('#editPosBtns .pos-btn').forEach(b => {
+                b.classList.toggle('active', b.innerText === pos);
+            });
+            
             editName.style.borderColor = "var(--primary)";
             setTimeout(() => editName.style.borderColor = "", 500);
         }
@@ -491,11 +530,15 @@ async function waitForManualCorrection(initialData, detectedNumber) {
 
     return new Promise((resolve) => {
         confirmBtn.onclick = () => {
+            const activePosBtn = document.querySelector('#editPosBtns .pos-btn.active');
+            const finalPos = activePosBtn ? activePosBtn.innerText : "DEL";
+            const finalCap = editCapBtn.classList.contains('active');
+
             const updatedData = {
-                name: editName.value.toUpperCase(),
+                name: editName.value.toUpperCase() + (finalCap ? " (C)" : ""),
                 team: editTeam.value.toUpperCase(),
                 number: editNumber.value,
-                position: editPosition.value.toUpperCase(),
+                position: finalPos,
                 teamCode: team ? team.code : initialData.teamCode,
                 color: initialData.color || "#00ff88",
                 color2: initialData.color2 || "#00d4ff",

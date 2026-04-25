@@ -965,6 +965,99 @@ input:checked + .slider:before {
     border-radius: 50%;
 }
 
+.match-info-strip {
+    display: flex;
+    justify-content: center;
+    padding: 0 20px;
+    margin-bottom: 20px;
+}
+
+.match-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 15px;
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.match-selectors {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.match-select {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: white;
+    padding: 8px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.vs-text {
+    font-size: 0.6rem;
+    font-weight: 900;
+    color: var(--secondary);
+    opacity: 0.5;
+}
+
+.match-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.match-select-small, .match-date-input {
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.05);
+    color: var(--secondary);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.btn-group {
+    display: flex;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.pos-btn, .cap-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+    min-width: 45px;
+    text-align: center;
+}
+
+.pos-btn.active, .cap-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: black;
+    box-shadow: 0 0 15px var(--primary);
+}
+
+.cap-btn {
+    font-size: 0.8rem;
+    min-width: 40px;
+}
+
 /* FOOTER TICKER */
 .ticker-footer {
     position: fixed;
