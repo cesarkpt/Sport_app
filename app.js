@@ -62,26 +62,8 @@ function renderTeamsList() {
         stripItem.innerHTML = `<img src="${team.shield || 'https://cdn-icons-png.flaticon.com/512/5351/5351333.png'}" title="${team.name}">`;
         strip.appendChild(stripItem);
     });
-
-    // 3. Selectores de Partido
-    const selA = document.getElementById('matchTeamA');
-    const selB = document.getElementById('matchTeamB');
-    if (selA && selB) {
-        const valA = selA.value;
-        const valB = selB.value;
-        
-        selA.innerHTML = '<option value="">EQUIPO A</option>';
-        selB.innerHTML = '<option value="">EQUIPO B</option>';
-        
-        Object.entries(allTeams).forEach(([id, team]) => {
-            selA.innerHTML += `<option value="${id}">${team.name}</option>`;
-            selB.innerHTML += `<option value="${id}">${team.name}</option>`;
-        });
-        
-        selA.value = valA;
-        selB.value = valB;
-    }
 }
+
 
 function setActiveTeam(id) {
     activeTeamId = id;
@@ -615,10 +597,8 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true) {
     if (player.shield) await drawShield(ctxOut, player.shield);
 
     // --- 2.5 INFO DE PARTIDO (En blanco) ---
-    const teamAId = document.getElementById('matchTeamA').value;
-    const teamBId = document.getElementById('matchTeamB').value;
-    if (teamAId && teamBId) {
-        await drawMatchInfo(ctxOut, allTeams[teamAId], allTeams[teamBId]);
+    if (selectedMatchTeamA && selectedMatchTeamB) {
+        await drawMatchInfo(ctxOut, allTeams[selectedMatchTeamA], allTeams[selectedMatchTeamB]);
     }
 
     // --- 3. CANVAS DE CARNET (Zoom a la Cara) ---
@@ -693,27 +673,43 @@ async function drawShield(ctx, shieldUrl) {
     ctx.save();
     ctx.shadowColor = "rgba(0,0,0,0.3)";
     ctx.shadowBlur = 20;
-    ctx.drawImage(shieldImg, CONFIG.outputWidth - 250, 50, 200, 200);
+    ctx.drawImage(shieldImg, 80, 80, 180, 180); // Lado Izquierdo
     ctx.restore();
 }
 
 function drawCarnetOverlay(ctx, player) {
     const h = CONFIG.carnetHeight;
     const w = CONFIG.carnetWidth;
+    
+    // Degradado inferior
     const grd = ctx.createLinearGradient(0, h-300, 0, h);
     grd.addColorStop(0, "transparent");
     grd.addColorStop(1, "black");
     ctx.fillStyle = grd;
     ctx.fillRect(0, h-300, w, 300);
     
-    ctx.fillStyle = player.color;
-    ctx.font = "900 120px Outfit";
-    ctx.textAlign = "center";
-    ctx.fillText(player.number, w/2, h - 140);
+    // Split Nombre y Apellido
+    const nameParts = player.name.split(" ");
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts.slice(1).join(" ") || "";
+
+    ctx.textAlign = "left";
     
+    // Nombre (Pequeño)
+    ctx.fillStyle = "rgba(255,255,255,0.7)";
+    ctx.font = "400 35px Outfit";
+    ctx.fillText(firstName, 60, h - 110);
+    
+    // Apellido (Grande)
     ctx.fillStyle = "white";
-    ctx.font = "700 45px Outfit";
-    ctx.fillText(player.name, w/2, h - 60);
+    ctx.font = "900 65px Outfit";
+    ctx.fillText(lastName.toUpperCase(), 60, h - 50);
+    
+    // Número a la Derecha
+    ctx.fillStyle = player.color;
+    ctx.font = "900 130px Outfit";
+    ctx.textAlign = "right";
+    ctx.fillText(player.number, w - 40, h - 50);
 }
 
 function drawBackground(ctx, color) {
@@ -780,7 +776,7 @@ async function drawMatchInfo(ctx, teamA, teamB) {
     const stage = document.getElementById('matchStage').value;
     const date = document.getElementById('matchDate').value || new Date().toLocaleDateString();
     
-    const x = 80;
+    const x = CONFIG.outputWidth - 300; // Lado Derecho
     const y = 80;
     const sSize = 65;
     
@@ -971,3 +967,48 @@ function simulateShields() {
 }
 // --- INICIALIZACIÓN ---
 renderTeamsList();
+// --- SELECTOR VISUAL DE PARTIDO ---
+let selectedMatchTeamA = null;
+let selectedMatchTeamB = null;
+let currentPickerSlot = null;
+
+function openMatchShieldPicker(slot) {
+    currentPickerSlot = slot;
+    const modal = document.getElementById('matchShieldPickerModal');
+    const grid = document.getElementById('matchShieldGrid');
+    modal.classList.remove('hidden');
+    
+    grid.innerHTML = '';
+    Object.entries(allTeams).forEach(([id, team]) => {
+        const item = document.createElement('div');
+        item.className = 'shield-item-mini';
+        item.onclick = () => selectMatchTeam(id);
+        item.innerHTML = `
+            <img src="${team.shield || 'https://cdn-icons-png.flaticon.com/512/5351/5351333.png'}">
+            <p>${team.name}</p>
+        `;
+        grid.appendChild(item);
+    });
+}
+
+function closeMatchShieldPicker() {
+    document.getElementById('matchShieldPickerModal').classList.add('hidden');
+}
+
+function selectMatchTeam(id) {
+    const team = allTeams[id];
+    if (currentPickerSlot === 'A') {
+        selectedMatchTeamA = id;
+        const img = document.getElementById('imgA');
+        img.src = team.shield;
+        img.classList.remove('hidden');
+        document.querySelector('#slotA .placeholder').classList.add('hidden');
+    } else {
+        selectedMatchTeamB = id;
+        const img = document.getElementById('imgB');
+        img.src = team.shield;
+        img.classList.remove('hidden');
+        document.querySelector('#slotB .placeholder').classList.add('hidden');
+    }
+    closeMatchShieldPicker();
+}

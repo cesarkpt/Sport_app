@@ -95,8 +95,8 @@
                                     <button class="pos-btn" onclick="setPos(this, 'DEF')">DEF</button>
                                     <button class="pos-btn" onclick="setPos(this, 'VOL')">VOL</button>
                                     <button class="pos-btn" onclick="setPos(this, 'DEL')">DEL</button>
+                                    <button class="cap-btn" id="rosterCapBtn" onclick="toggleCap(this)">©</button>
                                 </div>
-                                <button class="cap-btn" id="rosterCapBtn" onclick="toggleCap(this)">©</button>
                                 <button class="add-btn" onclick="addPlayerToRoster()">+</button>
                             </div>
                             <div id="rosterList" class="roster-list"></div>
@@ -121,14 +121,16 @@
             <!-- Módulo de Partido (Match Info) -->
             <section class="match-info-strip">
                 <div class="match-card">
-                    <div class="match-selectors">
-                        <select id="matchTeamA" class="match-select">
-                            <option value="">EQUIPO A</option>
-                        </select>
-                        <span class="vs-text">VS</span>
-                        <select id="matchTeamB" class="match-select">
-                            <option value="">EQUIPO B</option>
-                        </select>
+                    <div class="match-selectors-visual">
+                        <div class="shield-slot" id="slotA" onclick="openMatchShieldPicker('A')">
+                            <img src="" id="imgA" class="hidden">
+                            <span class="placeholder">EQUIPO A</span>
+                        </div>
+                        <span class="vs-text-big">VS</span>
+                        <div class="shield-slot" id="slotB" onclick="openMatchShieldPicker('B')">
+                            <img src="" id="imgB" class="hidden">
+                            <span class="placeholder">EQUIPO B</span>
+                        </div>
                     </div>
                     <div class="match-meta">
                         <select id="matchStage" class="match-select-small">
@@ -196,8 +198,8 @@
                                     <button class="pos-btn" onclick="setPos(this, 'DEF')">DEF</button>
                                     <button class="pos-btn" onclick="setPos(this, 'VOL')">VOL</button>
                                     <button class="pos-btn" onclick="setPos(this, 'DEL')">DEL</button>
+                                    <button class="cap-btn" id="editCapBtn" onclick="toggleCap(this)">©</button>
                                 </div>
-                                <button class="cap-btn" id="editCapBtn" onclick="toggleCap(this)" style="margin-top:10px">CAPITÁN ©</button>
                             </div>
                         </div>
                         <button class="btn-primary" id="confirmEditBtn" style="margin-top:15px">CONFIRMAR Y CONTINUAR</button>
@@ -292,5 +294,15 @@
     </div>
 
     <script src="app.js"></script>
+    <!-- Selector de Escudos para Match Day -->
+    <div id="matchShieldPickerModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>SELECCIONAR EQUIPO</h3>
+                <button class="close-btn" onclick="closeMatchShieldPicker()">×</button>
+            </div>
+            <div id="matchShieldGrid" class="shield-grid-mini"></div>
+        </div>
+    </div>
 </body>
 </html>
