@@ -151,9 +151,20 @@ async function saveTeam() {
             alert("Equipo guardado y sincronizado ✅");
         }).saveAllTeamsData(allTeams);
     } else {
-        renderTeamsList();
-        closeTeamEditor();
-        alert("Guardado localmente ✅");
+        // Intentar guardar vía API
+        fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors', // GAS requiere no-cors o redirección para POST
+            body: JSON.stringify({ action: 'saveAllTeams', data: allTeams })
+        }).then(() => {
+            renderTeamsList();
+            closeTeamEditor();
+            alert("Guardado en Local y enviado a Nube ✅");
+        }).catch(err => {
+            renderTeamsList();
+            closeTeamEditor();
+            alert("Guardado en Local ✅ (Error nube: " + err.message + ")");
+        });
     }
 }
 
@@ -169,6 +180,19 @@ function syncWithCloud() {
                 }
             })
             .getAllTeamsData();
+    } else {
+        // Fallback vía API fetch
+        fetch(`${GAS_WEB_APP_URL}?action=getAllTeamsData`)
+            .then(res => res.json())
+            .then(response => {
+                if (response.success && response.data) {
+                    allTeams = response.data;
+                    localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
+                    renderTeamsList();
+                    alert("Sincronización vía API completa 🔄");
+                }
+            })
+            .catch(err => alert("Error al sincronizar: " + err.message));
     }
 }
 

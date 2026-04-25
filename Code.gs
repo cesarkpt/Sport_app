@@ -107,8 +107,8 @@ function doPost(e) {
       const result = saveProcessedImage(params.image, params.fileName, params.teamName);
       return createJsonResponse(result);
     }
-    if (params.action === 'saveTeam') {
-      const result = saveTeamData(params.data);
+    if (params.action === 'saveAllTeams') {
+      const result = saveAllTeamsData(params.data);
       return createJsonResponse(result);
     }
   } catch (e) {
