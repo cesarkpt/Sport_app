@@ -411,6 +411,29 @@ main {
     margin-bottom: 20px;
 }
 
+.close-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: var(--text-dim);
+    font-size: 2.5rem; /* Muy grande para celulares */
+    line-height: 1;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    padding-bottom: 5px; /* Ajuste óptico para la X */
+}
+
+.close-btn:active {
+    background: rgba(255, 0, 0, 0.2);
+    color: #ff4444;
+    transform: scale(0.9);
+}
+
 .modal-header h3 {
     margin: 0;
     font-size: 0.9rem;
