@@ -48,25 +48,47 @@
                 </div>
 
                 <div class="controls-panel">
+                    <!-- Pasos de IA -->
                     <div class="step active" id="step1">
                         <span class="step-num">1</span>
                         <div class="step-info">
-                            <h4>Escaneo OCR</h4>
-                            <p id="ocrStatus">Identificando dorsal...</p>
+                            <h4>Identificación</h4>
+                            <p id="ocrStatus">Buscando dorsal...</p>
                         </div>
                     </div>
+
+                    <!-- Panel de Corrección Manual -->
+                    <div class="edit-panel hidden" id="editPanel">
+                        <h5>CORREGIR INFORMACIÓN</h5>
+                        <div class="input-group">
+                            <label>Nombre</label>
+                            <input type="text" id="editName" placeholder="Nombre del Jugador">
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>Dorsal</label>
+                                <input type="text" id="editNumber" placeholder="00">
+                            </div>
+                            <div class="input-group">
+                                <label>Equipo</label>
+                                <input type="text" id="editTeam" placeholder="Equipo">
+                            </div>
+                        </div>
+                        <button class="btn-secondary" id="confirmEditBtn">CONFIRMAR Y GENERAR</button>
+                    </div>
+
                     <div class="step" id="step2">
                         <span class="step-num">2</span>
                         <div class="step-info">
                             <h4>IA Background</h4>
-                            <p id="segStatus">Removiendo fondo...</p>
+                            <p id="segStatus">Esperando...</p>
                         </div>
                     </div>
                     <div class="step" id="step3">
                         <span class="step-num">3</span>
                         <div class="step-info">
                             <h4>Composición</h4>
-                            <p id="layoutStatus">Aplicando branding...</p>
+                            <p id="layoutStatus">Esperando...</p>
                         </div>
                     </div>
                 </div>

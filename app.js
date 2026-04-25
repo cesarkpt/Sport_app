@@ -103,12 +103,21 @@ async function processPlayerPhoto(processingImg, originalImg) {
     ctxIn.drawImage(processingImg, 0, 0);
 
     // 1. OCR - Detectar Número
-    updateStep(1, "Buscando dorsal...");
+    updateStep(1, "Escaneando dorsal...");
     const ocrResult = await Tesseract.recognize(processingImg, 'eng');
     const detectedNumber = extractNumber(ocrResult.data.text);
-    const playerData = window.PLAYER_DATABASE[detectedNumber] || window.PLAYER_DATABASE["DEFAULT"];
-    updateStep(1, `Identificado: #${detectedNumber}`);
+    const playerData = window.PLAYER_DATABASE[detectedNumber] || { ...window.PLAYER_DATABASE["DEFAULT"] };
+    
+    // Si no está en DB, poner el número detectado en el nombre temporalmente
+    if (detectedNumber !== "??" && !window.PLAYER_DATABASE[detectedNumber]) {
+        playerData.name = "JUGADOR #" + detectedNumber;
+    }
 
+    updateStep(1, "Dorsal detectado: #" + detectedNumber);
+
+    // --- PAUSA PARA CORRECCIÓN MANUAL ---
+    const finalData = await waitForManualCorrection(playerData, detectedNumber);
+    
     // 2. Segmentación - Quitar Fondo
     updateStep(2, "IA de recorte...");
     const transparentPlayer = await removeBackground(processingImg);
@@ -116,7 +125,7 @@ async function processPlayerPhoto(processingImg, originalImg) {
 
     // 3. Composición de Layout
     updateStep(3, "Creando arte HD...");
-    await generateLayouts(transparentPlayer, playerData);
+    await generateLayouts(transparentPlayer, finalData);
     updateStep(3, "Listo para descargar");
     
     // 4. Mostrar Resultados
@@ -124,6 +133,35 @@ async function processPlayerPhoto(processingImg, originalImg) {
         elements.processingArea.classList.add('hidden');
         elements.resultArea.classList.remove('hidden');
     }, 500);
+}
+
+async function waitForManualCorrection(initialData, detectedNumber) {
+    const editPanel = document.getElementById('editPanel');
+    const editName = document.getElementById('editName');
+    const editNumber = document.getElementById('editNumber');
+    const editTeam = document.getElementById('editTeam');
+    const confirmBtn = document.getElementById('confirmEditBtn');
+
+    // Poblar campos
+    editName.value = initialData.name;
+    editNumber.value = detectedNumber === "??" ? "" : detectedNumber;
+    editTeam.value = initialData.team;
+
+    // Mostrar panel
+    editPanel.classList.remove('hidden');
+
+    return new Promise((resolve) => {
+        confirmBtn.onclick = () => {
+            const updatedData = {
+                name: editName.value.toUpperCase(),
+                team: editTeam.value.toUpperCase(),
+                number: editNumber.value,
+                color: initialData.color || "#00ff88"
+            };
+            editPanel.classList.add('hidden');
+            resolve(updatedData);
+        };
+    });
 }
 
 function extractNumber(text) {
@@ -206,7 +244,7 @@ async function generateLayouts(playerCanvas, player) {
     ctxCar.fillStyle = player.color;
     ctxCar.font = "900 120px Oswald";
     ctxCar.textAlign = "right";
-    ctxCar.fillText(player.name.charAt(0) == "J" ? "?" : "?", 550, 750);
+    ctxCar.fillText(player.number || "??", 550, 750);
 }
 
 function drawBackground(ctx, color) {
@@ -261,7 +299,7 @@ function drawSportsTicker(ctx, player) {
     ctx.fillStyle = "white";
     ctx.font = "900 50px Oswald";
     ctx.textAlign = "center";
-    ctx.fillText("#", 1750, bY + 78);
+    ctx.fillText(player.number || "#", 1750, bY + 78);
 }
 
 function updateStep(num, text) {
