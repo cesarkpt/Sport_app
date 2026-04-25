@@ -688,3 +688,8 @@ function simulateShields() {
     };
     renderShieldGallery(mockData);
 }
+// --- INICIALIZACIÓN ---
+renderTeamsList();
+if (activeTeamId) {
+    document.getElementById('activeTeamSelector').value = activeTeamId;
+}
