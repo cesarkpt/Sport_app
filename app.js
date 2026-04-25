@@ -7,79 +7,150 @@ const CONFIG = {
     carnetHeight: 800
 };
 
-// --- GESTIÓN DE EQUIPO ---
-let currentTeam = JSON.parse(localStorage.getItem('sportshub_team')) || {
-    name: "",
-    color1: "#00ff88",
-    color2: "#00d4ff",
-    shield: null,
-    roster: {}
-};
+// --- GESTIÓN DE EQUIPOS ---
+let allTeams = JSON.parse(localStorage.getItem('sportshub_all_teams')) || {};
+let activeTeamId = localStorage.getItem('sportshub_active_team_id') || "";
+let editingTeamId = null;
 
 function toggleTeamManager() {
     const tm = document.getElementById('teamManager');
     tm.classList.toggle('hidden');
     if (!tm.classList.contains('hidden')) {
-        loadTeamIntoUI();
+        renderTeamsList();
+        closeTeamEditor();
     }
 }
 
-function loadTeamIntoUI() {
-    document.getElementById('teamNameInput').value = currentTeam.name;
-    document.getElementById('teamColor1').value = currentTeam.color1;
-    document.getElementById('teamColor2').value = currentTeam.color2;
-    renderRosterList();
+function renderTeamsList() {
+    const list = document.getElementById('teamsList');
+    list.innerHTML = '';
+    
+    Object.entries(allTeams).forEach(([id, team]) => {
+        const card = document.createElement('div');
+        card.className = 'team-item-card';
+        card.onclick = () => editTeam(id);
+        card.innerHTML = `
+            <img src="${team.shield || 'https://cdn-icons-png.flaticon.com/512/5351/5351333.png'}" alt="Shield">
+            <h4>${team.name}</h4>
+            <div style="font-size: 0.6rem; color: var(--text-dim)">${Object.keys(team.roster).length} Jugadores</div>
+        `;
+        list.appendChild(card);
+    });
+    
+    updateActiveTeamSelector();
+}
+
+function updateActiveTeamSelector() {
+    const selector = document.getElementById('activeTeamSelector');
+    selector.innerHTML = '<option value="">Sin Equipo...</option>';
+    
+    Object.entries(allTeams).forEach(([id, team]) => {
+        const opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = team.name;
+        if (id === activeTeamId) opt.selected = true;
+        selector.appendChild(opt);
+    });
+}
+
+function changeActiveTeam() {
+    activeTeamId = document.getElementById('activeTeamSelector').value;
+    localStorage.setItem('sportshub_active_team_id', activeTeamId);
+}
+
+function createNewTeam() {
+    editingTeamId = "team_" + Date.now();
+    const newTeam = { name: "", color1: "#00ff88", color2: "#00d4ff", shield: null, roster: {} };
+    openTeamEditor(newTeam);
+}
+
+function editTeam(id) {
+    editingTeamId = id;
+    openTeamEditor(allTeams[id]);
+}
+
+function openTeamEditor(team) {
+    document.getElementById('teamEditor').classList.remove('hidden');
+    document.getElementById('teamNameInput').value = team.name;
+    document.getElementById('teamColor1').value = team.color1;
+    document.getElementById('teamColor2').value = team.color2;
+    renderRosterList(team.roster);
+}
+
+function closeTeamEditor() {
+    document.getElementById('teamEditor').classList.add('hidden');
+    editingTeamId = null;
+}
+
+function renderRosterList(roster) {
+    const list = document.getElementById('rosterList');
+    list.innerHTML = '';
+    Object.entries(roster).forEach(([num, name]) => {
+        const item = document.createElement('div');
+        item.className = 'roster-item';
+        item.innerHTML = `<span>#${num}</span> ${name} <button onclick="removePlayer('${num}')">X</button>`;
+        list.appendChild(item);
+    });
 }
 
 function addPlayerToRoster() {
     const num = document.getElementById('playerNum').value;
     const name = document.getElementById('playerName').value;
-    if (!num || !name) return;
+    if (!num || !name || !editingTeamId) return;
     
-    currentTeam.roster[num] = name.toUpperCase();
+    const roster = (editingTeamId && allTeams[editingTeamId]) ? allTeams[editingTeamId].roster : {};
+    // Temporalmente guardamos en un objeto local si es nuevo equipo
+    const tempRoster = document.getElementById('teamEditor')._tempRoster || roster;
+    tempRoster[num] = name.toUpperCase();
+    document.getElementById('teamEditor')._tempRoster = tempRoster;
+    
     document.getElementById('playerNum').value = '';
     document.getElementById('playerName').value = '';
-    renderRosterList();
-}
-
-function renderRosterList() {
-    const list = document.getElementById('rosterList');
-    list.innerHTML = '';
-    Object.entries(currentTeam.roster).forEach(([num, name]) => {
-        const item = document.createElement('div');
-        item.className = 'roster-item';
-        item.innerHTML = `<span>#${num}</span> ${name} <button onclick="removePlayer('${num}')">ELIMINAR</button>`;
-        list.appendChild(item);
-    });
+    renderRosterList(tempRoster);
 }
 
 function removePlayer(num) {
-    delete currentTeam.roster[num];
-    renderRosterList();
+    const tempRoster = document.getElementById('teamEditor')._tempRoster;
+    delete tempRoster[num];
+    renderRosterList(tempRoster);
 }
 
 async function saveTeam() {
-    currentTeam.name = document.getElementById('teamNameInput').value;
-    currentTeam.color1 = document.getElementById('teamColor1').value;
-    currentTeam.color2 = document.getElementById('teamColor2').value;
-    
+    const teamName = document.getElementById('teamNameInput').value;
+    if (!teamName) return alert("Ingresa un nombre de equipo");
+
+    const teamData = {
+        id: editingTeamId,
+        name: teamName,
+        color1: document.getElementById('teamColor1').value,
+        color2: document.getElementById('teamColor2').value,
+        roster: document.getElementById('teamEditor')._tempRoster || (allTeams[editingTeamId] ? allTeams[editingTeamId].roster : {}),
+        shield: allTeams[editingTeamId] ? allTeams[editingTeamId].shield : null
+    };
+
     const shieldInput = document.getElementById('shieldInput');
     if (shieldInput.files[0]) {
-        currentTeam.shield = await imageToBase64(shieldInput.files[0]);
+        teamData.shield = await imageToBase64(shieldInput.files[0]);
     }
-    
-    localStorage.setItem('sportshub_team', JSON.stringify(currentTeam));
 
-    // Guardar en la Nube (Google Sheets)
-    if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run
-            .withSuccessHandler(() => alert("Guardado en Local y Nube ✅"))
-            .saveTeamData(currentTeam);
-    } else {
-        alert("Guardado en Local ✅ (Conéctate a GAS para sincronizar)");
-    }
+    allTeams[editingTeamId] = teamData;
+    localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
     
-    toggleTeamManager();
+    if (!activeTeamId) activeTeamId = editingTeamId;
+    localStorage.setItem('sportshub_active_team_id', activeTeamId);
+
+    // Sync Cloud
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(() => {
+            renderTeamsList();
+            closeTeamEditor();
+            alert("Equipo guardado y sincronizado ✅");
+        }).saveAllTeamsData(allTeams);
+    } else {
+        renderTeamsList();
+        closeTeamEditor();
+        alert("Guardado localmente ✅");
+    }
 }
 
 function syncWithCloud() {
@@ -87,28 +158,13 @@ function syncWithCloud() {
         google.script.run
             .withSuccessHandler((response) => {
                 if (response.success && response.data) {
-                    currentTeam = response.data;
-                    localStorage.setItem('sportshub_team', JSON.stringify(currentTeam));
-                    loadTeamIntoUI();
+                    allTeams = response.data;
+                    localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
+                    renderTeamsList();
                     alert("Sincronización completa 🔄");
-                } else {
-                    alert("No hay datos en la nube o error.");
                 }
             })
-            .getTeamData();
-    } else {
-        // Fallback vía API fetch
-        fetch(`${GAS_WEB_APP_URL}?action=getTeamData`)
-            .then(res => res.json())
-            .then(response => {
-                if (response.success && response.data) {
-                    currentTeam = response.data;
-                    localStorage.setItem('sportshub_team', JSON.stringify(currentTeam));
-                    loadTeamIntoUI();
-                    alert("Sincronización vía API completa 🔄");
-                }
-            })
-            .catch(err => alert("Error al sincronizar: " + err.message));
+            .getAllTeamsData();
     }
 }
 
@@ -219,13 +275,16 @@ async function processPlayerPhoto(processingImg, originalImg) {
     const ocrResult = await Tesseract.recognize(processingImg, 'eng');
     const detectedNumber = extractNumber(ocrResult.data.text);
     
-    // Buscar en Nómina del Equipo Primero
+    // Obtener equipo activo
+    const team = allTeams[activeTeamId] || { name: "DRAFT", color1: "#00ff88", color2: "#00d4ff", roster: {} };
+    
     let playerData = {
-        name: currentTeam.roster[detectedNumber] || "JUGADOR #" + detectedNumber,
-        team: currentTeam.name || "DRAFT",
-        color: currentTeam.color1,
-        color2: currentTeam.color2,
-        number: detectedNumber
+        name: team.roster[detectedNumber] || "JUGADOR #" + detectedNumber,
+        team: team.name,
+        color: team.color1,
+        color2: team.color2,
+        number: detectedNumber,
+        shield: team.shield
     };
 
     updateStep(1, "Dorsal detectado: #" + detectedNumber);
@@ -371,9 +430,9 @@ async function generateLayouts(playerCanvas, player) {
     ctxOut.restore();
 
     // Dibujar Escudo arriba a la derecha
-    if (currentTeam.shield) {
+    if (player.shield) {
         const shieldImg = new Image();
-        shieldImg.src = currentTeam.shield;
+        shieldImg.src = player.shield;
         await new Promise(r => shieldImg.onload = r);
         
         ctxOut.save();

@@ -12,8 +12,8 @@ function doGet(e) {
   if (e && e.parameter && e.parameter.action === 'getShields') {
     return createJsonResponse(getShieldsFromDrive());
   }
-  if (e && e.parameter && e.parameter.action === 'getTeamData') {
-    return createJsonResponse(getTeamData());
+  if (e && e.parameter && e.parameter.action === 'getAllTeamsData') {
+    return createJsonResponse(getAllTeamsData());
   }
 
   return HtmlService.createTemplateFromFile('index')
@@ -24,23 +24,16 @@ function doGet(e) {
 }
 
 /**
- * Función para guardar datos desde Web App (POST/Direct)
+ * Guardar TODOS los equipos en la Nube
  */
-function saveTeamData(data) {
+function saveAllTeamsData(allTeams) {
   try {
     const ss = getOrCreateSpreadsheet();
-    const sheet = ss.getSheetByName("Teams") || ss.insertSheet("Teams");
+    const sheet = ss.getSheetByName("Config") || ss.insertSheet("Config");
     
-    // Limpiar y guardar (Sistema simple de 1 equipo por ahora o tabla de equipos)
     sheet.clear();
-    sheet.getRange(1, 1, 1, 2).setValues([["Property", "Value"]]);
-    sheet.getRange(2, 1, 5, 2).setValues([
-      ["name", data.name],
-      ["color1", data.color1],
-      ["color2", data.color2],
-      ["shield", data.shield],
-      ["roster", JSON.stringify(data.roster)]
-    ]);
+    sheet.getRange(1, 1).setValue("TeamsDataJSON");
+    sheet.getRange(2, 1).setValue(JSON.stringify(allTeams));
     
     return { success: true };
   } catch (e) {
@@ -48,23 +41,14 @@ function saveTeamData(data) {
   }
 }
 
-function getTeamData() {
+function getAllTeamsData() {
   try {
     const ss = getOrCreateSpreadsheet();
-    const sheet = ss.getSheetByName("Teams");
-    if (!sheet) return { success: true, data: null };
+    const sheet = ss.getSheetByName("Config");
+    if (!sheet) return { success: true, data: {} };
     
-    const values = sheet.getRange(2, 1, 5, 2).getValues();
-    const data = {};
-    values.forEach(row => {
-      if (row[0] === "roster") {
-        data[row[0]] = JSON.parse(row[1]);
-      } else {
-        data[row[0]] = row[1];
-      }
-    });
-    
-    return { success: true, data: data };
+    const json = sheet.getRange(2, 1).getValue();
+    return { success: true, data: json ? JSON.parse(json) : {} };
   } catch (e) {
     return { success: false, error: e.toString() };
   }
