@@ -72,6 +72,7 @@ function editTeam(id) {
 function openTeamEditor(team) {
     document.getElementById('teamEditor').classList.remove('hidden');
     document.getElementById('teamNameInput').value = team.name;
+    document.getElementById('teamCodeInput').value = team.code || "";
     document.getElementById('teamColor1').value = team.color1;
     document.getElementById('teamColor2').value = team.color2;
     document.getElementById('teamEditor')._selectedShield = team.shield;
@@ -124,6 +125,7 @@ async function saveTeam() {
     const teamData = {
         id: editingTeamId,
         name: teamName,
+        code: document.getElementById('teamCodeInput').value.toUpperCase().substring(0,3) || teamName.substring(0,3).toUpperCase(),
         color1: document.getElementById('teamColor1').value,
         color2: document.getElementById('teamColor2').value,
         roster: document.getElementById('teamEditor')._tempRoster || (allTeams[editingTeamId] ? allTeams[editingTeamId].roster : {}),
@@ -283,6 +285,7 @@ async function processPlayerPhoto(processingImg, originalImg) {
     let playerData = {
         name: team.roster[detectedNumber] || "JUGADOR #" + detectedNumber,
         team: team.name,
+        teamCode: team.code || "SIN",
         color: team.color1,
         color2: team.color2,
         number: detectedNumber,
@@ -317,8 +320,8 @@ async function processPlayerPhoto(processingImg, originalImg) {
 }
 
 async function saveToDrive(base64, player) {
-    // Refinar nombre: TRES LETRAS EQUIPO _ NUMERO _ NOMBRE
-    const teamCode = (player.team || "SIN").substring(0, 3).toUpperCase();
+    // Usar el código personalizado o fallback a 3 letras del nombre
+    const teamCode = player.teamCode || (player.team || "SIN").substring(0, 3).toUpperCase();
     const fileName = `${teamCode}_${player.number}_${player.name.replace(/\s+/g, '_')}.png`;
     const teamName = player.team || "SIN_EQUIPO";
 

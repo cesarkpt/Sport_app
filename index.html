@@ -54,7 +54,10 @@
                     <div class="team-config-grid">
                         <div class="config-card">
                             <h5>DATOS DEL EQUIPO</h5>
-                            <input type="text" id="teamNameInput" placeholder="Nombre del Equipo">
+                            <div style="display: grid; grid-template-columns: 1fr 80px; gap: 10px;">
+                                <input type="text" id="teamNameInput" placeholder="Nombre del Equipo">
+                                <input type="text" id="teamCodeInput" placeholder="ABC" maxlength="3" style="text-align: center;">
+                            </div>
                             <div class="color-pickers">
                                 <div class="color-field">
                                     <label>Color 1</label>
@@ -232,16 +235,6 @@
         </div>
     </div>
 
-    <!-- Lista de jugadores (Simulación de DB) -->
-    <script>
-        window.PLAYER_DATABASE = {
-            "10": { name: "LIONEL MESSI", team: "ARGENTINA", color: "#43a047" },
-            "7": { name: "CRISTIANO RONALDO", team: "PORTUGAL", color: "#e53935" },
-            "11": { name: "NEYMAR JR", team: "BRASIL", color: "#fdd835" },
-            "9": { name: "ERLING HAALAND", team: "NORUEGA", color: "#1e88e5" },
-            "DEFAULT": { name: "JUGADOR DESCONOCIDO", team: "DRAFT", color: "#777" }
-        };
-    </script>
     <script src="app.js"></script>
 </body>
 </html>
