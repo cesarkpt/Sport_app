@@ -62,6 +62,7 @@
                                 <input type="text" id="teamNameInput" placeholder="Nombre del Equipo">
                                 <input type="text" id="teamCodeInput" placeholder="ABC" maxlength="3" style="text-align: center;">
                             </div>
+                            <input type="text" id="teamCoachInput" placeholder="Director Técnico (DT)" style="margin-top:10px;">
                             <div class="color-pickers">
                                 <div class="color-field">
                                     <label>Color 1</label>
@@ -89,6 +90,16 @@
                             <div class="roster-input">
                                 <input type="number" id="playerNum" placeholder="#">
                                 <input type="text" id="playerName" placeholder="Nombre">
+                                <select id="playerPosition" class="pos-select">
+                                    <option value="POR">POR</option>
+                                    <option value="DEF">DEF</option>
+                                    <option value="VOL">VOL</option>
+                                    <option value="ATK">ATK</option>
+                                </select>
+                                <div class="captain-toggle">
+                                    <input type="checkbox" id="isCaptain">
+                                    <label for="isCaptain" title="Capitán">©</label>
+                                </div>
                                 <button class="add-btn" onclick="addPlayerToRoster()">+</button>
                             </div>
                             <div id="rosterList" class="roster-list"></div>

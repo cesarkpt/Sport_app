@@ -447,6 +447,67 @@ main {
     cursor: pointer;
 }
 
+.pos-select {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    color: var(--primary);
+    border-radius: 8px;
+    padding: 0 5px;
+    font-size: 0.7rem;
+    font-weight: 900;
+    font-family: 'Outfit', sans-serif;
+    outline: none;
+    width: 60px;
+}
+
+.pos-badge {
+    background: var(--bg-dark);
+    color: var(--secondary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.6rem;
+    font-weight: 900;
+    margin-right: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.captain-toggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0 10px;
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+}
+
+.captain-toggle input {
+    width: 15px !important;
+    height: 15px !important;
+    margin: 0 !important;
+}
+
+.captain-toggle label {
+    font-size: 0.8rem;
+    font-weight: 900;
+    color: var(--secondary);
+}
+
+.roster-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255,255,255,0.03);
+    padding: 8px 15px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+}
+
+.roster-item b {
+    color: var(--primary);
+    margin-right: 5px;
+}
+
 .updates-list {
     display: flex;
     flex-direction: column;

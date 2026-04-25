@@ -85,6 +85,7 @@ function openTeamEditor(team) {
     document.getElementById('teamEditor').classList.remove('hidden');
     document.getElementById('teamNameInput').value = team.name;
     document.getElementById('teamCodeInput').value = team.code || "";
+    document.getElementById('teamCoachInput').value = team.coach || "";
     document.getElementById('teamColor1').value = team.color1;
     document.getElementById('teamColor2').value = team.color2;
     document.getElementById('teamEditor')._selectedShield = team.shield;
@@ -100,10 +101,13 @@ function closeTeamEditor() {
 function renderRosterList(roster) {
     const list = document.getElementById('rosterList');
     list.innerHTML = '';
-    Object.entries(roster).forEach(([num, name]) => {
+    Object.entries(roster).forEach(([num, player]) => {
+        const name = typeof player === 'string' ? player : player.name;
+        const pos = player.position ? `<span class="pos-badge">${player.position}</span>` : '';
+        const isCap = player.isCaptain ? ' <b title="Capitán">(C)</b>' : '';
         const item = document.createElement('div');
         item.className = 'roster-item';
-        item.innerHTML = `<span>#${num}</span> ${name} <button onclick="removePlayer('${num}')">X</button>`;
+        item.innerHTML = `<span>${pos}<b>#${num}</b> ${name}${isCap}</span> <button onclick="removePlayer('${num}')">X</button>`;
         list.appendChild(item);
     });
 }
@@ -111,16 +115,23 @@ function renderRosterList(roster) {
 function addPlayerToRoster() {
     const num = document.getElementById('playerNum').value;
     const name = document.getElementById('playerName').value;
+    const pos = document.getElementById('playerPosition').value;
+    const isCap = document.getElementById('isCaptain').checked;
     if (!num || !name || !editingTeamId) return;
     
     const roster = (editingTeamId && allTeams[editingTeamId]) ? allTeams[editingTeamId].roster : {};
-    // Temporalmente guardamos en un objeto local si es nuevo equipo
     const tempRoster = document.getElementById('teamEditor')._tempRoster || roster;
-    tempRoster[num] = name.toUpperCase();
-    document.getElementById('teamEditor')._tempRoster = tempRoster;
     
+    tempRoster[num] = { 
+        name: name.toUpperCase(), 
+        position: pos,
+        isCaptain: isCap 
+    };
+    
+    document.getElementById('teamEditor')._tempRoster = tempRoster;
     document.getElementById('playerNum').value = '';
     document.getElementById('playerName').value = '';
+    document.getElementById('isCaptain').checked = false;
     renderRosterList(tempRoster);
 }
 
@@ -138,6 +149,7 @@ async function saveTeam() {
         id: editingTeamId,
         name: teamName,
         code: document.getElementById('teamCodeInput').value.toUpperCase().substring(0,3) || teamName.substring(0,3).toUpperCase(),
+        coach: document.getElementById('teamCoachInput').value.toUpperCase(),
         color1: document.getElementById('teamColor1').value,
         color2: document.getElementById('teamColor2').value,
         roster: document.getElementById('teamEditor')._tempRoster || (allTeams[editingTeamId] ? allTeams[editingTeamId].roster : {}),
@@ -318,10 +330,19 @@ async function processPlayerPhoto(processingImg, originalImg) {
     const detectedNumber = extractNumber(ocrResult.data.text);
     
     // Obtener equipo activo
-    const team = allTeams[activeTeamId] || { name: "DRAFT", color1: "#00ff88", color2: "#00d4ff", roster: {} };
+    const team = allTeams[activeTeamId] || { name: "DRAFT", code: "DFT", coach: "", color1: "#00ff88", color2: "#00d4ff", roster: {} };
     
+    const pData = team.roster[detectedNumber];
+    let pName = "JUGADOR #" + detectedNumber;
+    let pPos = "";
+    if (pData) {
+        pName = (typeof pData === 'string' ? pData : pData.name) + (pData.isCaptain ? " (C)" : "");
+        pPos = pData.position || "";
+    }
+
     let playerData = {
-        name: team.roster[detectedNumber] || "JUGADOR #" + detectedNumber,
+        name: pName,
+        position: pPos,
         team: team.name,
         teamCode: team.code || "SIN",
         color: team.color1,
@@ -543,37 +564,43 @@ function drawBackground(ctx, color) {
 function drawSportsTicker(ctx, player) {
     const bY = 1080 - 180;
     
-    // Glassmorphism Ticker
+    // 1. Fondo Glassmorphism
     ctx.fillStyle = "rgba(0,0,0,0.85)";
-    ctx.fillRect(100, bY, 1720, 120);
+    ctx.beginPath();
+    ctx.roundRect(100, bY, 1720, 120, 15);
+    ctx.fill();
     
-    // Barra de colores bicolor tipo ticker
+    // 2. Barras laterales de color (Bicolor)
     ctx.fillStyle = player.color;
     ctx.fillRect(100, bY, 15, 60);
     ctx.fillStyle = player.color2 || player.color;
     ctx.fillRect(100, bY + 60, 15, 60);
 
-    // Texto Nombre
-    ctx.fillStyle = "white";
-    ctx.font = "900 70px Oswald";
-    ctx.textAlign = "left";
-    ctx.fillText(player.name, 150, bY + 85);
-    
-    // Team
-    ctx.font = "400 35px Outfit";
-    ctx.fillStyle = player.color;
-    ctx.fillText(player.team, 150, bY + 35);
+    // 3. Posición Badge
+    let textX = 140;
+    if (player.position) {
+        ctx.fillStyle = player.color;
+        ctx.beginPath();
+        ctx.roundRect(135, bY + 35, 90, 50, 8);
+        ctx.fill();
+        ctx.fillStyle = "#000";
+        ctx.font = "900 30px Outfit";
+        ctx.textAlign = "center";
+        ctx.fillText(player.position, 180, bY + 72);
+        textX = 250;
+    }
 
-    // Escudo/Círculo Número
-    ctx.beginPath();
-    ctx.arc(1750, bY + 60, 45, 0, Math.PI * 2);
-    ctx.fillStyle = player.color;
-    ctx.fill();
-    
-    ctx.fillStyle = "white";
-    ctx.font = "900 50px Oswald";
-    ctx.textAlign = "center";
-    ctx.fillText(player.number || "#", 1750, bY + 78);
+    // 4. Nombre y Número
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#FFF";
+    ctx.font = "900 65px Outfit";
+    ctx.fillText(`${player.number} | ${player.name}`, textX, bY + 82);
+
+    // 5. Nombre del Equipo (Derecha)
+    ctx.textAlign = "right";
+    ctx.font = "700 35px Outfit";
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    ctx.fillText(player.team.toUpperCase(), 1780, bY + 75);
 }
 
 function updateStep(num, text) {
