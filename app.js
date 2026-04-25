@@ -69,8 +69,47 @@ async function saveTeam() {
     }
     
     localStorage.setItem('sportshub_team', JSON.stringify(currentTeam));
-    alert("Equipo guardado correctamente");
+
+    // Guardar en la Nube (Google Sheets)
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+            .withSuccessHandler(() => alert("Guardado en Local y Nube ✅"))
+            .saveTeamData(currentTeam);
+    } else {
+        alert("Guardado en Local ✅ (Conéctate a GAS para sincronizar)");
+    }
+    
     toggleTeamManager();
+}
+
+function syncWithCloud() {
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+            .withSuccessHandler((response) => {
+                if (response.success && response.data) {
+                    currentTeam = response.data;
+                    localStorage.setItem('sportshub_team', JSON.stringify(currentTeam));
+                    loadTeamIntoUI();
+                    alert("Sincronización completa 🔄");
+                } else {
+                    alert("No hay datos en la nube o error.");
+                }
+            })
+            .getTeamData();
+    } else {
+        // Fallback vía API fetch
+        fetch(`${GAS_WEB_APP_URL}?action=getTeamData`)
+            .then(res => res.json())
+            .then(response => {
+                if (response.success && response.data) {
+                    currentTeam = response.data;
+                    localStorage.setItem('sportshub_team', JSON.stringify(currentTeam));
+                    loadTeamIntoUI();
+                    alert("Sincronización vía API completa 🔄");
+                }
+            })
+            .catch(err => alert("Error al sincronizar: " + err.message));
+    }
 }
 
 async function imageToBase64(file) {
@@ -202,13 +241,39 @@ async function processPlayerPhoto(processingImg, originalImg) {
     // 3. Composición de Layout
     updateStep(3, "Creando arte HD...");
     await generateLayouts(transparentPlayer, finalData);
+    
+    // 4. Guardado Automático en Drive
+    updateStep(3, "Subiendo a Drive...");
+    await saveToDrive(elements.outputCanvas.toDataURL('image/png'), finalData);
+    
     updateStep(3, "Listo para descargar");
     
-    // 4. Mostrar Resultados
+    // 5. Mostrar Resultados
     setTimeout(() => {
         elements.processingArea.classList.add('hidden');
         elements.resultArea.classList.remove('hidden');
     }, 500);
+}
+
+async function saveToDrive(base64, player) {
+    // Refinar nombre: TRES LETRAS EQUIPO _ NUMERO _ NOMBRE
+    const teamCode = (player.team || "SIN").substring(0, 3).toUpperCase();
+    const fileName = `${teamCode}_${player.number}_${player.name.replace(/\s+/g, '_')}.png`;
+    const teamName = player.team || "SIN_EQUIPO";
+
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+        return new Promise((resolve) => {
+            google.script.run
+                .withSuccessHandler((res) => {
+                    console.log("Guardado en Drive:", res.url);
+                    resolve(res);
+                })
+                .saveProcessedImage(base64, fileName, teamName);
+        });
+    } else {
+        console.warn("Modo Local: No se puede guardar en Drive directamente.");
+        // Podríamos intentar un fetch POST al GAS_WEB_APP_URL aquí si el usuario lo necesita
+    }
 }
 
 async function waitForManualCorrection(initialData, detectedNumber) {

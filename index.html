@@ -34,7 +34,10 @@
             <section id="teamManager" class="team-manager hidden">
                 <div class="modal-header">
                     <h3>CONFIGURAR EQUIPO</h3>
-                    <button onclick="toggleTeamManager()" class="close-btn">&times;</button>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="syncWithCloud()" class="update-btn" style="background:var(--primary); color:var(--bg-dark)">NUBE 🔄</button>
+                        <button onclick="toggleTeamManager()" class="close-btn">&times;</button>
+                    </div>
                 </div>
                 
                 <div class="team-config-grid">
