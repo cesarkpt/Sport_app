@@ -440,3 +440,103 @@ function toggleUpdates() {
     const modal = document.getElementById('updatesModal');
     modal.classList.toggle('hidden');
 }
+
+// --- GALERÍA DE ESCUDOS (DRIVE) ---
+
+function openShieldGallery() {
+    document.getElementById('shieldGalleryModal').classList.remove('hidden');
+    const grid = document.getElementById('shieldGrid');
+    grid.innerHTML = '<p class="loading-text">Conectando con Google Drive...</p>';
+
+    // Intentar llamar a Google Apps Script
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+            .withSuccessHandler(renderShieldGallery)
+            .withFailureHandler(handleShieldError)
+            .getShieldsFromDrive();
+    } else {
+        grid.innerHTML = `
+            <div class="loading-text">
+                <p>⚠️ Modo Local detectado.</p>
+                <p style="font-size: 0.6rem; margin-top: 10px;">Para conectar con Drive, despliega el proyecto en Google Apps Script.</p>
+                <button class="btn-primary" onclick="simulateShields()" style="margin-top: 15px; font-size: 0.7rem;">SIMULAR ESCUDOS (TEST)</button>
+            </div>
+        `;
+    }
+}
+
+function closeShieldGallery() {
+    document.getElementById('shieldGalleryModal').classList.add('hidden');
+}
+
+function renderShieldGallery(response) {
+    const grid = document.getElementById('shieldGrid');
+    grid.innerHTML = '';
+
+    if (!response.success) {
+        grid.innerHTML = `<p class="loading-text">Error: ${response.error}</p>`;
+        return;
+    }
+
+    if (response.data.length === 0) {
+        grid.innerHTML = '<p class="loading-text">No se encontraron imágenes en la carpeta.</p>';
+        return;
+    }
+
+    response.data.forEach(shield => {
+        const item = document.createElement('div');
+        item.className = 'shield-item';
+        item.onclick = () => selectShield(shield.id);
+        item.innerHTML = `
+            <img src="${shield.url}" alt="${shield.name}">
+            <span>${shield.name}</span>
+        `;
+        grid.appendChild(item);
+    });
+}
+
+function handleShieldError(err) {
+    document.getElementById('shieldGrid').innerHTML = `<p class="loading-text">Error de conexión: ${err}</p>`;
+}
+
+async function selectShield(fileId) {
+    // Generar la URL de alta resolución para el canvas
+    const highResUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
+    
+    // Intentar convertir a Base64 para guardarlo en localStorage
+    // (Nota: Esto puede dar CORS si se corre localmente, pero en GAS funciona mejor)
+    try {
+        const base64 = await urlToBase64(highResUrl);
+        currentTeam.shield = base64;
+    } catch(e) {
+        currentTeam.shield = highResUrl;
+    }
+    
+    alert("Escudo seleccionado correctamente.");
+    closeShieldGallery();
+}
+
+async function urlToBase64(url) {
+    try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+        });
+    } catch (e) {
+        return url;
+    }
+}
+
+function simulateShields() {
+    const mockData = {
+        success: true,
+        data: [
+            { id: "1BZ9_Qn6g2AvtPD8A3eShmIv2_H7SZioR", name: "Ejemplo 1", url: "https://cdn-icons-png.flaticon.com/512/5351/5351333.png" },
+            { id: "1XUHCYb3yEPvDgqHIz0dNgsiNITkJdVCO", name: "Ejemplo 2", url: "https://cdn-icons-png.flaticon.com/512/5351/5351333.png" }
+        ]
+    };
+    renderShieldGallery(mockData);
+}

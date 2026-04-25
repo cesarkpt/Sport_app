@@ -53,7 +53,10 @@
                         </div>
                         <div class="shield-upload">
                             <label>Escudo (PNG)</label>
-                            <input type="file" id="shieldInput" accept="image/*">
+                            <div class="shield-actions">
+                                <input type="file" id="shieldInput" accept="image/*">
+                                <button class="browse-btn" onclick="openShieldGallery()">EXPLORAR DRIVE</button>
+                            </div>
                         </div>
                     </div>
 
@@ -165,6 +168,19 @@
         <div class="ticker-footer">
             <div class="ticker-content">
                 GENERADOR AUTOMÁTICO DE CROMOS DEPORTIVOS • IA POWERED • DETECCIÓN DE NÚMERO • RECORTE INTELIGENTE • SPORTS HUB V1.0
+            </div>
+        </div>
+    </div>
+
+    <!-- Galería de Escudos (Drive) -->
+    <div id="shieldGalleryModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>ESCUDOS EN DRIVE</h3>
+                <button onclick="closeShieldGallery()" class="close-btn">&times;</button>
+            </div>
+            <div id="shieldGrid" class="shield-grid">
+                <p class="loading-text">Cargando escudos...</p>
             </div>
         </div>
     </div>
