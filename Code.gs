@@ -5,7 +5,14 @@
 
 const SHIELDS_FOLDER_ID = "1XUHCYb3yEPvDgqHIz0dNgsiNITkJdVCO";
 
-function doGet() {
+function doGet(e) {
+  // Si se solicita una acción específica via API
+  if (e && e.parameter && e.parameter.action === 'getShields') {
+    const response = getShieldsFromDrive();
+    return ContentService.createTextOutput(JSON.stringify(response))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   return HtmlService.createTemplateFromFile('index')
     .evaluate()
     .setTitle('Sports Hub Pro')

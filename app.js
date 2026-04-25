@@ -442,26 +442,34 @@ function toggleUpdates() {
 }
 
 // --- GALERÍA DE ESCUDOS (DRIVE) ---
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzYBhBQSZzSI5qj9cRgLhjQ-YGonuqnNBTmMRXJH6OllT3XpO0KTXBZP0wOPWv1i4nk/exec";
 
 function openShieldGallery() {
     document.getElementById('shieldGalleryModal').classList.remove('hidden');
     const grid = document.getElementById('shieldGrid');
     grid.innerHTML = '<p class="loading-text">Conectando con Google Drive...</p>';
 
-    // Intentar llamar a Google Apps Script
+    // 1. Intentar llamar a Google Apps Script (Si estamos dentro del entorno GAS)
     if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
             .withSuccessHandler(renderShieldGallery)
             .withFailureHandler(handleShieldError)
             .getShieldsFromDrive();
-    } else {
-        grid.innerHTML = `
-            <div class="loading-text">
-                <p>⚠️ Modo Local detectado.</p>
-                <p style="font-size: 0.6rem; margin-top: 10px;">Para conectar con Drive, despliega el proyecto en Google Apps Script.</p>
-                <button class="btn-primary" onclick="simulateShields()" style="margin-top: 15px; font-size: 0.7rem;">SIMULAR ESCUDOS (TEST)</button>
-            </div>
-        `;
+    } 
+    // 2. Fallback: Llamada vía API a la Web App desplegada (Si estamos en local/GitHub)
+    else {
+        fetch(`${GAS_WEB_APP_URL}?action=getShields`)
+            .then(response => response.json())
+            .then(data => renderShieldGallery(data))
+            .catch(err => {
+                grid.innerHTML = `
+                    <div class="loading-text">
+                        <p>⚠️ Error de conexión con la API.</p>
+                        <p style="font-size: 0.6rem; margin-top: 10px;">${err.message}</p>
+                        <button class="btn-primary" onclick="simulateShields()" style="margin-top: 15px; font-size: 0.7rem;">USAR ESCUDOS DE PRUEBA</button>
+                    </div>
+                `;
+            });
     }
 }
 
