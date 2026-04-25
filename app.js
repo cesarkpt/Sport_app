@@ -318,20 +318,34 @@ async function resizeImage(img, maxSize) {
     return resizedImg;
 }
 
-async function processPlayerPhoto(processingImg, originalImg) {
-    // Dibujar en canvas de entrada (preview)
-    const ctxIn = elements.inputCanvas.getContext('2d');
-    elements.inputCanvas.width = processingImg.width;
-    elements.inputCanvas.height = processingImg.height;
-    ctxIn.drawImage(processingImg, 0, 0);
+function extractNumber(text) {
+    if (!text) return "??";
+    // Limpiar caracteres extraños y buscar números
+    const match = text.replace(/[^0-9]/g, '').match(/\d+/);
+    if (!match) return "??";
+    let num = match[0];
+    // Quitar ceros a la izquierda si tiene más de 1 dígito (ej: 01 -> 1)
+    if (num.length > 1 && num.startsWith('0')) num = num.substring(1);
+    return num;
+}
 
-    updateStep(1, "Escaneando dorsal...");
-    const ocrResult = await Tesseract.recognize(processingImg, 'eng');
-    const detectedNumber = extractNumber(ocrResult.data.text);
+async function processPlayerPhoto(processingImg, originalImg) {
+    updateStep(1, "Analizando dorsal...");
+    const ocrResult = await recognizeText(processingImg);
+    let detectedNumber = extractNumber(ocrResult.data.text);
     
     // Obtener equipo activo
     const team = allTeams[activeTeamId] || { name: "DRAFT", code: "DFT", coach: "", color1: "#00ff88", color2: "#00d4ff", roster: {} };
     
+    // INTELIGENCIA: Si el número detectado no está en la nómina, 
+    // pero al invertirlo sí está, sugerir el invertido (ej: 01 -> 10)
+    if (!team.roster[detectedNumber]) {
+        const reversed = detectedNumber.split('').reverse().join('');
+        if (team.roster[reversed]) {
+            console.log(`OCR Flip detectado: ${detectedNumber} -> ${reversed}`);
+            detectedNumber = reversed;
+        }
+    }
     const pData = team.roster[detectedNumber];
     let pName = "JUGADOR #" + detectedNumber;
     let pPos = "";
@@ -358,7 +372,7 @@ async function processPlayerPhoto(processingImg, originalImg) {
     
     // 2. Segmentación - Quitar Fondo
     updateStep(2, "IA de recorte...");
-    const transparentPlayer = await removeBackground(processingImg);
+    const transparentPlayer = await removeBackground(originalImg);
     updateStep(2, "Recorte completado");
 
     // 3. Composición de Layout
@@ -404,12 +418,31 @@ async function waitForManualCorrection(initialData, detectedNumber) {
     const editName = document.getElementById('editName');
     const editNumber = document.getElementById('editNumber');
     const editTeam = document.getElementById('editTeam');
+    const editPosition = document.getElementById('editPosition');
     const confirmBtn = document.getElementById('confirmEditBtn');
 
-    // Poblar campos
+    // Poblar campos iniciales
     editName.value = initialData.name;
     editNumber.value = detectedNumber === "??" ? "" : detectedNumber;
     editTeam.value = initialData.team;
+    editPosition.value = initialData.position || "";
+
+    // Lógica Dinámica: Al cambiar el número, buscar en la nómina activa
+    const team = allTeams[activeTeamId];
+    editNumber.oninput = () => {
+        const num = editNumber.value;
+        if (team && team.roster[num]) {
+            const p = team.roster[num];
+            const name = typeof p === 'string' ? p : p.name;
+            const pos = typeof p === 'string' ? "" : (p.position || "");
+            
+            editName.value = name + (p.isCaptain ? " (C)" : "");
+            editPosition.value = pos;
+            // Destello visual de éxito
+            editName.style.borderColor = "var(--primary)";
+            setTimeout(() => editName.style.borderColor = "", 500);
+        }
+    };
 
     // Mostrar panel
     editPanel.classList.remove('hidden');
@@ -420,8 +453,11 @@ async function waitForManualCorrection(initialData, detectedNumber) {
                 name: editName.value.toUpperCase(),
                 team: editTeam.value.toUpperCase(),
                 number: editNumber.value,
+                position: editPosition.value.toUpperCase(),
+                teamCode: team ? team.code : initialData.teamCode,
                 color: initialData.color || "#00ff88",
-                color2: initialData.color2 || "#00d4ff"
+                color2: initialData.color2 || "#00d4ff",
+                shield: initialData.shield
             };
             editPanel.classList.add('hidden');
             resolve(updatedData);
@@ -463,84 +499,100 @@ async function removeBackground(img) {
 }
 
 async function generateLayouts(playerCanvas, player) {
-    // --- CANVAS PRINCIPAL (Transmisión) ---
+    // --- 1. SMART CROP PARA CARNET (Cara y Hombros) ---
+    const carnetCrop = createSmartCrop(playerCanvas);
+    
+    // --- 2. CANVAS DE TRANSMISIÓN (Plano Americano) ---
     const ctxOut = elements.outputCanvas.getContext('2d');
     elements.outputCanvas.width = CONFIG.outputWidth;
     elements.outputCanvas.height = CONFIG.outputHeight;
-
-    // Fondo Tech/Deportivo
     drawBackground(ctxOut, player.color);
-
-    // Jugador (Escalado inteligente con efectos de profundidad)
+    
+    // Jugador en Plano Americano (Cuerpo completo/medio)
     const scale = (CONFIG.outputHeight * 0.85) / playerCanvas.height;
     const pW = playerCanvas.width * scale;
     const pH = playerCanvas.height * scale;
-    
     ctxOut.save();
-    // Efecto 1: Sombra profunda para despegar del fondo
-    ctxOut.shadowColor = "rgba(0,0,0,0.8)";
-    ctxOut.shadowBlur = 40;
-    ctxOut.shadowOffsetX = 0;
-    ctxOut.shadowOffsetY = 20;
-    
-    // Efecto 2: Brillo sutil en los bordes (Rim Light) para disimular recortes
-    // (Dibujamos el jugador dos veces, una con glow)
-    ctxOut.drawImage(playerCanvas, (CONFIG.outputWidth - pW) / 2, CONFIG.outputHeight - pH, pW, pH);
-    
-    ctxOut.globalCompositeOperation = 'source-over';
-    ctxOut.shadowBlur = 10;
-    ctxOut.shadowColor = "rgba(255,255,255,0.2)";
+    ctxOut.shadowColor = "rgba(0,0,0,0.6)";
+    ctxOut.shadowBlur = 30;
     ctxOut.drawImage(playerCanvas, (CONFIG.outputWidth - pW) / 2, CONFIG.outputHeight - pH, pW, pH);
     ctxOut.restore();
-
-    // Dibujar Escudo arriba a la derecha
-    if (player.shield) {
-        const shieldImg = new Image();
-        shieldImg.src = player.shield;
-        await new Promise(r => shieldImg.onload = r);
-        
-        ctxOut.save();
-        ctxOut.shadowColor = "rgba(0,0,0,0.3)";
-        ctxOut.shadowBlur = 20;
-        ctxOut.drawImage(shieldImg, CONFIG.outputWidth - 250, 50, 200, 200);
-        ctxOut.restore();
-    }
-
-    // Ticker Pro
+    
     drawSportsTicker(ctxOut, player);
+    if (player.shield) await drawShield(ctxOut, player.shield);
 
-    // --- CANVAS CARNET ---
-    const ctxCar = elements.carnetCanvas.getContext('2d');
+    // --- 3. CANVAS DE CARNET (Zoom a la Cara) ---
+    const ctxCarnet = elements.carnetCanvas.getContext('2d');
     elements.carnetCanvas.width = CONFIG.carnetWidth;
     elements.carnetCanvas.height = CONFIG.carnetHeight;
-
+    
     // Fondo Carnet
-    ctxCar.fillStyle = "#111";
-    ctxCar.fillRect(0, 0, CONFIG.carnetWidth, CONFIG.carnetHeight);
+    ctxCarnet.fillStyle = "#111";
+    ctxCarnet.fillRect(0, 0, CONFIG.carnetWidth, CONFIG.carnetHeight);
     
-    // Acento de color lateral
-    ctxCar.fillStyle = player.color;
-    ctxCar.fillRect(0, 0, 40, CONFIG.carnetHeight);
+    // Jugador con Zoom (Smart Crop)
+    const cScale = CONFIG.carnetWidth / carnetCrop.width;
+    ctxCarnet.drawImage(carnetCrop, 0, 0, carnetCrop.width, carnetCrop.height, 0, 0, CONFIG.carnetWidth, carnetCrop.height * cScale);
+    
+    drawCarnetOverlay(ctxCarnet, player);
+}
 
-    // Foto Jugador
-    const cScale = (CONFIG.carnetHeight * 0.7) / playerCanvas.height;
-    const cW = playerCanvas.width * cScale;
-    const cH = playerCanvas.height * cScale;
-    ctxCar.drawImage(playerCanvas, (CONFIG.carnetWidth - cW) / 2 + 20, 50, cW, cH);
+function createSmartCrop(playerCanvas) {
+    const ctx = playerCanvas.getContext('2d');
+    const pixels = ctx.getImageData(0, 0, playerCanvas.width, playerCanvas.height).data;
     
-    // Datos
-    ctxCar.fillStyle = "white";
-    ctxCar.font = "900 50px Oswald";
-    ctxCar.fillText(player.name, 70, 700);
-    ctxCar.font = "400 30px Outfit";
-    ctxCar.fillStyle = "rgba(255,255,255,0.5)";
-    ctxCar.fillText(player.team, 70, 740);
+    // Encontrar el primer pixel no transparente (Tope de la cabeza)
+    let top = 0;
+    for (let y = 0; y < playerCanvas.height; y++) {
+        for (let x = 0; x < playerCanvas.width; x++) {
+            if (pixels[(y * playerCanvas.width + x) * 4 + 3] > 10) {
+                top = y;
+                y = playerCanvas.height; break;
+            }
+        }
+    }
     
-    // Número
-    ctxCar.fillStyle = player.color;
-    ctxCar.font = "900 120px Oswald";
-    ctxCar.textAlign = "right";
-    ctxCar.fillText(player.number || "??", 550, 750);
+    // Definir área de carnet
+    const cropHeight = playerCanvas.height * 0.45;
+    const cropWidth = cropHeight * (CONFIG.carnetWidth / CONFIG.carnetHeight);
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = cropWidth;
+    tempCanvas.height = cropHeight;
+    const tCtx = tempCanvas.getContext('2d');
+    
+    const xOffset = (playerCanvas.width - cropWidth) / 2;
+    tCtx.drawImage(playerCanvas, xOffset, top, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+    return tempCanvas;
+}
+
+async function drawShield(ctx, shieldUrl) {
+    const shieldImg = new Image();
+    shieldImg.src = shieldUrl;
+    await new Promise(r => shieldImg.onload = r);
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.3)";
+    ctx.shadowBlur = 20;
+    ctx.drawImage(shieldImg, CONFIG.outputWidth - 250, 50, 200, 200);
+    ctx.restore();
+}
+
+function drawCarnetOverlay(ctx, player) {
+    const h = CONFIG.carnetHeight;
+    const w = CONFIG.carnetWidth;
+    const grd = ctx.createLinearGradient(0, h-300, 0, h);
+    grd.addColorStop(0, "transparent");
+    grd.addColorStop(1, "black");
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, h-300, w, 300);
+    
+    ctx.fillStyle = player.color;
+    ctx.font = "900 120px Outfit";
+    ctx.textAlign = "center";
+    ctx.fillText(player.number, w/2, h - 140);
+    
+    ctx.fillStyle = "white";
+    ctx.font = "700 45px Outfit";
+    ctx.fillText(player.name, w/2, h - 60);
 }
 
 function drawBackground(ctx, color) {
