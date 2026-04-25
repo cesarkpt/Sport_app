@@ -23,9 +23,6 @@
         <header>
             <div class="logo">SPORTS<span>HUB</span></div>
             <div class="header-actions">
-                <select id="activeTeamSelector" class="team-select" onchange="changeActiveTeam()">
-                    <option value="">Seleccionar Equipo...</option>
-                </select>
                 <button class="update-btn" onclick="toggleUpdates()">v1.4</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
@@ -33,6 +30,13 @@
         </header>
 
         <main>
+            <!-- Selector Visual de Equipos -->
+            <section class="visual-team-selector">
+                <h5>SELECCIONA EQUIPO</h5>
+                <div id="teamStrip" class="team-strip">
+                    <!-- Los escudos de los equipos aparecerán aquí -->
+                </div>
+            </section>
             <!-- Panel de Gestión de Equipos -->
             <section id="teamManager" class="team-manager hidden">
                 <div class="modal-header">

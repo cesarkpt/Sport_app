@@ -23,39 +23,34 @@ function toggleTeamManager() {
 
 function renderTeamsList() {
     const list = document.getElementById('teamsList');
+    const strip = document.getElementById('teamStrip');
     list.innerHTML = '';
+    strip.innerHTML = '';
     
     Object.entries(allTeams).forEach(([id, team]) => {
+        // 1. Card para el Administrador
         const card = document.createElement('div');
         card.className = 'team-item-card';
-        card.onclick = () => editTeam(id);
         card.innerHTML = `
             <img src="${team.shield || 'https://cdn-icons-png.flaticon.com/512/5351/5351333.png'}" alt="Shield">
             <h4>${team.name}</h4>
-            <div style="font-size: 0.6rem; color: var(--text-dim)">${Object.keys(team.roster).length} Jugadores</div>
+            <button class="update-btn" onclick="editTeam('${id}')" style="margin-top:5px; font-size:0.5rem">EDITAR JUGADORES</button>
         `;
         list.appendChild(card);
-    });
-    
-    updateActiveTeamSelector();
-}
 
-function updateActiveTeamSelector() {
-    const selector = document.getElementById('activeTeamSelector');
-    selector.innerHTML = '<option value="">Sin Equipo...</option>';
-    
-    Object.entries(allTeams).forEach(([id, team]) => {
-        const opt = document.createElement('option');
-        opt.value = id;
-        opt.textContent = team.name;
-        if (id === activeTeamId) opt.selected = true;
-        selector.appendChild(opt);
+        // 2. Item para el Strip Visual (Pantalla principal)
+        const stripItem = document.createElement('div');
+        stripItem.className = `team-strip-item ${id === activeTeamId ? 'active' : ''}`;
+        stripItem.onclick = () => setActiveTeam(id);
+        stripItem.innerHTML = `<img src="${team.shield || 'https://cdn-icons-png.flaticon.com/512/5351/5351333.png'}" title="${team.name}">`;
+        strip.appendChild(stripItem);
     });
 }
 
-function changeActiveTeam() {
-    activeTeamId = document.getElementById('activeTeamSelector').value;
+function setActiveTeam(id) {
+    activeTeamId = id;
     localStorage.setItem('sportshub_active_team_id', activeTeamId);
+    renderTeamsList();
 }
 
 function createNewTeam() {
@@ -717,6 +712,3 @@ function simulateShields() {
 }
 // --- INICIALIZACIÓN ---
 renderTeamsList();
-if (activeTeamId) {
-    document.getElementById('activeTeamSelector').value = activeTeamId;
-}
