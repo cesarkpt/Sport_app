@@ -9,7 +9,24 @@ const CONFIG = {
 
 // --- GESTIÓN DE EQUIPOS ---
 let allTeams = JSON.parse(localStorage.getItem('sportshub_all_teams')) || {};
+
+// MIGRACIÓN: Recuperar equipo de versiones anteriores (v1.1 - v1.3)
+const legacyTeam = JSON.parse(localStorage.getItem('sportshub_team'));
+if (legacyTeam && legacyTeam.name) {
+    const legacyId = "legacy_" + Date.now();
+    allTeams[legacyId] = {
+        ...legacyTeam,
+        id: legacyId,
+        code: legacyTeam.name.substring(0,3).toUpperCase()
+    };
+    localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
+    localStorage.removeItem('sportshub_team'); // Limpiar viejo
+}
+
 let activeTeamId = localStorage.getItem('sportshub_active_team_id') || "";
+if (!activeTeamId && Object.keys(allTeams).length > 0) {
+    activeTeamId = Object.keys(allTeams)[0];
+}
 let editingTeamId = null;
 
 function toggleTeamManager() {
@@ -167,12 +184,14 @@ function syncWithCloud() {
     if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
             .withSuccessHandler((response) => {
-                if (response.success && response.data) {
-                    allTeams = response.data;
-                    localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
-                    renderTeamsList();
-                    alert("Sincronización completa 🔄");
-                }
+                    if (Object.keys(response.data).length === 0) {
+                        alert("La nube está vacía ☁️. Asegúrate de haber guardado el equipo en el otro dispositivo primero.");
+                    } else {
+                        allTeams = response.data;
+                        localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
+                        renderTeamsList();
+                        alert("Sincronización completa 🔄 (" + Object.keys(allTeams).length + " equipos)");
+                    }
             })
             .getAllTeamsData();
     } else {
