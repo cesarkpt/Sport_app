@@ -62,6 +62,25 @@ function renderTeamsList() {
         stripItem.innerHTML = `<img src="${team.shield || 'https://cdn-icons-png.flaticon.com/512/5351/5351333.png'}" title="${team.name}">`;
         strip.appendChild(stripItem);
     });
+
+    // 3. Selectores de Partido
+    const selA = document.getElementById('matchTeamA');
+    const selB = document.getElementById('matchTeamB');
+    if (selA && selB) {
+        const valA = selA.value;
+        const valB = selB.value;
+        
+        selA.innerHTML = '<option value="">EQUIPO A</option>';
+        selB.innerHTML = '<option value="">EQUIPO B</option>';
+        
+        Object.entries(allTeams).forEach(([id, team]) => {
+            selA.innerHTML += `<option value="${id}">${team.name}</option>`;
+            selB.innerHTML += `<option value="${id}">${team.name}</option>`;
+        });
+        
+        selA.value = valA;
+        selB.value = valB;
+    }
 }
 
 function setActiveTeam(id) {
@@ -330,74 +349,89 @@ function extractNumber(text) {
 }
 
 async function processPlayerPhoto(processingImg, originalImg) {
-    updateStep(1, "Analizando dorsal...");
-    const ocrResult = await recognizeText(processingImg);
-    let detectedNumber = extractNumber(ocrResult.data.text);
-    
-    // Obtener equipo activo
-    const team = allTeams[activeTeamId] || { name: "DRAFT", code: "DFT", coach: "", color1: "#00ff88", color2: "#00d4ff", roster: {} };
-    
-    // INTELIGENCIA: Si el número detectado no está en la nómina, 
-    // pero al invertirlo sí está, sugerir el invertido (ej: 01 -> 10)
-    if (!team.roster[detectedNumber]) {
-        const reversed = detectedNumber.split('').reverse().join('');
-        if (team.roster[reversed]) {
-            console.log(`OCR Flip detectado: ${detectedNumber} -> ${reversed}`);
-            detectedNumber = reversed;
+    try {
+        updateStep(1, "Analizando dorsal...");
+        const ocrResult = await recognizeText(processingImg);
+        let detectedNumber = extractNumber(ocrResult.data.text);
+        
+        // Obtener equipo activo
+        const team = allTeams[activeTeamId] || { name: "DRAFT", code: "DFT", coach: "", color1: "#00ff88", color2: "#00d4ff", roster: {} };
+        
+        // INTELIGENCIA: Si el número detectado no está en la nómina, 
+        // pero al invertirlo sí está, sugerir el invertido (ej: 01 -> 10)
+        if (!team.roster[detectedNumber]) {
+            const reversed = detectedNumber.split('').reverse().join('');
+            if (team.roster[reversed]) {
+                console.log(`OCR Flip detectado: ${detectedNumber} -> ${reversed}`);
+                detectedNumber = reversed;
+            }
         }
-    }
-    const pData = team.roster[detectedNumber];
-    let pName = "JUGADOR #" + detectedNumber;
-    let pPos = "";
-    if (pData) {
-        pName = (typeof pData === 'string' ? pData : pData.name) + (pData.isCaptain ? " (C)" : "");
-        pPos = pData.position || "";
-    }
+        const pData = team.roster[detectedNumber];
+        let pName = "JUGADOR #" + detectedNumber;
+        let pPos = "";
+        if (pData) {
+            pName = (typeof pData === 'string' ? pData : pData.name) + (pData.isCaptain ? " (C)" : "");
+            pPos = pData.position || "";
+        }
 
-    let playerData = {
-        name: pName,
-        position: pPos,
-        team: team.name,
-        teamCode: team.code || "SIN",
-        color: team.color1,
-        color2: team.color2,
-        number: detectedNumber,
-        shield: team.shield
-    };
+        let playerData = {
+            name: pName,
+            position: pPos,
+            team: team.name,
+            teamCode: team.code || "SIN",
+            color: team.color1,
+            color2: team.color2,
+            number: detectedNumber,
+            shield: team.shield
+        };
 
-    updateStep(1, "Dorsal detectado: #" + detectedNumber);
+        updateStep(1, "Dorsal detectado: #" + detectedNumber);
 
-    // --- PAUSA PARA CORRECCIÓN MANUAL ---
-    const finalData = await waitForManualCorrection(playerData, detectedNumber);
-    
-    // 2. Segmentación - Quitar Fondo
-    const shouldRemoveBg = document.getElementById('bgToggle').checked;
-    let finalPlayerImg;
-    
-    if (shouldRemoveBg) {
-        updateStep(2, "IA de recorte...");
-        finalPlayerImg = await removeBackground(originalImg);
-        updateStep(2, "Recorte completado");
-    } else {
-        updateStep(2, "Fondo original conservado");
-        finalPlayerImg = originalImg;
-    }
+        // --- PAUSA PARA CORRECCIÓN MANUAL ---
+        const finalData = await waitForManualCorrection(playerData, detectedNumber);
+        
+        // 2. Segmentación - Quitar Fondo
+        const shouldRemoveBg = document.getElementById('bgToggle').checked;
+        let finalPlayerImg;
+        
+        if (shouldRemoveBg) {
+            updateStep(2, "IA de recorte...");
+            finalPlayerImg = await removeBackground(originalImg);
+            updateStep(2, "Recorte completado");
+        } else {
+            updateStep(2, "Fondo original conservado");
+            finalPlayerImg = originalImg;
+        }
 
-    // 3. Composición de Layout
-    updateStep(3, "Creando arte HD...");
-    await generateLayouts(finalPlayerImg, finalData, shouldRemoveBg);
-    
-    // 4. Guardado Automático en Drive
-    updateStep(3, "Subiendo a Drive...");
-    await saveToDrive(elements.outputCanvas.toDataURL('image/png'), finalData);
-    
-    updateStep(3, "Listo para descargar");
-    
-    // 5. Mostrar Resultados
-    setTimeout(() => {
+        // 3. Composición de Layout
+        updateStep(3, "Creando arte HD...");
+        await generateLayouts(finalPlayerImg, finalData, shouldRemoveBg);
+        
+        // 4. Guardado Automático en Drive
+        updateStep(3, "Subiendo a Drive...");
+        await saveToDrive(elements.outputCanvas.toDataURL('image/png'), finalData);
+        
+        updateStep(3, "Listo para descargar");
+        
+        // 5. Mostrar Resultados
+        setTimeout(() => {
+            elements.processingArea.classList.add('hidden');
+            elements.resultArea.classList.remove('hidden');
+        }, 500);
+
+    } catch (error) {
+        console.error("Error en procesamiento:", error);
+        alert("Ocurrió un error al analizar la foto. Intentaremos continuar manualmente.");
+        const fallbackData = { name: "ERROR IA", team: "DESCONOCIDO", number: "??", position: "DEL", teamCode: "DFT", color: "#777", color2: "#777" };
+        const corrected = await waitForManualCorrection(fallbackData, "??");
+        await generateLayouts(originalImg, corrected, false);
         elements.processingArea.classList.add('hidden');
         elements.resultArea.classList.remove('hidden');
-    }, 500);
+    }
+}
+
+async function recognizeText(img) {
+    return Tesseract.recognize(img, 'eng');
 }
 
 async function saveToDrive(base64, player) {
@@ -537,19 +571,47 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true) {
     drawSportsTicker(ctxOut, player);
     if (player.shield) await drawShield(ctxOut, player.shield);
 
+    // --- 2.5 INFO DE PARTIDO (En blanco) ---
+    const teamAId = document.getElementById('matchTeamA').value;
+    const teamBId = document.getElementById('matchTeamB').value;
+    if (teamAId && teamBId) {
+        await drawMatchInfo(ctxOut, allTeams[teamAId], allTeams[teamBId]);
+    }
+
     // --- 3. CANVAS DE CARNET (Zoom a la Cara) ---
     const ctxCarnet = elements.carnetCanvas.getContext('2d');
-    elements.carnetCanvas.width = CONFIG.carnetWidth;
-    elements.carnetCanvas.height = CONFIG.carnetHeight;
+    const cw = CONFIG.carnetWidth;
+    const ch = CONFIG.carnetHeight;
+    elements.carnetCanvas.width = cw;
+    elements.carnetCanvas.height = ch;
     
-    // Fondo Carnet
-    ctxCarnet.fillStyle = "#111";
-    ctxCarnet.fillRect(0, 0, CONFIG.carnetWidth, CONFIG.carnetHeight);
+    // Fondo Carnet con Degradado 45 grados (Si se quita el fondo)
+    if (shouldRemoveBg) {
+        const grdBg = ctxCarnet.createLinearGradient(0, 0, cw, ch);
+        grdBg.addColorStop(0, player.color);
+        grdBg.addColorStop(1, player.color2 || player.color);
+        ctxCarnet.fillStyle = grdBg;
+        ctxCarnet.fillRect(0, 0, cw, ch);
+        
+        // Textura sutil
+        ctxCarnet.fillStyle = "rgba(0,0,0,0.2)";
+        ctxCarnet.fillRect(0, 0, cw, ch);
+    } else {
+        ctxCarnet.fillStyle = "#111";
+        ctxCarnet.fillRect(0, 0, cw, ch);
+    }
     
     // Jugador con Zoom (Smart Crop)
-    const cScale = CONFIG.carnetWidth / carnetCrop.width;
-    ctxCarnet.drawImage(carnetCrop, 0, 0, carnetCrop.width, carnetCrop.height, 0, 0, CONFIG.carnetWidth, carnetCrop.height * cScale);
+    const cScale = cw / carnetCrop.width;
+    ctxCarnet.drawImage(carnetCrop, 0, 0, carnetCrop.width, carnetCrop.height, 0, 0, cw, carnetCrop.height * cScale);
     
+    // Barra lateral con degradado
+    const grdSide = ctxCarnet.createLinearGradient(0, 0, 0, ch);
+    grdSide.addColorStop(0, player.color2 || player.color);
+    grdSide.addColorStop(1, player.color);
+    ctxCarnet.fillStyle = grdSide;
+    ctxCarnet.fillRect(0, 0, 30, ch);
+
     drawCarnetOverlay(ctxCarnet, player);
 }
 
@@ -669,6 +731,46 @@ function drawSportsTicker(ctx, player) {
     ctx.font = "700 35px Outfit";
     ctx.fillStyle = "rgba(255,255,255,0.5)";
     ctx.fillText(player.team.toUpperCase(), 1780, bY + 75);
+}
+
+async function drawMatchInfo(ctx, teamA, teamB) {
+    const stage = document.getElementById('matchStage').value;
+    const date = document.getElementById('matchDate').value || new Date().toLocaleDateString();
+    
+    const x = 80;
+    const y = 80;
+    const sSize = 65;
+    
+    ctx.save();
+    // Filtro para poner escudos en blanco (Ghost look)
+    ctx.filter = "brightness(0) invert(1)";
+    
+    if (teamA.shield) {
+        const imgA = new Image();
+        imgA.src = teamA.shield;
+        imgA.crossOrigin = "anonymous";
+        await new Promise(r => imgA.onload = r);
+        ctx.drawImage(imgA, x, y, sSize, sSize);
+    }
+    
+    if (teamB.shield) {
+        const imgB = new Image();
+        imgB.src = teamB.shield;
+        imgB.crossOrigin = "anonymous";
+        await new Promise(r => imgB.onload = r);
+        ctx.drawImage(imgB, x + sSize + 15, y, sSize, sSize);
+    }
+    ctx.restore();
+    
+    // Texto Info
+    ctx.fillStyle = "white";
+    ctx.textAlign = "left";
+    ctx.font = "900 20px Outfit";
+    ctx.fillText(stage, x, y + sSize + 30);
+    
+    ctx.font = "400 16px Outfit";
+    ctx.fillStyle = "rgba(255,255,255,0.7)";
+    ctx.fillText(date, x, y + sSize + 55);
 }
 
 function updateStep(num, text) {

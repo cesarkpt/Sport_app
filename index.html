@@ -94,7 +94,7 @@
                                     <option value="POR">POR</option>
                                     <option value="DEF">DEF</option>
                                     <option value="VOL">VOL</option>
-                                    <option value="ATK">ATK</option>
+                                    <option value="DEL">DEL</option>
                                 </select>
                                 <div class="captain-toggle">
                                     <input type="checkbox" id="isCaptain">
@@ -118,6 +118,30 @@
                         <input type="checkbox" id="bgToggle" checked>
                         <span class="slider round"></span>
                     </label>
+                </div>
+            </section>
+
+            <!-- Módulo de Partido (Match Info) -->
+            <section class="match-info-strip">
+                <div class="match-card">
+                    <div class="match-selectors">
+                        <select id="matchTeamA" class="match-select">
+                            <option value="">EQUIPO A</option>
+                        </select>
+                        <span class="vs-text">VS</span>
+                        <select id="matchTeamB" class="match-select">
+                            <option value="">EQUIPO B</option>
+                        </select>
+                    </div>
+                    <div class="match-meta">
+                        <select id="matchStage" class="match-select-small">
+                            <option value="APERTURA">APERTURA</option>
+                            <option value="CUADRANGULAR">CUADRANGULAR</option>
+                            <option value="SEMIFINAL">SEMIFINAL</option>
+                            <option value="FINAL">FINAL</option>
+                        </select>
+                        <input type="text" id="matchDate" placeholder="DD-MM-AAAA" class="match-date-input">
+                    </div>
                 </div>
             </section>
 
