@@ -67,8 +67,11 @@
                             </div>
                             <div class="shield-upload">
                                 <label>Escudo (PNG)</label>
+                                <div class="shield-preview-container">
+                                    <img id="shieldPreview" src="https://cdn-icons-png.flaticon.com/512/5351/5351333.png" alt="Preview">
+                                </div>
                                 <div class="shield-actions">
-                                    <input type="file" id="shieldInput" accept="image/*">
+                                    <input type="file" id="shieldInput" accept="image/*" onchange="previewLocalShield(this)">
                                     <button class="browse-btn" onclick="openShieldGallery()">DRIVE</button>
                                 </div>
                             </div>

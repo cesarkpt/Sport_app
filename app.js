@@ -74,6 +74,8 @@ function openTeamEditor(team) {
     document.getElementById('teamNameInput').value = team.name;
     document.getElementById('teamColor1').value = team.color1;
     document.getElementById('teamColor2').value = team.color2;
+    document.getElementById('teamEditor')._selectedShield = team.shield;
+    document.getElementById('shieldPreview').src = team.shield || 'https://cdn-icons-png.flaticon.com/512/5351/5351333.png';
     renderRosterList(team.roster);
 }
 
@@ -125,7 +127,7 @@ async function saveTeam() {
         color1: document.getElementById('teamColor1').value,
         color2: document.getElementById('teamColor2').value,
         roster: document.getElementById('teamEditor')._tempRoster || (allTeams[editingTeamId] ? allTeams[editingTeamId].roster : {}),
-        shield: allTeams[editingTeamId] ? allTeams[editingTeamId].shield : null
+        shield: document.getElementById('teamEditor')._selectedShield
     };
 
     const shieldInput = document.getElementById('shieldInput');
@@ -632,20 +634,34 @@ function handleShieldError(err) {
 }
 
 async function selectShield(fileId) {
-    // Generar la URL de alta resolución para el canvas
     const highResUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
     
-    // Intentar convertir a Base64 para guardarlo en localStorage
-    // (Nota: Esto puede dar CORS si se corre localmente, pero en GAS funciona mejor)
+    // Mostrar feedback de carga
+    const grid = document.getElementById('shieldGrid');
+    const oldContent = grid.innerHTML;
+    grid.innerHTML = '<p class="loading-text">Procesando escudo...</p>';
+
     try {
         const base64 = await urlToBase64(highResUrl);
-        currentTeam.shield = base64;
+        document.getElementById('teamEditor')._selectedShield = base64;
+        document.getElementById('shieldPreview').src = base64;
+        
+        alert("Escudo seleccionado ✅");
+        closeShieldGallery();
     } catch(e) {
-        currentTeam.shield = highResUrl;
+        document.getElementById('teamEditor')._selectedShield = highResUrl;
+        document.getElementById('shieldPreview').src = highResUrl;
+        alert("Escudo vinculado (URL) ✅");
+        closeShieldGallery();
     }
-    
-    alert("Escudo seleccionado correctamente.");
-    closeShieldGallery();
+}
+
+async function previewLocalShield(input) {
+    if (input.files && input.files[0]) {
+        const base64 = await imageToBase64(input.files[0]);
+        document.getElementById('teamEditor')._selectedShield = base64;
+        document.getElementById('shieldPreview').src = base64;
+    }
 }
 
 async function urlToBase64(url) {
