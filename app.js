@@ -1258,92 +1258,79 @@ function drawPerimeterShadow(ctx, w, h) {
         ctx.fillStyle = grdBot;
         ctx.fillRect(0, h - edgeSize, w, edgeSize);
 
-        ctx.restore();
-    }
+    ctx.restore();
+}
 
-    // --- CARRUSEL INSTAGRAM EQUIPO (VERSION PESTAÑA) ---
-    let carouselState = { img: null, x: 0, y: 0, scale: 1, rotate: 0, isDragging: false, startX: 0, startY: 0 };
+// --- CARRUSEL INSTAGRAM EQUIPO (VERSION PESTAÑA) ---
+let carouselState = { img: null, x: 0, y: 0, scale: 1, rotate: 0, isDragging: false, startX: 0, startY: 0 };
 
-    async function initCarouselWithPhoto(img) {
-        if (!img) return;
-        carouselState.img = img;
-        const viewImg = document.getElementById('tabCarouselImg');
-        viewImg.src = img.src;
+async function initCarouselWithPhoto(img) {
+    if (!img) return;
+    carouselState.img = img;
+    const viewImg = document.getElementById('tabCarouselImg');
+    if (viewImg) viewImg.src = img.src;
+    const preview = document.getElementById('tabCarouselPreview');
+    if (preview) preview.classList.add('hidden');
+    setTimeout(() => {
+        resetCarouselPosition();
+        setupCarouselEvents();
+    }, 100);
+}
 
-        // Resetear área
-        document.getElementById('tabCarouselPreview').classList.add('hidden');
-        
-        // Inicializar posición después de un breve delay para asegurar que el DOM responda
-        setTimeout(() => {
-            resetCarouselPosition();
-            setupCarouselEvents();
-        }, 100);
-    }
-
-    function setupCarouselEvents() {
-        const container = document.getElementById('tabCarouselContainer');
-        
-        container.onmousedown = (e) => {
-            carouselState.isDragging = true;
-            carouselState.startX = e.clientX - carouselState.x;
-            carouselState.startY = e.clientY - carouselState.y;
-        };
-        
-        window.onmousemove = (e) => {
-            if (!carouselState.isDragging) return;
-            carouselState.x = e.clientX - carouselState.startX;
-            carouselState.y = e.clientY - carouselState.startY;
-            updateCarouselImg();
-        };
-        
-        window.onmouseup = () => carouselState.isDragging = false;
-
-        document.getElementById('tabCarouselZoom').oninput = (e) => {
-            const newScale = parseFloat(e.target.value);
-            const cW = container.clientWidth;
-            const cH = container.clientHeight;
-            const centerX = cW / 2;
-            const centerY = cH / 2;
-            const relX = (centerX - carouselState.x) / carouselState.scale;
-            const relY = (centerY - carouselState.y) / carouselState.scale;
-
-            carouselState.scale = newScale;
-            carouselState.x = centerX - relX * newScale;
-            carouselState.y = centerY - relY * newScale;
-            updateCarouselImg();
-        };
-
-        document.getElementById('tabCarouselRotate').oninput = (e) => {
-            carouselState.rotate = parseInt(e.target.value);
-            updateCarouselImg();
-        };
-    }
-
-    function resetCarouselPosition() {
-        if (!carouselState.img) return;
-        const container = document.getElementById('tabCarouselContainer');
-        const cW = container.clientWidth;
-        const cH = container.clientHeight;
-
-        carouselState.scale = Math.max(cW / carouselState.img.width, cH / carouselState.img.height);
-        carouselState.x = (cW - carouselState.img.width * carouselState.scale) / 2;
-        carouselState.y = (cH - carouselState.img.height * carouselState.scale) / 2;
-        carouselState.rotate = 0;
-
-        const zoomInput = document.getElementById('tabCarouselZoom');
-        if (zoomInput) zoomInput.value = carouselState.scale;
-        const rotateInput = document.getElementById('tabCarouselRotate');
-        if (rotateInput) rotateInput.value = 0;
-
+function setupCarouselEvents() {
+    const container = document.getElementById('tabCarouselContainer');
+    if (!container) return;
+    container.onmousedown = (e) => {
+        carouselState.isDragging = true;
+        carouselState.startX = e.clientX - carouselState.x;
+        carouselState.startY = e.clientY - carouselState.y;
+    };
+    window.onmousemove = (e) => {
+        if (!carouselState.isDragging) return;
+        carouselState.x = e.clientX - carouselState.startX;
+        carouselState.y = e.clientY - carouselState.startY;
         updateCarouselImg();
-    }
+    };
+    window.onmouseup = () => carouselState.isDragging = false;
+    const zoom = document.getElementById('tabCarouselZoom');
+    if (zoom) zoom.oninput = (e) => {
+        const newScale = parseFloat(e.target.value);
+        const cW = container.clientWidth, cH = container.clientHeight;
+        const relX = (cW / 2 - carouselState.x) / carouselState.scale;
+        const relY = (cH / 2 - carouselState.y) / carouselState.scale;
+        carouselState.scale = newScale;
+        carouselState.x = cW / 2 - relX * newScale;
+        carouselState.y = cH / 2 - relY * newScale;
+        updateCarouselImg();
+    };
+    const rotate = document.getElementById('tabCarouselRotate');
+    if (rotate) rotate.oninput = (e) => {
+        carouselState.rotate = parseInt(e.target.value);
+        updateCarouselImg();
+    };
+}
 
-    function updateCarouselImg() {
-        const img = document.getElementById('tabCarouselImg');
-        if (!img || !carouselState.img) return;
-        img.style.width = (carouselState.img.width * carouselState.scale) + 'px';
-        img.style.transform = `translate(${carouselState.x}px, ${carouselState.y}px) rotate(${carouselState.rotate}deg)`;
-    }
+function resetCarouselPosition() {
+    if (!carouselState.img) return;
+    const container = document.getElementById('tabCarouselContainer');
+    if (!container) return;
+    const cW = container.clientWidth, cH = container.clientHeight;
+    carouselState.scale = Math.max(cW / carouselState.img.width, cH / carouselState.img.height);
+    carouselState.x = (cW - carouselState.img.width * carouselState.scale) / 2;
+    carouselState.y = (cH - carouselState.img.height * carouselState.scale) / 2;
+    carouselState.rotate = 0;
+    const zoom = document.getElementById('tabCarouselZoom');
+    if (zoom) zoom.value = carouselState.scale;
+    const rot = document.getElementById('tabCarouselRotate');
+    if (rot) rot.value = 0;
+    updateCarouselImg();
+}
+
+function updateCarouselImg() {
+    const img = document.getElementById('tabCarouselImg');
+    if (!img || !carouselState.img) return;
+    img.style.width = (carouselState.img.width * carouselState.scale) + 'px';
+    img.style.transform = `translate(${carouselState.x}px, ${carouselState.y}px) rotate(${carouselState.rotate}deg)`;
 }
 
 async function confirmCarouselFraming() {
