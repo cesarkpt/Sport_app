@@ -818,41 +818,41 @@ function drawCarnetOverlay(ctx, player) {
         };
     } catch(e) {}
 
-    // 2. INFO PARTIDO EN CARNET (Match Shields + Info CENTRADO)
+    // 2. INFO PARTIDO EN CARNET (Match Day REDUCIDO 70%)
     if (selectedMatchTeamA && selectedMatchTeamB) {
         const teamA = allTeams[selectedMatchTeamA];
         const teamB = allTeams[selectedMatchTeamB];
         const stage = document.getElementById('matchStage').value;
         const date = document.getElementById('matchDate').value || "";
         
-        const ms = 65;
-        const totalW = (ms * 2) + 15;
-        const startX = w - totalW - 25; // Margen derecho
-        const my = 25;
+        const ms = 40; // Mucho más pequeño
+        const totalW = (ms * 2) + 10;
+        const startX = w - totalW - 20; 
+        const my = 20;
 
         const loadAndDrawMatch = async () => {
             try {
                 const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
                 drawImageProp(ctx, imgA, startX, my, ms, ms);
                 const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-                drawImageProp(ctx, imgB, startX + ms + 15, my, ms, ms);
+                drawImageProp(ctx, imgB, startX + ms + 10, my, ms, ms);
             } catch(e) {}
         };
         loadAndDrawMatch();
         
-        ctx.fillStyle = "rgba(255,255,255,0.9)";
+        ctx.fillStyle = "rgba(255,255,255,0.8)";
         ctx.textAlign = "center";
         const centerX = startX + totalW/2;
-        ctx.font = "900 18px Outfit";
-        ctx.fillText(stage, centerX, my + ms + 30);
-        ctx.font = "400 14px Outfit";
-        ctx.fillText(date, centerX, my + ms + 50);
+        ctx.font = "900 12px Outfit";
+        ctx.fillText(stage, centerX, my + ms + 15);
+        ctx.font = "400 10px Outfit";
+        ctx.fillText(date, centerX, my + ms + 28);
     }
 
-    // 3. NÚMERO GIGANTE AL FONDO
+    // 3. NÚMERO GIGANTE AL FONDO (Opacidad 45%)
     ctx.save();
     ctx.textAlign = "center";
-    ctx.fillStyle = "rgba(255,255,255,0.12)"; 
+    ctx.fillStyle = "rgba(255,255,255,0.45)"; 
     ctx.font = "italic 900 500px Outfit";
     ctx.fillText(player.number, w/2, h/2 + 150);
     ctx.restore();
@@ -869,20 +869,20 @@ function drawCarnetOverlay(ctx, player) {
     const firstName = nameParts[0] || "";
     const lastName = nameParts.slice(1).join(" ") || "";
 
-    // 4. ESCUDO DEL EQUIPO 
+    // 4. ESCUDO DEL EQUIPO (Correr 10px izq, bajar 5px)
     let textX = 140;
     const drawTeamShield = async () => {
         if (player.shield) {
             try {
                 const sImg = await loadImg(player.shield);
-                ctx.drawImage(sImg, 20, h - 155, 100, 100);
+                ctx.drawImage(sImg, 10, h - 150, 100, 100); // x=10 (antes 20), y=h-150 (antes h-155)
             } catch(e) {}
         }
     };
     drawTeamShield();
 
-    // 5. NOMBRE DEL JUGADOR
-    const finalX = textX - 10;
+    // 5. NOMBRE DEL JUGADOR (Correr 10px izq)
+    const finalX = 130 - 10; // (Antes 140-10)
     ctx.textAlign = "left";
     ctx.save();
     ctx.shadowBlur = 15;
@@ -896,15 +896,6 @@ function drawCarnetOverlay(ctx, player) {
     ctx.font = "900 65px Outfit";
     ctx.fillText(lastName.toUpperCase(), finalX, h - 50);
     ctx.restore();
-    
-    // 6. NÚMERO DE JUGADOR (CON DEGRADADO DE LA BARRA)
-    const grdNum = ctx.createLinearGradient(w - 150, h - 150, w, h - 50);
-    grdNum.addColorStop(0, player.color);
-    grdNum.addColorStop(1, player.color2 || player.color);
-    ctx.fillStyle = grdNum;
-    ctx.font = "italic 900 160px Outfit";
-    ctx.textAlign = "right";
-    ctx.fillText(player.number, w - 30, h - 50);
 
     // 7. Icono Capitán (C)
     if (player.name.includes("(C)")) {
@@ -921,13 +912,14 @@ function drawCarnetOverlay(ctx, player) {
     }
 }
 
+
 async function drawBackground(ctx, color, color2) {
     // 1. Imagen de Estadio (AL FONDO)
     try {
         const bgImg = await loadImg("https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=1920&auto=format&fit=crop");
         ctx.save();
         ctx.filter = "blur(15px)"; 
-        ctx.globalAlpha = 0.5; // Un poco más de presencia inicial
+        ctx.globalAlpha = 0.4; // Opacidad al 40% como pidió el usuario
         ctx.drawImage(bgImg, 0, 0, 1920, 1080);
         ctx.restore();
     } catch(e) {
@@ -937,13 +929,13 @@ async function drawBackground(ctx, color, color2) {
     
     // 2. Overlay de color del equipo (Vignette) - SOBRE LA IMAGEN
     const grd = ctx.createRadialGradient(960, 540, 100, 960, 540, 1200);
-    grd.addColorStop(0, "rgba(10, 14, 20, 0.4)");
+    grd.addColorStop(0, "rgba(0, 0, 0, 0.4)");
     grd.addColorStop(1, (color2 || color) + "55"); 
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, 1920, 1080);
     
     // 3. Vidrio Oscuro (Smoked Glass Final)
-    ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
+    ctx.fillStyle = "rgba(0, 0, 0, 0.7)"; // Más oscuro para que se vea el efecto cristal
     ctx.fillRect(0, 0, 1920, 1080);
 }
 
@@ -1004,10 +996,10 @@ async function drawMatchInfo(ctx, teamA, teamB) {
     const stage = document.getElementById('matchStage').value;
     const date = document.getElementById('matchDate').value || new Date().toLocaleDateString();
     
-    const sSize = 110; 
+    const sSize = 100; 
     const totalW = (sSize * 2) + 20;
-    const x = CONFIG.outputWidth - 20 - totalW; // 20px de margen derecho
-    const y = 80;
+    const x = CONFIG.outputWidth - 40 - totalW; // Alineado a la derecha con margen
+    const y = 60; // Alineado con el logo superior
     
     ctx.save();
     ctx.globalAlpha = 1.0;
@@ -1032,12 +1024,12 @@ async function drawMatchInfo(ctx, teamA, teamB) {
     ctx.textAlign = "center";
     const centerX = x + totalW/2;
 
-    ctx.font = "900 35px Outfit";
-    ctx.fillText(stage, centerX, y + sSize + 50);
+    ctx.font = "900 30px Outfit";
+    ctx.fillText(stage, centerX, y + sSize + 40);
     
-    ctx.font = "400 25px Outfit";
+    ctx.font = "400 22px Outfit";
     ctx.fillStyle = "rgba(255,255,255,0.8)";
-    ctx.fillText(date, centerX, y + sSize + 85);
+    ctx.fillText(date, centerX, y + sSize + 70);
 }
 
 function updateStep(num, text) {
