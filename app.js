@@ -511,6 +511,11 @@ async function processPlayerPhoto(processingImg, originalImg) {
         updateStep(3, "Creando arte HD...");
         lastProcessedPlayerImg = finalPlayerImg;
         lastProcessedCropHD = finalData.cropHD;
+        
+        // Auto-pasar al Carrusel y Arte
+        initCarouselWithPhoto(finalPlayerImg);
+        generateArteLayouts(finalPlayerImg, finalData.data, finalData.cropHD);
+
         await generateLayouts(finalPlayerImg, finalData.data, shouldRemoveBg, finalData.crop, finalData.cropHD);
 
         // --- 4. Guardado en Drive (MOVIDO AL BOTÓN DE DESCARGA) ---
@@ -1244,153 +1249,81 @@ function drawPerimeterShadow(ctx, w, h) {
     grdTop.addColorStop(0, "rgba(0,0,0,0.9)");
     grdTop.addColorStop(1, "transparent");
     ctx.fillStyle = grdTop;
-    ctx.fillRect(0, 0, w, edgeSize);
+        ctx.fillRect(0, 0, w, edgeSize);
 
-    // Inferior
-    const grdBot = ctx.createLinearGradient(0, h, 0, h - edgeSize);
-    grdBot.addColorStop(0, "rgba(0,0,0,0.9)");
-    grdBot.addColorStop(1, "transparent");
-    ctx.fillStyle = grdBot;
-    ctx.fillRect(0, h - edgeSize, w, edgeSize);
+        // Inferior
+        const grdBot = ctx.createLinearGradient(0, h, 0, h - edgeSize);
+        grdBot.addColorStop(0, "rgba(0,0,0,0.9)");
+        grdBot.addColorStop(1, "transparent");
+        ctx.fillStyle = grdBot;
+        ctx.fillRect(0, h - edgeSize, w, edgeSize);
 
-    ctx.restore();
-}
+        ctx.restore();
+    }
 
-// --- CARRUSEL INSTAGRAM EQUIPO (CON ENCUADRE Y VIÑETAS) ---
-let carouselState = { img: null, x: 0, y: 0, scale: 1, rotate: 0, isDragging: false, startX: 0, startY: 0 };
+    // --- CARRUSEL INSTAGRAM EQUIPO (VERSION PESTAÑA) ---
+    let carouselState = { img: null, x: 0, y: 0, scale: 1, rotate: 0, isDragging: false, startX: 0, startY: 0 };
 
-function openTeamCarouselModal() {
-    document.getElementById('teamCarouselModal').classList.remove('hidden');
-}
+    async function initCarouselWithPhoto(img) {
+        if (!img) return;
+        carouselState.img = img;
+        const viewImg = document.getElementById('tabCarouselImg');
+        viewImg.src = img.src;
 
-function closeTeamCarouselModal() {
-    document.getElementById('teamCarouselModal').classList.add('hidden');
-    // Reset
-    document.getElementById('carouselUploadArea').classList.remove('hidden');
-    document.getElementById('carouselEditor').classList.add('hidden');
-    document.getElementById('carouselPreview').classList.add('hidden');
-    document.getElementById('carouselFooter').classList.add('hidden');
-}
+        // Resetear área
+        document.getElementById('tabCarouselPreview').classList.add('hidden');
+        
+        // Inicializar posición después de un breve delay para asegurar que el DOM responda
+        setTimeout(() => {
+            resetCarouselPosition();
+            setupCarouselEvents();
+        }, 100);
+    }
 
-async function initCarouselCropper(input) {
-    const file = input.files[0];
-    if (!file) return;
+    function setupCarouselEvents() {
+        const container = document.getElementById('tabCarouselContainer');
+        
+        container.onmousedown = (e) => {
+            carouselState.isDragging = true;
+            carouselState.startX = e.clientX - carouselState.x;
+            carouselState.startY = e.clientY - carouselState.y;
+        };
+        
+        window.onmousemove = (e) => {
+            if (!carouselState.isDragging) return;
+            carouselState.x = e.clientX - carouselState.startX;
+            carouselState.y = e.clientY - carouselState.startY;
+            updateCarouselImg();
+        };
+        
+        window.onmouseup = () => carouselState.isDragging = false;
 
-    const img = await loadImg(URL.createObjectURL(file));
-    carouselState.img = img;
+        document.getElementById('tabCarouselZoom').oninput = (e) => {
+            const newScale = parseFloat(e.target.value);
+            const cW = container.clientWidth;
+            const cH = container.clientHeight;
+            const centerX = cW / 2;
+            const centerY = cH / 2;
+            const relX = (centerX - carouselState.x) / carouselState.scale;
+            const relY = (centerY - carouselState.y) / carouselState.scale;
 
-    const viewImg = document.getElementById('carouselImg');
-    viewImg.src = img.src;
+            carouselState.scale = newScale;
+            carouselState.x = centerX - relX * newScale;
+            carouselState.y = centerY - relY * newScale;
+            updateCarouselImg();
+        };
 
-    document.getElementById('carouselUploadArea').classList.add('hidden');
-    document.getElementById('carouselEditor').classList.remove('hidden');
+        document.getElementById('tabCarouselRotate').oninput = (e) => {
+            carouselState.rotate = parseInt(e.target.value);
+            updateCarouselImg();
+        };
+    }
 
-    // Inicializar posición
-    resetCarouselPosition();
-
-    // Eventos de Arrastre
-    const container = document.getElementById('carouselContainer');
-    container.onmousedown = (e) => {
-        carouselState.isDragging = true;
-        carouselState.startX = e.clientX - carouselState.x;
-        carouselState.startY = e.clientY - carouselState.y;
-    };
-    window.onmousemove = (e) => {
-        if (!carouselState.isDragging) return;
-        carouselState.x = e.clientX - carouselState.startX;
-        carouselState.y = e.clientY - carouselState.startY;
-        updateCarouselImg();
-    };
-    window.onmouseup = () => carouselState.isDragging = false;
-
-    document.getElementById('carouselZoom').oninput = (e) => {
-        const newScale = parseFloat(e.target.value);
+    function resetCarouselPosition() {
+        if (!carouselState.img) return;
+        const container = document.getElementById('tabCarouselContainer');
         const cW = container.clientWidth;
         const cH = container.clientHeight;
-        const centerX = cW / 2;
-        const centerY = cH / 2;
-        const relX = (centerX - carouselState.x) / carouselState.scale;
-        const relY = (centerY - carouselState.y) / carouselState.scale;
-
-        carouselState.scale = newScale;
-        carouselState.x = centerX - relX * newScale;
-        carouselState.y = centerY - relY * newScale;
-        updateCarouselImg();
-    };
-
-    document.getElementById('carouselRotate').oninput = (e) => {
-        carouselState.rotate = parseInt(e.target.value);
-        updateCarouselImg();
-    };
-}
-
-function resetCarouselPosition() {
-    if (!carouselState.img) return;
-    const container = document.getElementById('carouselContainer');
-    const cW = container.clientWidth;
-    const cH = container.clientHeight;
-
-    carouselState.scale = Math.max(cW / carouselState.img.width, cH / carouselState.img.height);
-    carouselState.x = (cW - carouselState.img.width * carouselState.scale) / 2;
-    carouselState.y = (cH - carouselState.img.height * carouselState.scale) / 2;
-    carouselState.rotate = 0;
-
-    const zoomInput = document.getElementById('carouselZoom');
-    if (zoomInput) zoomInput.value = carouselState.scale;
-    const rotateInput = document.getElementById('carouselRotate');
-    if (rotateInput) rotateInput.value = 0;
-
-    updateCarouselImg();
-}
-
-function updateCarouselImg() {
-    const img = document.getElementById('carouselImg');
-    img.style.width = (carouselState.img.width * carouselState.scale) + 'px';
-    img.style.transform = `translate(${carouselState.x}px, ${carouselState.y}px) rotate(${carouselState.rotate}deg)`;
-}
-
-async function confirmCarouselFraming() {
-    const size = 1080;
-    const c1 = document.getElementById('carouselCanvas1');
-    const c2 = document.getElementById('carouselCanvas2');
-    c1.width = size; c1.height = size;
-    c2.width = size; c2.height = size;
-
-    const ctx1 = c1.getContext('2d');
-    const ctx2 = c2.getContext('2d');
-
-    // Calcular coordenadas reales basadas en el contenedor (que es 2:1)
-    const container = document.getElementById('carouselContainer');
-    const renderScale = (size * 2) / container.clientWidth;
-
-    const realX = carouselState.x * renderScale;
-    const realY = carouselState.y * renderScale;
-    const realW = carouselState.img.width * carouselState.scale * renderScale;
-    const realH = carouselState.img.height * carouselState.scale * renderScale;
-
-    // Dibujar en Partes
-    [ctx1, ctx2].forEach((ctx, i) => {
-        ctx.fillStyle = "#000";
-        ctx.fillRect(0, 0, size, size);
-
-        ctx.save();
-        // Aplicar transformación completa (Traslación + Rotación)
-        // El punto de anclaje para la rotación debe ser el centro del panorama
-        const totalW = size * 2;
-        ctx.translate(realX - (i * size) + realW / 2, realY + realH / 2);
-        ctx.rotate(carouselState.rotate * Math.PI / 180);
-        ctx.drawImage(carouselState.img, -realW / 2, -realH / 2, realW, realH);
-        ctx.restore();
-
-        // --- VIÑETAS PRO (4 Lados) ---
-        drawPerimeterShadow(ctx, size, size);
-    });
-
-    // Branding Slide 1: Logo (Arriba Izquierda)
-    try {
-        const logo = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
-        drawImageProp(ctx1, logo, 80, 80, 300, 140);
-    } catch (e) { }
 
     // INFO PARTIDO (Mover a la Parte 2 - Derecha)
     if (selectedMatchTeamA && selectedMatchTeamB) {
@@ -2051,4 +1984,52 @@ async function generateMatchPostals() {
     } catch (e) {
         console.error("Error en generateMatchPostals:", e);
     }
+}
+
+async function generateArteLayouts(playerImg, data, crop) {
+    const team = allTeams[data.teamId];
+    if (!team || !playerImg) return;
+
+    const generateArte = async (canvasId, width, height) => {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = width;
+        canvas.height = height;
+
+        // 1. Fondo Degradado Pro
+        const grd = ctx.createLinearGradient(0, 0, width, height);
+        grd.addColorStop(0, team.color1 || "#00ff88");
+        grd.addColorStop(1, team.color2 || "#00d4ff");
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, width, height);
+
+        // 2. Jugador
+        const scale = Math.max(width / crop.w, height / crop.h) * 1.1;
+        const w = crop.w * scale;
+        const h = crop.h * scale;
+        const x = (width - w) / 2;
+        const y = (height - h) / 1.5; // Un poco bajado para dar aire arriba
+
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,0.5)";
+        ctx.shadowBlur = 50;
+        ctx.drawImage(playerImg, crop.x, crop.y, crop.w, crop.h, x, y, w, h);
+        ctx.restore();
+
+        // 3. Escudo Grande y Sutil al fondo (opcional, pero da estilo)
+        try {
+            const shield = await loadImg(team.shieldWhite || team.shield);
+            ctx.save();
+            ctx.globalAlpha = 0.15;
+            drawImageProp(ctx, shield, width * 0.1, height * 0.1, width * 0.8, width * 0.8);
+            ctx.restore();
+        } catch(e) {}
+
+        // 4. Viñetas
+        drawPerimeterShadow(ctx, width, height);
+    };
+
+    await generateArte('arteCanvasSquare', 1080, 1080);
+    await generateArte('arteCanvasVertical', 1080, 1920);
 }

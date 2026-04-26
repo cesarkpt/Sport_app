@@ -273,6 +273,8 @@
                 <div class="result-nav">
                     <button class="nav-tab active" onclick="showResultTab('previas')">PREVIAS</button>
                     <button class="nav-tab" onclick="showResultTab('postales')">POSTALES</button>
+                    <button class="nav-tab" onclick="showResultTab('carousel')">CARRUSEL</button>
+                    <button class="nav-tab" onclick="showResultTab('arte')">ARTE</button>
                 </div>
 
                 <div id="previasTab" class="tab-content">
@@ -349,7 +351,74 @@
                         </div>
                     </div>
                 </div>
-                
+
+                <div id="carouselTab" class="tab-content hidden">
+                    <div class="result-card">
+                        <h3>Editor de Carrusel (Instagram)</h3>
+                        
+                        <div id="tabCarouselEditor" class="carousel-editor-area">
+                            <div class="carousel-cropper-wrapper">
+                                <div class="carousel-guidelines">
+                                    <div class="center-line"><span>CORTE</span></div>
+                                    <div class="ticker-guide"><span>TICKER EQUIPO</span></div>
+                                </div>
+                                <div id="tabCarouselContainer" class="carousel-container" style="height: 400px; background: #000; overflow: hidden; position: relative; border-radius: 15px;">
+                                    <img id="tabCarouselImg" src="" style="cursor: move; position: absolute; max-width: none;">
+                                </div>
+                            </div>
+                            
+                            <div class="zoom-control" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+                                <div style="display: flex; gap: 15px; align-items: center;">
+                                    <div style="flex: 1;">
+                                        <label style="font-size: 0.6rem; opacity: 0.7;">ZOOM</label>
+                                        <input type="range" id="tabCarouselZoom" min="0.1" max="2" step="0.01" value="1">
+                                    </div>
+                                    <button class="btn-secondary" onclick="resetCarouselPosition()" style="padding: 5px 15px; font-size: 0.6rem;">RECENTRAR</button>
+                                </div>
+                                <div style="flex: 1;">
+                                    <label style="font-size: 0.6rem; opacity: 0.7;">ROTACIÓN</label>
+                                    <input type="range" id="tabCarouselRotate" min="-30" max="30" step="1" value="0">
+                                </div>
+                            </div>
+                            <button class="btn-primary" onclick="confirmCarouselFraming()" style="margin-top: 20px; width: 100%;">GENERAR VISTA PREVIA</button>
+                        </div>
+
+                        <div id="tabCarouselPreview" class="carousel-preview-grid hidden" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
+                            <div class="result-card" style="padding: 10px; background: rgba(0,0,0,0.3);">
+                                <h5 style="font-size: 0.6rem; opacity: 0.5; margin-bottom: 8px;">PARTE 1 (IZQUIERDA)</h5>
+                                <div class="canvas-container">
+                                    <canvas id="tabCarouselCanvas1"></canvas>
+                                </div>
+                            </div>
+                            <div class="result-card" style="padding: 10px; background: rgba(0,0,0,0.3);">
+                                <h5 style="font-size: 0.6rem; opacity: 0.5; margin-bottom: 8px;">PARTE 2 (DERECHA)</h5>
+                                <div class="canvas-container">
+                                    <canvas id="tabCarouselCanvas2"></canvas>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-secondary" onclick="downloadImage('tabCarouselCanvas1', 'carrusel_p1')" style="flex: 1;">DESCARGAR P1</button>
+                                <button class="btn-secondary" onclick="downloadImage('tabCarouselCanvas2', 'carrusel_p2')" style="flex: 1;">DESCARGAR P2</button>
+                            </div>
+                <div id="arteTab" class="tab-content hidden">
+                    <div class="result-grid" style="display: flex; flex-direction: column; gap: 20px;">
+                        <div class="result-card">
+                            <h3>Fondo Cuadrado (1:1)</h3>
+                            <div class="canvas-container" style="max-width: 500px; margin: 0 auto;">
+                                <canvas id="arteCanvasSquare"></canvas>
+                            </div>
+                            <button class="btn-secondary" onclick="downloadImage('arteCanvasSquare', 'arte_1x1')" style="width: 100%; margin-top: 10px;">DESCARGAR 1:1</button>
+                        </div>
+                        <div class="result-card">
+                            <h3>Fondo Vertical (Story)</h3>
+                            <div class="canvas-container carnet-result" style="max-width: 400px; margin: 0 auto;">
+                                <canvas id="arteCanvasVertical"></canvas>
+                            </div>
+                            <button class="btn-secondary" onclick="downloadImage('arteCanvasVertical', 'arte_vertical')" style="width: 100%; margin-top: 10px;">DESCARGAR STORY</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="final-actions">
                     <button class="btn-primary" onclick="resetApp()" style="background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); border: none; font-weight: 900;">OTRO JUGADOR 🔄</button>
                 </div>
@@ -399,63 +468,8 @@
                 <div class="update-item">
                     <span class="update-ver">v1.0</span>
                     <p>Diseño Mobile-First, soporte PWA y optimización de carga.</p>
+        <!-- Modal Carrusel Instagram ELIMINADO - Ahora es una pestaña -->           </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Carrusel Instagram -->
-    <div id="teamCarouselModal" class="modal hidden">
-        <div class="modal-content" style="max-width: 900px;">
-            <div class="modal-header">
-                <h3>CARRUSEL DE EQUIPO (INSTAGRAM)</h3>
-                <button onclick="closeTeamCarouselModal()" class="close-btn">&times;</button>
-            </div>
-            <div class="carousel-setup">
-                <div id="carouselUploadArea" class="upload-box" onclick="document.getElementById('teamPhotoInput').click()">
-                    <p>Subir Foto de Equipo (Panorámica)</p>
-                    <input type="file" id="teamPhotoInput" accept="image/*" style="display:none" onchange="initCarouselCropper(this)">
-                </div>
-                
-                <div id="carouselEditor" class="carousel-editor-area hidden">
-                    <div class="carousel-cropper-wrapper">
-                        <div class="carousel-guidelines">
-                            <div class="center-line"><span>CORTE</span></div>
-                            <div class="ticker-guide"><span>TICKER EQUIPO</span></div>
-                        </div>
-                        <div id="carouselContainer" class="carousel-container">
-                            <img id="carouselImg" src="" style="cursor: move;">
-                        </div>
-                    </div>
-                    <div class="zoom-control" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
-                        <div style="display: flex; gap: 15px; align-items: center;">
-                            <div style="flex: 1;">
-                                <label>ZOOM PANORÁMICO</label>
-                                <input type="range" id="carouselZoom" min="0.1" max="2" step="0.01" value="1">
-                            </div>
-                            <button class="update-btn" onclick="resetCarouselPosition()" style="padding: 5px 15px;">RECENTRAR</button>
-                        </div>
-                        <div style="flex: 1;">
-                            <label>ROTACIÓN</label>
-                            <input type="range" id="carouselRotate" min="-30" max="30" step="1" value="0">
-                        </div>
-                    </div>
-                    <button class="btn-primary" onclick="confirmCarouselFraming()" style="margin-top: 10px;">GENERAR VISTA PREVIA</button>
-                </div>
-
-                <div id="carouselPreview" class="carousel-preview-grid hidden">
-                    <div class="preview-part">
-                        <span>Parte 1 (Izquierda)</span>
-                        <canvas id="carouselCanvas1"></canvas>
-                    </div>
-                    <div class="preview-part">
-                        <span>Parte 2 (Derecha)</span>
-                        <canvas id="carouselCanvas2"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer hidden" id="carouselFooter">
-                <button class="btn-primary" onclick="downloadCarousel()">DESCARGAR AMBAS IMÁGENES</button>
             </div>
         </div>
     </div>
