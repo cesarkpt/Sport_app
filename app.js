@@ -1192,7 +1192,7 @@ function initMatchSettings() {
     updateMatchPreview();
     
     // Listeners para auto-guardado
-    document.getElementById('matchStage').addEventListener('input', saveMatchSettings);
+    document.getElementById('matchStage').addEventListener('change', saveMatchSettings);
     document.getElementById('matchDate').addEventListener('input', saveMatchSettings);
 }
 
@@ -1215,12 +1215,16 @@ function updateMatchPreview() {
     const teamB = allTeams[selectedMatchTeamB];
     const stage = document.getElementById('matchStage').value;
     
+    // Usar escudos blancos si existen para el preview
+    const sA = teamA.shieldWhite || teamA.shield;
+    const sB = teamB.shieldWhite || teamB.shield;
+    
     preview.innerHTML = `
         <div class="preview-text">
-            <img src="${teamA.shield}" class="preview-shield">
+            <img src="${sA}" class="preview-shield">
             <span>VS</span>
-            <img src="${teamB.shield}" class="preview-shield">
-            <span style="margin-left:5px; opacity:0.5; font-size:0.6rem">| ${stage}</span>
+            <img src="${sB}" class="preview-shield">
+            <span style="margin-left:5px; opacity:0.6; font-size:0.65rem; color:var(--primary)">| ${stage}</span>
         </div>
     `;
 }
