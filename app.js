@@ -42,6 +42,8 @@ function toggleTeamManager() {
 }
 
 async function syncWithCloud() {
+    alert("🔄 Iniciando sincronización... Por favor, no cierres esta ventana.");
+    
     const btn = document.getElementById('btnSyncCloud') || document.querySelector('button[onclick*="syncWithCloud"]');
     const originalText = btn ? btn.innerHTML : "NUBE 🔄";
     
@@ -51,41 +53,52 @@ async function syncWithCloud() {
     }
 
     try {
-        console.log("Iniciando sincronización con la nube...");
+        console.log("--- DEBUG SYNC START ---");
         let result;
         
-        // Priorizar entorno Google Apps Script
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
+        // 1. Verificar si estamos en entorno Google
+        const isGoogleEnv = (typeof google !== 'undefined' && google.script && google.script.run);
+        console.log("¿Entorno Google detectado?:", isGoogleEnv);
+
+        if (isGoogleEnv) {
+            console.log("Llamando a google.script.run.getAllTeamsData()...");
             result = await new Promise((resolve, reject) => {
                 google.script.run
-                    .withSuccessHandler(res => resolve(res))
-                    .withFailureHandler(err => reject(err))
+                    .withSuccessHandler(res => {
+                        console.log("Respuesta recibida de GAS:", res);
+                        resolve(res);
+                    })
+                    .withFailureHandler(err => {
+                        console.error("Error en GAS:", err);
+                        reject(err);
+                    })
                     .getAllTeamsData();
             });
-        } 
-        // Fallback a Fetch API (Web App desplegada)
-        else {
+        } else {
+            console.log("Llamando a API externa via Fetch...");
             const url = `${GAS_WEB_APP_URL}?action=getAllTeamsData`;
             const resp = await fetch(url);
-            if (!resp.ok) throw new Error("Error en respuesta de red");
             result = await resp.json();
         }
 
         if (result && result.success) {
-            if (result.data && Object.keys(result.data).length > 0) {
+            const numTeams = result.data ? Object.keys(result.data).length : 0;
+            console.log("Equipos encontrados en la nube:", numTeams);
+
+            if (numTeams > 0) {
                 allTeams = result.data;
                 localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
                 renderTeamsList();
-                alert("¡Sincronización Exitosa! ✅\nLos equipos se han actualizado desde la nube.");
+                alert("✅ ÉXITO: Se han cargado " + numTeams + " equipos correctamente.");
             } else {
-                alert("La base de datos en la nube está vacía.");
+                alert("ℹ️ La nube está vacía. No hay equipos guardados todavía.");
             }
         } else {
-            throw new Error(result ? result.error : "Respuesta inválida del servidor");
+            alert("❌ EL SERVIDOR RESPONDIÓ CON ERROR:\n" + (result ? result.error : "Sin respuesta"));
         }
     } catch (e) {
-        console.error("Sync error:", e);
-        alert("FALLO DE CONEXIÓN:\n1. Verifica tu internet.\n2. Asegúrate de estar logueado en Google.\n3. El script podría estar saturado.");
+        console.error("CRITICAL SYNC ERROR:", e);
+        alert("⚠️ ERROR CRÍTICO DE CONEXIÓN:\n" + e.message + "\n\nCausas posibles:\n- No has iniciado sesión en Google.\n- No tienes permisos en la carpeta de Drive.\n- El script ha superado su cuota diaria.");
     } finally {
         if (btn) {
             btn.innerHTML = originalText;
