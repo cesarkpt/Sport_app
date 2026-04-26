@@ -1968,52 +1968,53 @@ async function generateMatchPostals() {
         ctx.save();
         ctx.drawImage(lastProcessedPlayerImg, crop.x, crop.y, crop.w, crop.h, finalX, finalY, finalW, finalH);
         drawPerimeterShadow(ctx, width, height);
-        ctx.fillStyle = "rgba(0,0,0,0.4)"; // Oscurecer un poco más
+        ctx.fillStyle = "rgba(0,0,0,0.5)"; // Más oscuro para que el texto destaque
         ctx.fillRect(0, 0, width, height);
         ctx.restore();
 
-        // 2. TEXTO
+        // 2. TEXTO - ESTILO: 80% Opacidad y Cursiva
         ctx.textAlign = "center";
-        ctx.fillStyle = "white";
         ctx.shadowColor = "black";
         ctx.shadowBlur = 20;
 
         const centerY = height / 2;
 
-        // A. Palabra Principal
-        ctx.font = "900 110px Outfit";
-        ctx.fillText(word, width / 2, centerY - 150);
+        // A. Palabra Principal (Arriba)
+        ctx.fillStyle = "rgba(255,255,255,0.8)";
+        ctx.font = "italic 900 120px Outfit";
+        ctx.fillText(word, width / 2, centerY - 280);
 
-        // B. MATCHDAY (Con Escudos)
+        // B. ESCUDOS (Grandes y en el centro)
         if (teamA && teamB) {
-            const sSize = 80;
-            const text = `${stage} • ${date}`;
-            ctx.font = "400 35px Outfit";
-            const textW = ctx.measureText(text).width;
-            const totalW = textW + (sSize * 2) + 60;
-            const startX = (width - totalW) / 2;
-            const itemY = centerY - 60;
+            const sSize = 250; // Más grandes
+            const totalShieldsW = (sSize * 2) + 100;
+            const sX = (width - totalShieldsW) / 2;
+            const sY = centerY - 200;
 
             try {
                 const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
-                drawImageProp(ctx, imgA, startX, itemY - sSize/2, sSize, sSize);
+                drawImageProp(ctx, imgA, sX, sY, sSize, sSize);
                 const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-                drawImageProp(ctx, imgB, startX + totalW - sSize, itemY - sSize/2, sSize, sSize);
+                drawImageProp(ctx, imgB, sX + sSize + 100, sY, sSize, sSize);
             } catch (e) {}
 
-            ctx.fillStyle = "rgba(255,255,255,0.9)";
-            ctx.fillText(text, width / 2, itemY + 12);
+            // C. STAGE Y FECHA (Debajo de los escudos)
+            ctx.fillStyle = "rgba(255,255,255,0.8)";
+            ctx.font = "italic 400 45px Outfit";
+            ctx.fillText(`${stage} • ${date}`, width / 2, sY + sSize + 80);
         }
 
-        // C. MARCADOR
-        ctx.font = "900 220px Outfit";
-        ctx.fillStyle = "white";
-        ctx.fillText(score, width / 2, centerY + 180);
+        // D. MARCADOR (Abajo del todo)
+        ctx.fillStyle = "rgba(255,255,255,0.8)";
+        ctx.font = "italic 900 280px Outfit";
+        ctx.fillText(score, width / 2, centerY + 380);
 
-        // D. Logo (Inferior)
+        // E. Logo (Arriba Izquierda)
         try {
             const logo = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
-            drawImageProp(ctx, logo, width / 2 - 100, height - 120, 200, 80);
+            ctx.globalAlpha = 0.6;
+            drawImageProp(ctx, logo, 60, 60, 250, 100);
+            ctx.globalAlpha = 1.0;
         } catch (e) {}
     };
 

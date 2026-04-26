@@ -315,20 +315,20 @@
                     </div>
 
                     <div id="postalResultArea" class="hidden">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="result-grid" style="display: flex; flex-direction: column; gap: 20px;">
                             <div class="result-card">
-                                <h5 style="font-size: 0.7rem; opacity: 0.6; margin-bottom: 10px;">HORIZONTAL (POST / TWITTER)</h5>
-                                <div class="canvas-container" style="aspect-ratio: 16/9; width: 100%; background: #000; border-radius: 10px; overflow: hidden;">
-                                    <canvas id="postalCanvasH" style="width: 100%; height: 100%; object-fit: contain;"></canvas>
+                                <h3>Horizontal (Post / Twitter)</h3>
+                                <div class="canvas-container main-result">
+                                    <canvas id="postalCanvasH"></canvas>
                                 </div>
-                                <button class="btn-secondary" onclick="downloadImage('postalCanvasH', 'postal_horizontal')" style="margin-top: 10px; width: 100%; font-size: 0.6rem;">DESCARGAR H 📥</button>
+                                <button class="btn-secondary" onclick="downloadImage('postalCanvasH', 'postal_horizontal')" style="width: 100%;">DESCARGAR H 📥</button>
                             </div>
                             <div class="result-card">
-                                <h5 style="font-size: 0.7rem; opacity: 0.6; margin-bottom: 10px;">VERTICAL (STORY / REEL)</h5>
-                                <div class="canvas-container" style="aspect-ratio: 9/16; width: 100%; background: #000; border-radius: 10px; overflow: hidden;">
-                                    <canvas id="postalCanvasV" style="width: 100%; height: 100%; object-fit: contain;"></canvas>
+                                <h3>Vertical (Story / Reel)</h3>
+                                <div class="canvas-container carnet-result">
+                                    <canvas id="postalCanvasV"></canvas>
                                 </div>
-                                <button class="btn-secondary" onclick="downloadImage('postalCanvasV', 'postal_vertical')" style="margin-top: 10px; width: 100%; font-size: 0.6rem;">DESCARGAR V 📥</button>
+                                <button class="btn-secondary" onclick="downloadImage('postalCanvasV', 'postal_vertical')" style="width: 100%;">DESCARGAR V 📥</button>
                             </div>
                         </div>
                     </div>
