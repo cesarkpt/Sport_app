@@ -689,9 +689,26 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
         ctxOut.drawImage(playerCanvas, (CONFIG.outputWidth - w) / 2, (CONFIG.outputHeight - h) / 2, w, h);
     }
     
-    // Jugador (Priorizar manualCropHD)
+    // Jugador (CON CÁLCULO PROPORCIONAL PARA EVITAR DISTORSIÓN)
     if (manualCropHD) {
-        ctxOut.drawImage(playerCanvas, manualCropHD.x, manualCropHD.y, manualCropHD.w, manualCropHD.h, 100, 100, CONFIG.outputWidth - 200, CONFIG.outputHeight - 200);
+        // Calcular escala para que quepa en el área central (1720x880 aprox) sin estirarse
+        const targetMaxW = CONFIG.outputWidth - 200;
+        const targetMaxH = CONFIG.outputHeight - 200;
+        const scale = Math.min(targetMaxW / manualCropHD.w, targetMaxH / manualCropHD.h);
+        const finalW = manualCropHD.w * scale;
+        const finalH = manualCropHD.h * scale;
+        
+        ctxOut.save();
+        if (shouldRemoveBg) {
+            ctxOut.shadowColor = "rgba(0,0,0,0.6)";
+            ctxOut.shadowBlur = 40;
+        }
+        // Dibujar centrado en el área
+        ctxOut.drawImage(playerCanvas, 
+            manualCropHD.x, manualCropHD.y, manualCropHD.w, manualCropHD.h, 
+            (CONFIG.outputWidth - finalW) / 2, (CONFIG.outputHeight - finalH) / 2, finalW, finalH
+        );
+        ctxOut.restore();
     } else if (shouldRemoveBg) {
         const scale = (CONFIG.outputHeight * 0.85) / playerCanvas.height;
         const pW = playerCanvas.width * scale;
@@ -867,12 +884,12 @@ async function drawCarnetOverlay(ctx, player) {
         } catch(e) {}
     }
 
-    // 5. NOMBRE DEL JUGADOR (CON SOMBRA AGRESIVA)
+    // 5. NOMBRE DEL JUGADOR (SOMBRA NARANJA)
     const finalX = 130 - 10; 
     ctx.textAlign = "left";
     ctx.save();
     ctx.shadowBlur = 20;
-    ctx.shadowColor = "rgba(0,0,0,0.9)";
+    ctx.shadowColor = "rgba(255, 152, 0, 0.9)"; // NARANJA AGRESIVO
     ctx.shadowOffsetX = 3;
     ctx.shadowOffsetY = 3;
     
@@ -1002,19 +1019,22 @@ async function drawSportsTicker(ctx, player) {
     ctx.fillText(`${player.number} | ${displayName}`, currentX, bY + 82);
     ctx.restore();
     
-    // 5.5 ICONO CAPITÁN (Estilo Carnet - Separado 15px del nombre)
+    // 5.5 ICONO CAPITÁN (Estilo Carnet - Asegurar visibilidad)
     if (player.name.includes("(C)")) {
         const nameW = ctx.measureText(`${player.number} | ${displayName}`).width;
-        const capX = currentX + nameW + 15 + 24; // 15px de margen + radio de 24
+        const capX = currentX + nameW + 25; 
         ctx.save();
+        // Sombra propia para el icono
+        ctx.shadowColor = "rgba(0,0,0,0.5)";
+        ctx.shadowBlur = 10;
         ctx.fillStyle = "#ff9800";
         ctx.beginPath();
-        ctx.arc(capX, bY + 58, 24, 0, Math.PI * 2);
+        ctx.arc(capX + 24, bY + 58, 28, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "black";
-        ctx.font = "900 28px Outfit";
+        ctx.font = "900 32px Outfit";
         ctx.textAlign = "center";
-        ctx.fillText("C", capX, bY + 68);
+        ctx.fillText("C", capX + 24, bY + 70);
         ctx.restore();
     }
 
