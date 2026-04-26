@@ -667,10 +667,15 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
         ctxOut.restore();
     }
     
-    drawSportsTicker(ctxOut, player);
-    if (player.shield) await drawShield(ctxOut, player.shield);
+    await drawSportsTicker(ctxOut, player);
+    
+    // 2.5 LOGO DE LA APP (Arriba Izquierda)
+    try {
+        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/12JwoN7xaFr9r_2UM_GUg5shi34pXSizn");
+        ctxOut.drawImage(logoImg, 100, 60, 220, 100);
+    } catch(e) {}
 
-    // --- 2.5 INFO DE PARTIDO (En blanco) ---
+    // --- 2.6 INFO DE PARTIDO ---
     if (selectedMatchTeamA && selectedMatchTeamB) {
         await drawMatchInfo(ctxOut, allTeams[selectedMatchTeamA], allTeams[selectedMatchTeamB]);
     }
@@ -768,14 +773,13 @@ function drawCarnetOverlay(ctx, player) {
     const h = CONFIG.carnetHeight;
     const w = CONFIG.carnetWidth;
     
-    // 1. ESCUDO EN EL CARNET (Fondo sutil)
-    if (player.shield) {
-        ctx.save();
-        ctx.globalAlpha = 0.15;
-        const sImg = new Image(); sImg.src = player.shield;
-        ctx.drawImage(sImg, w - 250, 40, 200, 200);
-        ctx.restore();
-    }
+    // 1. NÚMERO GIGANTE AL FONDO (Detrás del nombre)
+    ctx.save();
+    ctx.textAlign = "left";
+    ctx.fillStyle = "rgba(255,255,255,0.08)"; // Muy sutil
+    ctx.font = "900 350px Outfit";
+    ctx.fillText(player.number, 70, h - 80);
+    ctx.restore();
 
     // 2. INFO PARTIDO EN CARNET
     if (selectedMatchTeamA && selectedMatchTeamB) {
@@ -800,19 +804,29 @@ function drawCarnetOverlay(ctx, player) {
     const firstName = nameParts[0] || "";
     const lastName = nameParts.slice(1).join(" ") || "";
 
+    // 3. ESCUDO AL LADO DEL NOMBRE
+    let textX = 90;
+    if (player.shield) {
+        try {
+            const sImg = new Image(); sImg.src = player.shield;
+            ctx.drawImage(sImg, 80, h - 165, 80, 80);
+            textX = 180;
+        } catch(e) {}
+    }
+
     ctx.textAlign = "left";
     
     // Nombre (Pequeño)
     ctx.fillStyle = "rgba(255,255,255,0.7)";
     ctx.font = "400 35px Outfit";
-    ctx.fillText(firstName, 90, h - 110);
+    ctx.fillText(firstName, textX, h - 110);
     
     // Apellido (Grande)
     ctx.fillStyle = "white";
     ctx.font = "900 65px Outfit";
-    ctx.fillText(lastName.toUpperCase(), 90, h - 50);
+    ctx.fillText(lastName.toUpperCase(), textX, h - 50);
     
-    // Número a la Derecha
+    // 4. NÚMERO PRINCIPAL (DERECHA)
     ctx.fillStyle = player.color;
     ctx.font = "900 130px Outfit";
     ctx.textAlign = "right";
@@ -855,7 +869,7 @@ async function drawBackground(ctx, color) {
     ctx.fillRect(0, 0, 1920, 1080);
 }
 
-function drawSportsTicker(ctx, player) {
+async function drawSportsTicker(ctx, player) {
     const bY = 1080 - 180;
     
     // 1. Fondo Glassmorphism
@@ -870,27 +884,37 @@ function drawSportsTicker(ctx, player) {
     ctx.fillStyle = player.color2 || player.color;
     ctx.fillRect(100, bY + 60, 15, 60);
 
-    // 3. Posición Badge
-    let textX = 140;
+    let currentX = 140;
+
+    // 3. ESCUDO DEL EQUIPO (Dentro del Ticker)
+    if (player.shield) {
+        try {
+            const sImg = await loadImg(player.shield);
+            ctx.drawImage(sImg, currentX, bY + 20, 80, 80);
+            currentX += 110;
+        } catch(e) {}
+    }
+
+    // 4. Posición Badge
     if (player.position) {
         ctx.fillStyle = player.color;
         ctx.beginPath();
-        ctx.roundRect(135, bY + 35, 90, 50, 8);
+        ctx.roundRect(currentX, bY + 35, 90, 50, 8);
         ctx.fill();
         ctx.fillStyle = "#000";
         ctx.font = "900 30px Outfit";
         ctx.textAlign = "center";
-        ctx.fillText(player.position, 180, bY + 72);
-        textX = 250;
+        ctx.fillText(player.position, currentX + 45, bY + 72);
+        currentX += 110;
     }
 
-    // 4. Nombre y Número
+    // 5. Nombre y Número
     ctx.textAlign = "left";
     ctx.fillStyle = "#FFF";
     ctx.font = "900 65px Outfit";
-    ctx.fillText(`${player.number} | ${player.name}`, textX, bY + 82);
+    ctx.fillText(`${player.number} | ${player.name.replace(" (C)", "")}`, currentX, bY + 82);
 
-    // 5. Nombre del Equipo (Derecha)
+    // 6. Nombre del Equipo (Derecha)
     ctx.textAlign = "right";
     ctx.font = "700 35px Outfit";
     ctx.fillStyle = "rgba(255,255,255,0.5)";
