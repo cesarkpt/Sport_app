@@ -54,9 +54,10 @@ async function syncWithCloud() {
         let result;
         if (typeof google !== 'undefined' && google.script && google.script.run) {
             result = await new Promise((resolve, reject) => {
+                const tout = setTimeout(() => reject(new Error("Timeout")), 15000);
                 google.script.run
-                    .withSuccessHandler(res => resolve(res))
-                    .withFailureHandler(err => reject(err))
+                    .withSuccessHandler(res => { clearTimeout(tout); resolve(res); })
+                    .withFailureHandler(err => { clearTimeout(tout); reject(err); })
                     .getAllTeamsData();
             });
         } else {
@@ -1705,13 +1706,7 @@ initMatchSettings();
 document.addEventListener('DOMContentLoaded', () => {
     const btnSync = document.getElementById('btnSyncCloud');
     if (btnSync) {
-        console.log("✅ Botón de nube detectado y vinculado.");
-        btnSync.addEventListener('click', (e) => {
-            console.log("🖱️ Clic en nube registrado.");
-            syncWithCloud();
-        });
-    } else {
-        console.warn("⚠️ No se encontró el botón btnSyncCloud para vincular.");
+        btnSync.addEventListener('click', syncWithCloud);
     }
 });
 
