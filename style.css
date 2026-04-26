@@ -572,24 +572,27 @@ main {
     color: var(--secondary);
     letter-spacing: 2px;
     margin-bottom: 15px;
+    text-transform: uppercase;
 }
 
 .config-card input[type="text"],
-.config-card input[type="number"] {
+.config-card input[type="number"],
+.match-date-input,
+.match-select-small {
     width: 100%;
     background: rgba(0,0,0,0.3);
     border: 1px solid var(--glass-border);
     padding: 12px;
     border-radius: 10px;
     color: white;
-    margin-bottom: 10px;
+    font-family: 'Outfit', sans-serif;
+    outline: none;
 }
 
 .color-pickers {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 15px;
-    margin: 10px 0;
 }
 
 .color-field {
@@ -611,11 +614,57 @@ main {
     cursor: pointer;
 }
 
-.roster-input {
+.input-row-grid {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.input-group label {
+    font-size: 0.65rem;
+    font-weight: 900;
+    color: var(--secondary);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.shields-section-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.shield-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.shield-upload label {
+    font-size: 0.65rem;
+    font-weight: 900;
+    color: var(--secondary);
+    text-transform: uppercase;
+}
+
+.roster-input-wrapper {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.roster-fields {
     display: grid;
     grid-template-columns: 60px 1fr 50px;
     gap: 10px;
-    margin-bottom: 15px;
 }
 
 .add-btn {
@@ -624,10 +673,11 @@ main {
     border-radius: 10px;
     font-weight: 900;
     cursor: pointer;
+    height: 44px;
 }
 
 .roster-list {
-    max-height: 200px;
+    max-height: 250px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;

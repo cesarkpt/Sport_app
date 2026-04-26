@@ -58,22 +58,35 @@
                     <div class="team-config-grid">
                         <div class="config-card">
                             <h5>DATOS DEL EQUIPO</h5>
-                            <div style="display: grid; grid-template-columns: 1fr 80px; gap: 10px;">
-                                <input type="text" id="teamNameInput" placeholder="Nombre del Equipo">
-                                <input type="text" id="teamCodeInput" placeholder="ABC" maxlength="3" style="text-align: center;">
+                            
+                            <div class="input-row-grid">
+                                <div class="input-group">
+                                    <label>Nombre del Equipo</label>
+                                    <input type="text" id="teamNameInput" placeholder="Ej: Real Madrid">
+                                </div>
+                                <div class="input-group" style="width: 80px;">
+                                    <label>Código</label>
+                                    <input type="text" id="teamCodeInput" placeholder="ABC" maxlength="3" style="text-align: center;">
+                                </div>
                             </div>
-                            <input type="text" id="teamCoachInput" placeholder="Director Técnico (DT)" style="margin-top:10px;">
-                            <div class="color-pickers">
+
+                            <div class="input-group" style="margin-top: 15px;">
+                                <label>Director Técnico (DT)</label>
+                                <input type="text" id="teamCoachInput" placeholder="Nombre del Entrenador">
+                            </div>
+
+                            <div class="color-pickers" style="margin-top: 15px;">
                                 <div class="color-field">
-                                    <label>Color 1</label>
+                                    <label>Color Principal</label>
                                     <input type="color" id="teamColor1" value="#00ff88">
                                 </div>
                                 <div class="color-field">
-                                    <label>Color 2</label>
+                                    <label>Color Secundario</label>
                                     <input type="color" id="teamColor2" value="#00d4ff">
                                 </div>
                             </div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+
+                            <div class="shields-section-grid" style="margin-top: 20px;">
                                 <div class="shield-upload">
                                     <label>Escudo Principal</label>
                                     <div class="shield-preview-container">
@@ -99,17 +112,19 @@
 
                         <div class="config-card">
                             <h5>NÓMINA</h5>
-                            <div class="roster-input">
-                                <input type="number" id="playerNum" placeholder="#">
-                                <input type="text" id="playerName" placeholder="Nombre">
-                                <div class="btn-group" id="rosterPosBtns">
+                            <div class="roster-input-wrapper">
+                                <div class="roster-fields">
+                                    <input type="number" id="playerNum" placeholder="#" style="width: 60px;">
+                                    <input type="text" id="playerName" placeholder="Nombre completo">
+                                    <button class="add-btn" onclick="addPlayerToRoster()" style="width: 50px;">+</button>
+                                </div>
+                                <div class="btn-group" id="rosterPosBtns" style="margin-top: 10px;">
                                     <button class="pos-btn active" onclick="setPos(this, 'POR')">POR</button>
                                     <button class="pos-btn" onclick="setPos(this, 'DEF')">DEF</button>
                                     <button class="pos-btn" onclick="setPos(this, 'VOL')">VOL</button>
                                     <button class="pos-btn" onclick="setPos(this, 'DEL')">DEL</button>
                                     <button class="cap-btn" id="rosterCapBtn" onclick="toggleCap(this)">©</button>
                                 </div>
-                                <button class="add-btn" onclick="addPlayerToRoster()">+</button>
                             </div>
                             <div id="rosterList" class="roster-list"></div>
                         </div>
