@@ -1124,105 +1124,138 @@ function resetApp() {
     elements.imageInput.value = '';
 }
 
-function drawPerimeterShadow(ctx, w, h) {
-    ctx.save();
-    // 1. Degradado Radial masivo para las esquinas
-    const grd = ctx.createRadialGradient(w/2, h/2, w/4, w/2, h/2, w/1.1);
-    grd.addColorStop(0, "transparent");
-    grd.addColorStop(1, "rgba(0,0,0,0.85)");
-    ctx.fillStyle = grd;
-    ctx.fillRect(0, 0, w, h);
+// --- CARRUSEL INSTAGRAM EQUIPO (CON ENCUADRE Y VIÑETAS) ---
+let carouselState = { img: null, x: 0, y: 0, scale: 1, isDragging: false, startX: 0, startY: 0 };
 
-    // 2. Refuerzo en bordes (Linear)
-    const edgeSize = 250;
-    
-    // Superior
-    const grdTop = ctx.createLinearGradient(0,0,0,edgeSize);
-    grdTop.addColorStop(0, "rgba(0,0,0,0.9)");
-    grdTop.addColorStop(1, "transparent");
-    ctx.fillStyle = grdTop;
-    ctx.fillRect(0,0,w,edgeSize);
-
-    // Inferior
-    const grdBot = ctx.createLinearGradient(0,h,0,h-edgeSize);
-    grdBot.addColorStop(0, "rgba(0,0,0,0.9)");
-    grdBot.addColorStop(1, "transparent");
-    ctx.fillStyle = grdBot;
-    ctx.fillRect(0,h-edgeSize,w,edgeSize);
-
-    ctx.restore();
-}
-
-// --- CARRUSEL INSTAGRAM EQUIPO ---
 function openTeamCarouselModal() {
     document.getElementById('teamCarouselModal').classList.remove('hidden');
 }
 
 function closeTeamCarouselModal() {
     document.getElementById('teamCarouselModal').classList.add('hidden');
+    // Reset
+    document.getElementById('carouselUploadArea').classList.remove('hidden');
+    document.getElementById('carouselEditor').classList.add('hidden');
+    document.getElementById('carouselPreview').classList.add('hidden');
+    document.getElementById('carouselFooter').classList.add('hidden');
 }
 
-async function processTeamCarousel(input) {
+async function initCarouselCropper(input) {
     const file = input.files[0];
     if (!file) return;
 
     const img = await loadImg(URL.createObjectURL(file));
+    carouselState.img = img;
+    
+    const viewImg = document.getElementById('carouselImg');
+    viewImg.src = img.src;
+    
+    document.getElementById('carouselUploadArea').classList.add('hidden');
+    document.getElementById('carouselEditor').classList.remove('hidden');
+    
+    // Inicializar posición
+    const container = document.getElementById('carouselContainer');
+    const cW = container.clientWidth;
+    const cH = container.clientHeight;
+    
+    carouselState.scale = Math.max(cW / img.width, cH / img.height);
+    carouselState.x = (cW - img.width * carouselState.scale) / 2;
+    carouselState.y = (cH - img.height * carouselState.scale) / 2;
+    
+    updateCarouselImg();
+
+    // Eventos de Arrastre
+    container.onmousedown = (e) => {
+        carouselState.isDragging = true;
+        carouselState.startX = e.clientX - carouselState.x;
+        carouselState.startY = e.clientY - carouselState.y;
+    };
+    window.onmousemove = (e) => {
+        if (!carouselState.isDragging) return;
+        carouselState.x = e.clientX - carouselState.startX;
+        carouselState.y = e.clientY - carouselState.startY;
+        updateCarouselImg();
+    };
+    window.onmouseup = () => carouselState.isDragging = false;
+
+    document.getElementById('carouselZoom').oninput = (e) => {
+        const newScale = parseFloat(e.target.value);
+        // Zoom centrado
+        const centerX = cW / 2;
+        const centerY = cH / 2;
+        const relX = (centerX - carouselState.x) / carouselState.scale;
+        const relY = (centerY - carouselState.y) / carouselState.scale;
+        
+        carouselState.scale = newScale;
+        carouselState.x = centerX - relX * newScale;
+        carouselState.y = centerY - relY * newScale;
+        updateCarouselImg();
+    };
+}
+
+function updateCarouselImg() {
+    const img = document.getElementById('carouselImg');
+    img.style.width = (carouselState.img.width * carouselState.scale) + 'px';
+    img.style.transform = `translate(${carouselState.x}px, ${carouselState.y}px)`;
+}
+
+async function confirmCarouselFraming() {
+    const size = 1080;
     const c1 = document.getElementById('carouselCanvas1');
     const c2 = document.getElementById('carouselCanvas2');
-    const size = 1080;
     c1.width = size; c1.height = size;
     c2.width = size; c2.height = size;
 
     const ctx1 = c1.getContext('2d');
     const ctx2 = c2.getContext('2d');
-
-    // 1. Dibujar imagen de equipo extendida (Panorama)
-    const scale = size / img.height;
-    const fullW = img.width * scale;
-    const offsetX = (size * 2 - fullW) / 2;
-
-    // Parte 1
-    ctx1.fillStyle = "#000";
-    ctx1.fillRect(0,0,size,size);
-    ctx1.drawImage(img, offsetX, 0, fullW, size);
     
-    // Parte 2
-    ctx2.fillStyle = "#000";
-    ctx2.fillRect(0,0,size,size);
-    ctx2.drawImage(img, offsetX - size, 0, fullW, size);
+    // Calcular coordenadas reales basadas en el contenedor (que es 2:1)
+    const container = document.getElementById('carouselContainer');
+    const renderScale = (size * 2) / container.clientWidth;
+    
+    const realX = carouselState.x * renderScale;
+    const realY = carouselState.y * renderScale;
+    const realW = carouselState.img.width * carouselState.scale * renderScale;
+    const realH = carouselState.img.height * carouselState.scale * renderScale;
 
-    // 2. Sombreado perimetral en ambos
-    [ctx1, ctx2].forEach(ctx => {
-        const grd = ctx.createRadialGradient(size/2, size/2, size/3, size/2, size/2, size/1.1);
-        grd.addColorStop(0, "transparent");
-        grd.addColorStop(1, "rgba(0,0,0,0.8)");
-        ctx.fillStyle = grd;
-        ctx.fillRect(0, 0, size, size);
+    // Dibujar en Partes
+    [ctx1, ctx2].forEach((ctx, i) => {
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0,0,size,size);
+        ctx.drawImage(carouselState.img, realX - (i * size), realY, realW, realH);
+        
+        // --- VIÑETAS PRO (4 Lados) ---
+        drawPerimeterShadow(ctx, size, size);
     });
 
-    // 3. Branding Parte 1: Logo y Match Info
+    // Branding Slide 1
     try {
         const logo = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
-        drawImageProp(ctx1, logo, 60, 60, 250, 120);
+        drawImageProp(ctx1, logo, 60, 60, 300, 140);
     } catch(e) {}
-
+    
     const stage = document.getElementById('matchStage').value;
     const date = document.getElementById('matchDate').value;
+    ctx1.save();
+    ctx1.shadowColor = "black"; ctx1.shadowBlur = 15;
     ctx1.fillStyle = "white";
     ctx1.textAlign = "left";
-    ctx1.font = "900 40px Outfit";
+    ctx1.font = "900 45px Outfit";
     ctx1.fillText(stage.toUpperCase(), 60, size - 120);
     ctx1.font = "400 30px Outfit";
-    ctx1.fillText(date, 60, size - 80);
+    ctx1.fillText(date, 60, size - 75);
+    ctx1.restore();
 
-    // 4. Branding Parte 2: Ticker de Equipo
+    // Branding Slide 2: Ticker de Equipo
     if (selectedMatchTeamA) {
         const team = allTeams[selectedMatchTeamA];
-        const barW = 800;
-        const barH = 100;
+        const barW = 850;
+        const barH = 120;
         const bX = size - barW - 60;
-        const bY = size - 160;
+        const bY = size - 180;
 
+        ctx2.save();
+        ctx2.shadowColor = "rgba(0,0,0,0.5)"; ctx2.shadowBlur = 20;
         ctx2.fillStyle = "rgba(0,0,0,0.85)";
         ctx2.beginPath();
         ctx2.roundRect(bX, bY, barW, barH, 15);
@@ -1233,22 +1266,24 @@ async function processTeamCarousel(input) {
 
         if (team.shield) {
             const sImg = await loadImg(team.shield);
-            ctx2.drawImage(sImg, bX + 40, bY - 20, 130, 130);
+            ctx2.drawImage(sImg, bX + 40, bY - 25, 150, 150);
         }
 
         ctx2.fillStyle = "white";
         ctx2.textAlign = "left";
-        ctx2.font = "900 45px Outfit";
-        ctx2.fillText(team.name.toUpperCase(), bX + 190, bY + 65);
+        ctx2.font = "900 50px Outfit";
+        ctx2.fillText(team.name.toUpperCase(), bX + 210, bY + 78);
+        ctx2.restore();
     }
 
     document.getElementById('carouselPreview').classList.remove('hidden');
     document.getElementById('carouselFooter').classList.remove('hidden');
+    document.getElementById('carouselEditor').classList.add('hidden');
 }
 
 function downloadCarousel() {
-    downloadImage('carouselCanvas1', 'team_post_1');
-    setTimeout(() => downloadImage('carouselCanvas2', 'team_post_2'), 500);
+    downloadImage('carouselCanvas1', 'team_slide_1');
+    setTimeout(() => downloadImage('carouselCanvas2', 'team_slide_2'), 600);
 }
 
 // --- GALERÍA DE ESCUDOS (DRIVE) ---
