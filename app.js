@@ -1124,6 +1124,35 @@ function resetApp() {
     elements.imageInput.value = '';
 }
 
+function drawPerimeterShadow(ctx, w, h) {
+    ctx.save();
+    // 1. Degradado Radial masivo para las esquinas
+    const grd = ctx.createRadialGradient(w/2, h/2, w/4, w/2, h/2, w/1.1);
+    grd.addColorStop(0, "transparent");
+    grd.addColorStop(1, "rgba(0,0,0,0.85)");
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, w, h);
+
+    // 2. Refuerzo en bordes (Linear)
+    const edgeSize = 250;
+    
+    // Superior
+    const grdTop = ctx.createLinearGradient(0,0,0,edgeSize);
+    grdTop.addColorStop(0, "rgba(0,0,0,0.9)");
+    grdTop.addColorStop(1, "transparent");
+    ctx.fillStyle = grdTop;
+    ctx.fillRect(0,0,w,edgeSize);
+
+    // Inferior
+    const grdBot = ctx.createLinearGradient(0,h,0,h-edgeSize);
+    grdBot.addColorStop(0, "rgba(0,0,0,0.9)");
+    grdBot.addColorStop(1, "transparent");
+    ctx.fillStyle = grdBot;
+    ctx.fillRect(0,h-edgeSize,w,edgeSize);
+
+    ctx.restore();
+}
+
 // --- CARRUSEL INSTAGRAM EQUIPO (CON ENCUADRE Y VIÑETAS) ---
 let carouselState = { img: null, x: 0, y: 0, scale: 1, isDragging: false, startX: 0, startY: 0 };
 
