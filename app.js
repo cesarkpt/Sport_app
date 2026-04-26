@@ -1786,41 +1786,96 @@ function processBulkImport() {
     if (!text) return alert("Pega algún texto primero.");
 
     const lines = text.split('\n');
-    let count = 0;
+    let teamsCreated = {}; // { teamName: { id, name, code, roster: {} } }
+    let countTeams = 0;
 
     lines.forEach(line => {
-        if (!line.includes(':')) return;
-        
-        const parts = line.split(':');
-        const teamName = parts[0].trim();
-        const playersStr = parts.slice(1).join(':').trim();
-        
-        const teamId = "team_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
-        
-        const players = playersStr.split(',').map((p, index) => ({
-            number: (index + 1).toString(),
-            name: p.trim()
-        })).filter(p => p.name !== "");
+        if (!line.trim()) return;
 
-        allTeams[teamId] = {
-            id: teamId,
-            name: teamName,
-            code: teamName.substring(0, 3).toUpperCase(),
-            shield: 'https://cdn-icons-png.flaticon.com/512/5351/5351333.png',
-            primaryColor: '#00ff88',
-            secondaryColor: '#000000',
-            roster: players
-        };
-        count++;
+        // Detectar formato:
+        // 1. Legacy: "Equipo: Jugador 1, Jugador 2..."
+        // 2. CSV/Excel: "Equipo, Numero, Nombre, Posicion" (o con Tabs/Punto y coma)
+        
+        if (line.includes(':') && !line.includes(',') && !line.includes('\t')) {
+            // FORMATO LEGACY
+            const parts = line.split(':');
+            const teamName = parts[0].trim();
+            const playersStr = parts.slice(1).join(':').trim();
+            
+            if (!teamsCreated[teamName]) {
+                const teamId = "team_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
+                teamsCreated[teamName] = {
+                    id: teamId,
+                    name: teamName,
+                    code: teamName.substring(0, 3).toUpperCase(),
+                    shield: 'https://cdn-icons-png.flaticon.com/512/5351/5351333.png',
+                    color1: '#00ff88',
+                    color2: '#00d4ff',
+                    roster: {}
+                };
+                countTeams++;
+            }
+
+            playersStr.split(',').forEach((p, index) => {
+                const name = p.trim();
+                if (name) {
+                    const num = (index + 1).toString();
+                    teamsCreated[teamName].roster[num] = {
+                        name: name.toUpperCase(),
+                        position: "DEL",
+                        isCaptain: false
+                    };
+                }
+            });
+        } else {
+            // FORMATO EXCEL / CSV (Separado por , ; o TAB)
+            const sep = line.includes('\t') ? '\t' : (line.includes(';') ? ';' : ',');
+            const parts = line.split(sep).map(s => s.trim());
+            
+            if (parts.length < 3) return; // Necesitamos al menos Equipo, Numero, Nombre
+
+            // Asumimos orden: Equipo, Numero, Nombre, Posicion
+            const teamName = parts[0];
+            const playerNum = parts[1];
+            const playerName = parts[2];
+            const playerPos = parts[3] || "DEL";
+
+            // Saltar cabeceras si existen
+            if (playerNum.toLowerCase() === 'numero' || playerName.toLowerCase() === 'nombre') return;
+
+            if (!teamsCreated[teamName]) {
+                const teamId = "team_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
+                teamsCreated[teamName] = {
+                    id: teamId,
+                    name: teamName,
+                    code: teamName.substring(0, 3).toUpperCase(),
+                    shield: 'https://cdn-icons-png.flaticon.com/512/5351/5351333.png',
+                    color1: '#00ff88',
+                    color2: '#00d4ff',
+                    roster: {}
+                };
+                countTeams++;
+            }
+
+            if (playerNum && playerName) {
+                teamsCreated[teamName].roster[playerNum] = {
+                    name: playerName.toUpperCase(),
+                    position: playerPos.toUpperCase().substring(0, 3),
+                    isCaptain: false
+                };
+            }
+        }
     });
 
-    if (count > 0) {
+    if (countTeams > 0) {
+        // Integrar con los equipos existentes
+        Object.assign(allTeams, teamsCreated);
         localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
         renderTeamsList();
         closeImportModal();
-        alert("✅ Se han importado " + count + " equipos con sus jugadores.");
+        alert("✅ Se han procesado " + countTeams + " equipos nuevos o actualizados.");
     } else {
-        alert("No se reconoció el formato. Usa 'Equipo: Jugador 1, Jugador 2'");
+        alert("No se reconoció el formato.\n\nUsa:\n1. Equipo, Numero, Nombre, Posicion\n2. Equipo: Jugador 1, Jugador 2");
     }
 }
 function showResultTab(tabId) {

@@ -465,9 +465,10 @@
             </div>
             <div style="padding: 15px;">
                 <p style="font-size: 0.8rem; margin-bottom: 10px; color: var(--secondary);">
-                    Pega tu lista aquí (Formato: Equipo: Jugador1, Jugador2...)
+                    Pega tu lista de Excel o CSV aquí.<br>
+                    Formatos: <b>Equipo, Número, Nombre, Posición</b> o <b>Equipo: Jugador1, Jugador2...</b>
                 </p>
-                <textarea id="importTextArea" rows="10" style="width:100%; background:rgba(0,0,0,0.3); color:white; border-radius:10px; padding:10px; font-family:monospace; border:1px solid var(--glass-border);" placeholder="Equipo A: Jugador 1, Jugador 2&#10;Equipo B: Jugador X, Jugador Y"></textarea>
+                <textarea id="importTextArea" rows="10" style="width:100%; background:rgba(0,0,0,0.3); color:white; border-radius:10px; padding:10px; font-family:monospace; border:1px solid var(--glass-border);" placeholder="Real Madrid, 7, Vinicius Jr, DEL&#10;Barcelona: Lamine Yamal, Raphinha"></textarea>
                 <button class="btn-primary" onclick="processBulkImport()" style="margin-top:15px; width:100%">PROCESAR E IMPORTAR</button>
             </div>
         </div>
