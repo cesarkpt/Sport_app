@@ -1325,78 +1325,122 @@ function drawPerimeterShadow(ctx, w, h) {
         const cW = container.clientWidth;
         const cH = container.clientHeight;
 
-    // INFO PARTIDO (Mover a la Parte 2 - Derecha)
+        carouselState.scale = Math.max(cW / carouselState.img.width, cH / carouselState.img.height);
+        carouselState.x = (cW - carouselState.img.width * carouselState.scale) / 2;
+        carouselState.y = (cH - carouselState.img.height * carouselState.scale) / 2;
+        carouselState.rotate = 0;
+
+        const zoomInput = document.getElementById('tabCarouselZoom');
+        if (zoomInput) zoomInput.value = carouselState.scale;
+        const rotateInput = document.getElementById('tabCarouselRotate');
+        if (rotateInput) rotateInput.value = 0;
+
+        updateCarouselImg();
+    }
+
+    function updateCarouselImg() {
+        const img = document.getElementById('tabCarouselImg');
+        if (!img || !carouselState.img) return;
+        img.style.width = (carouselState.img.width * carouselState.scale) + 'px';
+        img.style.transform = `translate(${carouselState.x}px, ${carouselState.y}px) rotate(${carouselState.rotate}deg)`;
+    }
+}
+
+async function confirmCarouselFraming() {
+    if (!carouselState.img) return;
+
+    const container = document.getElementById('tabCarouselContainer');
+    const cW = container.clientWidth;
+    const cH = container.clientHeight;
+
+    const canvas1 = document.getElementById('tabCarouselCanvas1');
+    const canvas2 = document.getElementById('tabCarouselCanvas2');
+    const ctx1 = canvas1.getContext('2d');
+    const ctx2 = canvas2.getContext('2d');
+
+    const size = 1080;
+    canvas1.width = size; canvas1.height = size;
+    canvas2.width = size; canvas2.height = size;
+
+    const realW = carouselState.img.width * carouselState.scale * (size / cH);
+    const realH = carouselState.img.height * carouselState.scale * (size / cH);
+    const realX = carouselState.x * (size / cH);
+    const realY = carouselState.y * (size / cH);
+
+    [ctx1, ctx2].forEach((ctx, i) => {
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, size, size);
+        ctx.save();
+        ctx.translate(realX - (i * size) + realW / 2, realY + realH / 2);
+        ctx.rotate(carouselState.rotate * Math.PI / 180);
+        ctx.drawImage(carouselState.img, -realW / 2, -realH / 2, realW, realH);
+        ctx.restore();
+        drawPerimeterShadow(ctx, size, size);
+    });
+
+    // Logo en Slide 1
+    try {
+        const logo = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
+        drawImageProp(ctx1, logo, 80, 80, 300, 140);
+    } catch (e) {}
+
+    // Info partido en Slide 2
     if (selectedMatchTeamA && selectedMatchTeamB) {
         const teamA = allTeams[selectedMatchTeamA];
         const teamB = allTeams[selectedMatchTeamB];
-        const stage = document.getElementById('matchStage').value;
-        const date = document.getElementById('matchDate').value;
-
+        const stage = (document.getElementById('matchStage') || {}).value || '';
+        const date = (document.getElementById('matchDate') || {}).value || '';
         const sSize = 100;
-        const totalW = (sSize * 2) + 20;
-        const x = size - totalW - 80;
-        const y = 80;
-
+        const totalW2 = (sSize * 2) + 20;
+        const x2 = size - totalW2 - 80;
+        const y2 = 80;
         try {
             const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
-            drawImageProp(ctx2, imgA, x, y, sSize, sSize);
+            drawImageProp(ctx2, imgA, x2, y2, sSize, sSize);
             const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-            drawImageProp(ctx2, imgB, x + sSize + 20, y, sSize, sSize);
-        } catch (e) { }
-
+            drawImageProp(ctx2, imgB, x2 + sSize + 20, y2, sSize, sSize);
+        } catch (e) {}
         ctx2.save();
         ctx2.shadowColor = "black"; ctx2.shadowBlur = 20;
         ctx2.fillStyle = "white";
         ctx2.textAlign = "center";
-        const centerX = x + totalW / 2;
         ctx2.font = "900 35px Outfit";
-        ctx2.fillText(stage.toUpperCase(), centerX, y + sSize + 40);
+        ctx2.fillText(stage.toUpperCase(), x2 + totalW2 / 2, y2 + sSize + 40);
         ctx2.font = "400 25px Outfit";
         ctx2.fillStyle = "rgba(255,255,255,0.8)";
-        ctx2.fillText(date, centerX, y + sSize + 75);
+        ctx2.fillText(date, x2 + totalW2 / 2, y2 + sSize + 75);
         ctx2.restore();
     }
 
-    // Branding Slide 2: Ticker de Equipo (ÚNICA BARRA CENTRADA EN EL CORTE)
-    if (selectedMatchTeamA) {
-        const team = allTeams[selectedMatchTeamA];
-        const barW = 1200; // Barra larga
+    // Ticker con el equipo del jugador actual (currentPlayerData)
+    const tickerTeamId = currentPlayerData ? currentPlayerData.teamId : selectedMatchTeamA;
+    const tickerTeam = tickerTeamId ? allTeams[tickerTeamId] : null;
+    if (tickerTeam) {
+        const barW = 1200;
         const barH = 150;
-        const totalW = size * 2;
-        const centerX = totalW / 2;
-        const bX_total = centerX - (barW / 2); // 1080 - 600 = 480
+        const bX_total = (size * 2) / 2 - barW / 2;
         const bY = size - 240;
 
-        // Función para dibujar la barra en un contexto con offset
         const drawTickerOn = async (ctx, offsetX) => {
             ctx.save();
             ctx.shadowColor = "rgba(0,0,0,0.6)"; ctx.shadowBlur = 25;
             ctx.fillStyle = "rgba(0,0,0,0.92)";
-
             const relX = bX_total - offsetX;
-
-            // Dibujar fondo
             ctx.beginPath();
             ctx.roundRect(relX, bY, barW, barH, 25);
             ctx.fill();
-
-            // Color del equipo
-            ctx.fillStyle = team.color;
+            ctx.fillStyle = tickerTeam.color1 || tickerTeam.color || "#00ff88";
             ctx.fillRect(relX, bY, 15, barH);
-
-            // Escudo
-            if (team.shield) {
+            if (tickerTeam.shield) {
                 try {
-                    const sImg = await loadImg(team.shield);
+                    const sImg = await loadImg(tickerTeam.shield);
                     ctx.drawImage(sImg, relX + 60, bY - 35, 200, 200);
-                } catch (e) { }
+                } catch (e) {}
             }
-
-            // Nombre
             ctx.fillStyle = "white";
             ctx.textAlign = "left";
             ctx.font = "900 60px Outfit";
-            ctx.fillText(team.name.toUpperCase(), relX + 280, bY + 95);
+            ctx.fillText(tickerTeam.name.toUpperCase(), relX + 280, bY + 95);
             ctx.restore();
         };
 
@@ -1404,9 +1448,7 @@ function drawPerimeterShadow(ctx, w, h) {
         await drawTickerOn(ctx2, size);
     }
 
-    document.getElementById('carouselPreview').classList.remove('hidden');
-    document.getElementById('carouselFooter').classList.remove('hidden');
-    document.getElementById('carouselEditor').classList.add('hidden');
+    document.getElementById('tabCarouselPreview').classList.remove('hidden');
 }
 
 function downloadCarousel() {
