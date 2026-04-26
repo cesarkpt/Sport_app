@@ -1135,9 +1135,66 @@ function simulateShields() {
 // --- INICIALIZACIÓN ---
 renderTeamsList();
 // --- SELECTOR VISUAL DE PARTIDO ---
-let selectedMatchTeamA = null;
-let selectedMatchTeamB = null;
+let selectedMatchTeamA = localStorage.getItem('sportshub_match_a') || null;
+let selectedMatchTeamB = localStorage.getItem('sportshub_match_b') || null;
 let currentPickerSlot = null;
+
+// Inicializar preview y valores guardados
+function initMatchSettings() {
+    const stage = localStorage.getItem('sportshub_match_stage') || "FASE DE GRUPOS";
+    const date = localStorage.getItem('sportshub_match_date') || new Date().toLocaleDateString();
+    
+    document.getElementById('matchStage').value = stage;
+    document.getElementById('matchDate').value = date;
+    
+    if (selectedMatchTeamA && allTeams[selectedMatchTeamA]) {
+        const img = document.getElementById('imgA');
+        img.src = allTeams[selectedMatchTeamA].shield;
+        img.classList.remove('hidden');
+        document.querySelector('#slotA .placeholder').classList.add('hidden');
+    }
+    if (selectedMatchTeamB && allTeams[selectedMatchTeamB]) {
+        const img = document.getElementById('imgB');
+        img.src = allTeams[selectedMatchTeamB].shield;
+        img.classList.remove('hidden');
+        document.querySelector('#slotB .placeholder').classList.add('hidden');
+    }
+    
+    updateMatchPreview();
+    
+    // Listeners para auto-guardado
+    document.getElementById('matchStage').addEventListener('input', saveMatchSettings);
+    document.getElementById('matchDate').addEventListener('input', saveMatchSettings);
+}
+
+function saveMatchSettings() {
+    localStorage.setItem('sportshub_match_a', selectedMatchTeamA || "");
+    localStorage.setItem('sportshub_match_b', selectedMatchTeamB || "");
+    localStorage.setItem('sportshub_match_stage', document.getElementById('matchStage').value);
+    localStorage.setItem('sportshub_match_date', document.getElementById('matchDate').value);
+    updateMatchPreview();
+}
+
+function updateMatchPreview() {
+    const preview = document.getElementById('matchPreview');
+    if (!selectedMatchTeamA || !selectedMatchTeamB) {
+        preview.innerHTML = '<span class="preview-text">⚠️ Configura el partido</span>';
+        return;
+    }
+    
+    const teamA = allTeams[selectedMatchTeamA];
+    const teamB = allTeams[selectedMatchTeamB];
+    const stage = document.getElementById('matchStage').value;
+    
+    preview.innerHTML = `
+        <div class="preview-text">
+            <img src="${teamA.shield}" class="preview-shield">
+            <span>VS</span>
+            <img src="${teamB.shield}" class="preview-shield">
+            <span style="margin-left:5px; opacity:0.5; font-size:0.6rem">| ${stage}</span>
+        </div>
+    `;
+}
 
 function openMatchShieldPicker(slot) {
     currentPickerSlot = slot;
@@ -1177,6 +1234,7 @@ function selectMatchTeam(id) {
         img.classList.remove('hidden');
         document.querySelector('#slotB .placeholder').classList.add('hidden');
     }
+    saveMatchSettings();
     closeMatchShieldPicker();
 }
 function toggleMatchModal() {
@@ -1192,3 +1250,5 @@ function loadImg(url) {
         img.src = url;
     });
 }
+
+initMatchSettings();
