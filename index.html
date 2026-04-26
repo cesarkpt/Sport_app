@@ -116,33 +116,10 @@
                         <span class="slider round"></span>
                     </label>
                 </div>
+                <button class="match-btn" onclick="toggleMatchModal()">CONFIG. PARTIDO</button>
             </section>
 
-            <!-- Módulo de Partido (Match Info) -->
-            <section class="match-info-strip">
-                <div class="match-card">
-                    <div class="match-selectors-visual">
-                        <div class="shield-slot" id="slotA" onclick="openMatchShieldPicker('A')">
-                            <img src="" id="imgA" class="hidden">
-                            <span class="placeholder">EQUIPO A</span>
-                        </div>
-                        <span class="vs-text-big">VS</span>
-                        <div class="shield-slot" id="slotB" onclick="openMatchShieldPicker('B')">
-                            <img src="" id="imgB" class="hidden">
-                            <span class="placeholder">EQUIPO B</span>
-                        </div>
-                    </div>
-                    <div class="match-meta">
-                        <select id="matchStage" class="match-select-small">
-                            <option value="APERTURA">APERTURA</option>
-                            <option value="CUADRANGULAR">CUADRANGULAR</option>
-                            <option value="SEMIFINAL">SEMIFINAL</option>
-                            <option value="FINAL">FINAL</option>
-                        </select>
-                        <input type="text" id="matchDate" placeholder="DD-MM-AAAA" class="match-date-input">
-                    </div>
-                </div>
-            </section>
+            <!-- El match-info-strip se movió al modal matchDataModal -->
 
             <section class="upload-section" id="uploadDropzone">
                 <div class="upload-card">
@@ -178,6 +155,19 @@
                     <!-- Panel de Corrección Manual -->
                     <div class="edit-panel hidden" id="editPanel">
                         <h5>CORREGIR INFORMACIÓN</h5>
+                        
+                        <!-- Ajustador de Encuadre Manual -->
+                        <div class="cropper-wrapper">
+                            <label>AJUSTAR ENCUADRE CARNET</label>
+                            <div class="cropper-container" id="cropperContainer">
+                                <div class="cropper-box" id="cropperBox">
+                                    <img src="" id="cropperImg">
+                                </div>
+                                <div class="cropper-overlay"></div>
+                            </div>
+                            <p class="help-text">Arrastra para centrar la cara</p>
+                        </div>
+
                         <div class="input-group">
                             <label>Nombre</label>
                             <input type="text" id="editName" placeholder="Nombre del Jugador">
@@ -302,6 +292,38 @@
                 <button class="close-btn" onclick="closeMatchShieldPicker()">×</button>
             </div>
             <div id="matchShieldGrid" class="shield-grid-mini"></div>
+        </div>
+    </div>
+    <!-- Modal de Configuración de Partido -->
+    <div id="matchDataModal" class="modal hidden">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3>CONFIGURACIÓN DEL PARTIDO</h3>
+                <button class="close-btn" onclick="toggleMatchModal()">×</button>
+            </div>
+            <div class="match-card-modal">
+                <div class="match-selectors-visual">
+                    <div class="shield-slot" id="slotA" onclick="openMatchShieldPicker('A')">
+                        <img src="" id="imgA" class="hidden">
+                        <span class="placeholder">EQUIPO A</span>
+                    </div>
+                    <span class="vs-text-big">VS</span>
+                    <div class="shield-slot" id="slotB" onclick="openMatchShieldPicker('B')">
+                        <img src="" id="imgB" class="hidden">
+                        <span class="placeholder">EQUIPO B</span>
+                    </div>
+                </div>
+                <div class="match-meta">
+                    <select id="matchStage" class="match-select-small">
+                        <option value="APERTURA">APERTURA</option>
+                        <option value="CUADRANGULAR">CUADRANGULAR</option>
+                        <option value="SEMIFINAL">SEMIFINAL</option>
+                        <option value="FINAL">FINAL</option>
+                    </select>
+                    <input type="text" id="matchDate" placeholder="DD-MM-AAAA" class="match-date-input">
+                </div>
+                <button class="btn-primary" onclick="toggleMatchModal()" style="margin-top:20px">LISTO</button>
+            </div>
         </div>
     </div>
 </body>

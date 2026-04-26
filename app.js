@@ -393,27 +393,24 @@ async function processPlayerPhoto(processingImg, originalImg) {
             shield: team.shield
         };
 
-        updateStep(1, "Dorsal detectado: #" + detectedNumber);
+    // --- IA DE RECORTE (Si está activa) ---
+    const shouldRemoveBg = document.getElementById('bgToggle').checked;
+    let finalPlayerImg;
+    if (shouldRemoveBg) {
+        updateStep(2, "IA de recorte...");
+        finalPlayerImg = await removeBackground(originalImg);
+        updateStep(2, "Recorte completado");
+    } else {
+        updateStep(2, "Fondo original conservado");
+        finalPlayerImg = originalImg;
+    }
 
-        // --- PAUSA PARA CORRECCIÓN MANUAL ---
-        const finalData = await waitForManualCorrection(playerData, detectedNumber);
-        
-        // 2. Segmentación - Quitar Fondo
-        const shouldRemoveBg = document.getElementById('bgToggle').checked;
-        let finalPlayerImg;
-        
-        if (shouldRemoveBg) {
-            updateStep(2, "IA de recorte...");
-            finalPlayerImg = await removeBackground(originalImg);
-            updateStep(2, "Recorte completado");
-        } else {
-            updateStep(2, "Fondo original conservado");
-            finalPlayerImg = originalImg;
-        }
-
-        // 3. Composición de Layout
-        updateStep(3, "Creando arte HD...");
-        await generateLayouts(finalPlayerImg, finalData, shouldRemoveBg);
+    // --- PAUSA PARA CORRECCIÓN MANUAL Y ENCUADRE ---
+    const finalData = await waitForManualCorrection(playerData, detectedNumber, finalPlayerImg);
+    
+    // 3. Composición de Layout
+    updateStep(3, "Creando arte HD...");
+    await generateLayouts(finalPlayerImg, finalData.data, shouldRemoveBg, finalData.crop);
         
         // 4. Guardado Automático en Drive
         updateStep(3, "Subiendo a Drive...");
@@ -463,15 +460,58 @@ async function saveToDrive(base64, player) {
     }
 }
 
-async function waitForManualCorrection(initialData, detectedNumber) {
+async function waitForManualCorrection(initialData, detectedNumber, playerImg) {
     const editPanel = document.getElementById('editPanel');
     const editName = document.getElementById('editName');
     const editNumber = document.getElementById('editNumber');
     const editTeam = document.getElementById('editTeam');
     const editCapBtn = document.getElementById('editCapBtn');
     const confirmBtn = document.getElementById('confirmEditBtn');
+    
+    // --- LÓGICA DEL CROPPER MANUAL ---
+    const cropperImg = document.getElementById('cropperImg');
+    const cropperBox = document.getElementById('cropperBox');
+    const container = document.getElementById('cropperContainer');
+    
+    cropperImg.src = playerImg.src || playerImg.toDataURL();
+    
+    let isDragging = false;
+    let startY, startX;
+    let currentY = -50, currentX = -50; // Posición inicial sugerida
 
-    // Poblar campos iniciales
+    // Aplicar posición inicial
+    cropperBox.style.top = currentY + "px";
+    cropperBox.style.left = currentX + "px";
+
+    // Ajustar tamaño inicial de la imagen en el cropper (para que sea manejable)
+    cropperImg.style.width = "400px"; // Zoom base
+    
+    const startDrag = (e) => {
+        isDragging = true;
+        const event = e.touches ? e.touches[0] : e;
+        startY = event.clientY - currentY;
+        startX = event.clientX - currentX;
+    };
+
+    const doDrag = (e) => {
+        if (!isDragging) return;
+        const event = e.touches ? e.touches[0] : e;
+        currentY = event.clientY - startY;
+        currentX = event.clientX - startX;
+        cropperBox.style.top = currentY + "px";
+        cropperBox.style.left = currentX + "px";
+    };
+
+    const stopDrag = () => isDragging = false;
+
+    container.addEventListener('mousedown', startDrag);
+    container.addEventListener('touchstart', startDrag);
+    window.addEventListener('mousemove', doDrag);
+    window.addEventListener('touchmove', doDrag);
+    window.addEventListener('mouseup', stopDrag);
+    window.addEventListener('touchend', stopDrag);
+
+    // Poblar campos iniciales... (resto igual)
     editName.value = initialData.name.replace(" (C)", "");
     editNumber.value = detectedNumber === "??" ? "" : detectedNumber;
     editTeam.value = initialData.team;
@@ -516,6 +556,15 @@ async function waitForManualCorrection(initialData, detectedNumber) {
             const finalPos = activePosBtn ? activePosBtn.innerText : "DEL";
             const finalCap = editCapBtn.classList.contains('active');
 
+            // Calcular geometría del crop manual
+            const scale = playerImg.width / 400; // Relación entre original y cropper
+            const cropData = {
+                x: -currentX * scale,
+                y: -currentY * scale,
+                w: 200 * scale,
+                h: 280 * scale
+            };
+
             const updatedData = {
                 name: editName.value.toUpperCase() + (finalCap ? " (C)" : ""),
                 team: editTeam.value.toUpperCase(),
@@ -526,8 +575,9 @@ async function waitForManualCorrection(initialData, detectedNumber) {
                 color2: initialData.color2 || "#00d4ff",
                 shield: initialData.shield
             };
+
             editPanel.classList.add('hidden');
-            resolve(updatedData);
+            resolve({ data: updatedData, crop: cropData });
         };
     });
 }
@@ -565,9 +615,10 @@ async function removeBackground(img) {
     });
 }
 
-async function generateLayouts(playerCanvas, player, shouldRemoveBg = true) {
-    // --- 1. SMART CROP PARA CARNET (Cara y Hombros) ---
-    const carnetCrop = createSmartCrop(playerCanvas);
+async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manualCrop = null) {
+    // --- 1. ENCUADRE CARNET (Cara y Hombros) ---
+    // Si hay ajuste manual, lo usamos. Si no, smart crop.
+    const carnetCrop = manualCrop || createSmartCrop(playerCanvas, shouldRemoveBg);
     
     // --- 2. CANVAS DE TRANSMISIÓN (Plano Americano) ---
     const ctxOut = elements.outputCanvas.getContext('2d');
@@ -638,19 +689,24 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true) {
     drawCarnetOverlay(ctxCarnet, player);
 }
 
-function createSmartCrop(playerCanvas) {
+function createSmartCrop(playerCanvas, isTransparent = true) {
     const ctx = playerCanvas.getContext('2d');
     const pixels = ctx.getImageData(0, 0, playerCanvas.width, playerCanvas.height).data;
     
     // Encontrar el primer pixel no transparente (Tope de la cabeza)
     let top = 0;
-    for (let y = 0; y < playerCanvas.height; y++) {
-        for (let x = 0; x < playerCanvas.width; x++) {
-            if (pixels[(y * playerCanvas.width + x) * 4 + 3] > 10) {
-                top = y;
-                y = playerCanvas.height; break;
+    if (isTransparent) {
+        for (let y = 0; y < playerCanvas.height; y++) {
+            for (let x = 0; x < playerCanvas.width; x++) {
+                if (pixels[(y * playerCanvas.width + x) * 4 + 3] > 10) {
+                    top = y;
+                    y = playerCanvas.height; break;
+                }
             }
         }
+    } else {
+        // Si no es transparente (fondo original), asumimos que la cabeza está al 10% del tope
+        top = playerCanvas.height * 0.1;
     }
     
     // Definir área de carnet
@@ -1011,4 +1067,8 @@ function selectMatchTeam(id) {
         document.querySelector('#slotB .placeholder').classList.add('hidden');
     }
     closeMatchShieldPicker();
+}
+function toggleMatchModal() {
+    const modal = document.getElementById('matchDataModal');
+    modal.classList.toggle('hidden');
 }
