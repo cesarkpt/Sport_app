@@ -1938,110 +1938,117 @@ function showResultTab(tabId) {
 }
 
 async function generateMatchPostals() {
-    if (!lastProcessedPlayerImg || !currentPlayerData) return alert("Primero procesa a un jugador.");
+    try {
+        if (!lastProcessedPlayerImg) {
+            return alert("No hay una foto procesada. Por favor, procesa un jugador primero.");
+        }
 
-    const word = document.getElementById('postalWord').value.toUpperCase();
-    const score = document.getElementById('postalScore').value;
-    const stage = document.getElementById('matchStage').value;
-    const date = document.getElementById('matchDate').value;
-    
-    // Controles de usuario
-    const gScale = parseFloat(document.getElementById('postalScale').value) || 1;
-    const gY = parseInt(document.getElementById('postalY').value) || 0;
-    const gX = parseInt(document.getElementById('postalX').value) || 0;
+        const getVal = (id, fallback) => {
+            const el = document.getElementById(id);
+            return el ? el.value : fallback;
+        };
 
-    const teamA = allTeams[selectedMatchTeamA];
-    const teamB = allTeams[selectedMatchTeamB];
-
-    const generateOne = async (canvasId, width, height) => {
-        const canvas = document.getElementById(canvasId);
-        const ctx = canvas.getContext('2d');
+        const word = getVal('postalWord', 'FIN DEL PARTIDO').toUpperCase();
+        const score = getVal('postalScore', '0-0');
+        const stage = getVal('matchStage', 'PARTIDO');
+        const date = getVal('matchDate', '');
         
-        // Reset canvas transform and set dimensions
-        canvas.width = width;
-        canvas.height = height;
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        // Controles de usuario (Defensivo)
+        const gScale = parseFloat(getVal('postalScale', 1)) || 1;
+        const gY = parseInt(getVal('postalY', 0)) || 0;
+        const gX = parseInt(getVal('postalX', 0)) || 0;
 
-        // 1. Fondo y Jugador (Usar drawImageProp para asegurar relación de aspecto)
-        ctx.fillStyle = "#000";
-        ctx.fillRect(0, 0, width, height);
+        const teamA = allTeams[selectedMatchTeamA];
+        const teamB = allTeams[selectedMatchTeamB];
 
-        const crop = lastProcessedCropHD;
-        if (crop && lastProcessedPlayerImg) {
-            // Extraer el área recortada y dibujarla cubriendo el canvas
-            // Creamos un canvas temporal para el recorte y luego lo pasamos por drawImageProp
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = crop.w;
-            tempCanvas.height = crop.h;
-            const tCtx = tempCanvas.getContext('2d');
-            tCtx.drawImage(lastProcessedPlayerImg, crop.x, crop.y, crop.w, crop.h, 0, 0, crop.w, crop.h);
+        const generateOne = async (canvasId, width, height) => {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
             
-            // Dibujar el recorte en el canvas final asegurando que cubra (cover)
-            // Para "cover", usamos una versión modificada de drawImageProp o lógica directa
-            const scale = Math.max(width / crop.w, height / crop.h);
-            const w = crop.w * scale;
-            const h = crop.h * scale;
-            ctx.drawImage(tempCanvas, (width - w) / 2, (height - h) / 2, w, h);
-        }
+            canvas.width = width;
+            canvas.height = height;
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-        drawPerimeterShadow(ctx, width, height);
-        ctx.fillStyle = "rgba(0,0,0,0.5)"; 
-        ctx.fillRect(0, 0, width, height);
+            // 1. Fondo y Jugador
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, width, height);
 
-        // 2. TEXTO Y ASSETS (CON ESCALA Y OFFSET)
-        ctx.save();
-        ctx.translate(gX, gY); 
-        
-        ctx.textAlign = "center";
-        ctx.shadowColor = "black";
-        ctx.shadowBlur = 20;
+            const crop = lastProcessedCropHD;
+            if (crop && lastProcessedPlayerImg) {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = crop.w;
+                tempCanvas.height = crop.h;
+                const tCtx = tempCanvas.getContext('2d');
+                tCtx.drawImage(lastProcessedPlayerImg, crop.x, crop.y, crop.w, crop.h, 0, 0, crop.w, crop.h);
+                
+                const scale = Math.max(width / crop.w, height / crop.h);
+                const w = crop.w * scale;
+                const h = crop.h * scale;
+                ctx.drawImage(tempCanvas, (width - w) / 2, (height - h) / 2, w, h);
+            }
 
-        const centerY = height / 2;
+            drawPerimeterShadow(ctx, width, height);
+            ctx.fillStyle = "rgba(0,0,0,0.5)"; 
+            ctx.fillRect(0, 0, width, height);
 
-        // A. Palabra Principal
-        ctx.fillStyle = "rgba(255,255,255,0.8)";
-        ctx.font = `italic 900 ${120 * gScale}px Outfit`;
-        ctx.fillText(word, width / 2, centerY - (280 * gScale));
+            // 2. TEXTO Y ASSETS
+            ctx.save();
+            ctx.translate(gX, gY); 
+            
+            ctx.textAlign = "center";
+            ctx.shadowColor = "black";
+            ctx.shadowBlur = 20;
 
-        // B. ESCUDOS
-        if (teamA && teamB) {
-            const sSize = 250 * gScale; 
-            const totalShieldsW = (sSize * 2) + (100 * gScale);
-            const startX = (width - totalShieldsW) / 2;
-            const sY = centerY - (200 * gScale);
+            const centerY = height / 2;
 
-            try {
-                const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
-                drawImageProp(ctx, imgA, startX, sY, sSize, sSize);
-                const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-                drawImageProp(ctx, imgB, startX + sSize + (100 * gScale), sY, sSize, sSize);
-            } catch (e) {}
-
-            // C. STAGE Y FECHA
+            // A. Palabra Principal
             ctx.fillStyle = "rgba(255,255,255,0.8)";
-            ctx.font = `italic 400 ${45 * gScale}px Outfit`;
-            ctx.fillText(`${stage} • ${date}`, width / 2, sY + sSize + (80 * gScale));
-        }
+            ctx.font = `italic 900 ${120 * gScale}px Outfit`;
+            ctx.fillText(word, width / 2, centerY - (280 * gScale));
 
-        // D. MARCADOR
-        ctx.fillStyle = "rgba(255,255,255,0.8)";
-        ctx.font = `italic 900 ${280 * gScale}px Outfit`;
-        ctx.fillText(score, width / 2, centerY + (380 * gScale));
-        ctx.restore();
+            // B. ESCUDOS
+            if (teamA && teamB) {
+                const sSize = 250 * gScale; 
+                const totalShieldsW = (sSize * 2) + (100 * gScale);
+                const startX = (width - totalShieldsW) / 2;
+                const sY = centerY - (200 * gScale);
 
-        // E. Logo
-        try {
-            const logo = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
-            ctx.globalAlpha = 0.6;
-            // Aseguramos que el logo no se deforme tampoco
-            drawImageProp(ctx, logo, 60, 60, 250, 100, 0, 0); 
-            ctx.globalAlpha = 1.0;
-        } catch (e) {}
-    };
+                try {
+                    const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
+                    drawImageProp(ctx, imgA, startX, sY, sSize, sSize);
+                    const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
+                    drawImageProp(ctx, imgB, startX + sSize + (100 * gScale), sY, sSize, sSize);
+                } catch (e) {}
 
-    // Generar ambos formatos
-    await generateOne('postalCanvasH', 1920, 1080); // 16:9
-    await generateOne('postalCanvasV', 1080, 1920); // 9:16
+                // C. STAGE Y FECHA
+                ctx.fillStyle = "rgba(255,255,255,0.8)";
+                ctx.font = `italic 400 ${45 * gScale}px Outfit`;
+                ctx.fillText(`${stage} • ${date}`, width / 2, sY + sSize + (80 * gScale));
+            }
 
-    document.getElementById('postalResultArea').classList.remove('hidden');
+            // D. MARCADOR
+            ctx.fillStyle = "rgba(255,255,255,0.8)";
+            ctx.font = `italic 900 ${280 * gScale}px Outfit`;
+            ctx.fillText(score, width / 2, centerY + (380 * gScale));
+            ctx.restore();
+
+            // E. Logo
+            try {
+                const logo = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
+                ctx.globalAlpha = 0.6;
+                drawImageProp(ctx, logo, 60, 60, 250, 100, 0, 0); 
+                ctx.globalAlpha = 1.0;
+            } catch (e) {}
+        };
+
+        await generateOne('postalCanvasH', 1920, 1080);
+        await generateOne('postalCanvasV', 1080, 1920);
+
+        const resArea = document.getElementById('postalResultArea');
+        if (resArea) resArea.classList.remove('hidden');
+
+    } catch (e) {
+        console.error("Error en generateMatchPostals:", e);
+    }
 }
