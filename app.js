@@ -719,12 +719,14 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
         ctxOut.restore();
     }
     
-    // --- NUEVA SOMBRA INFERIOR (Estilo Carnet) ---
+    /* 
+    // COMENTADO: Sombra inferior eliminada por petición de fondo totalmente negro
     const grdShadow = ctxOut.createLinearGradient(0, CONFIG.outputHeight - 300, 0, CONFIG.outputHeight);
     grdShadow.addColorStop(0, "transparent");
     grdShadow.addColorStop(1, "rgba(0,0,0,0.8)");
     ctxOut.fillStyle = grdShadow;
     ctxOut.fillRect(0, CONFIG.outputHeight - 300, CONFIG.outputWidth, 300);
+    */
     
     await drawSportsTicker(ctxOut, player);
     
@@ -919,6 +921,17 @@ async function drawCarnetOverlay(ctx, player) {
     ctx.fillStyle = "white";
     ctx.font = `900 ${lastSize}px Outfit`;
     ctx.fillText(lastName.toUpperCase(), finalX, h - 50);
+
+    // 5.1 POSICIÓN (Al lado del nombre, mismo alto)
+    if (player.position) {
+        ctx.save();
+        ctx.fillStyle = "rgba(255,255,255,0.6)";
+        ctx.font = `900 ${firstSize}px Outfit`;
+        const firstNameW = ctx.measureText(firstName).width;
+        ctx.fillText(` [${player.position.toUpperCase()}]`, finalX + firstNameW + 5, h - 100);
+        ctx.restore();
+    }
+    
     ctx.restore();
 
     // 6. NÚMERO CON DEGRADADO (Reducido a 140px)
@@ -955,8 +968,8 @@ async function drawCarnetOverlay(ctx, player) {
 
 
 async function drawBackground(ctx, color, color2) {
-    // Eliminada imagen de fondo y overlays por petición del usuario
-    ctx.fillStyle = "#0a0e14"; // Fondo sólido oscuro
+    // Fondo TOTALMENTE NEGRO sin elementos por petición del usuario
+    ctx.fillStyle = "#000000"; 
     ctx.fillRect(0, 0, 1920, 1080);
 }
 
@@ -1014,10 +1027,10 @@ async function drawSportsTicker(ctx, player) {
     ctx.fillText(`${player.number} | ${displayName}`, currentX, bY + 82);
     ctx.restore();
     
-    // 5.5 ICONO CAPITÁN (Estilo Carnet - Alejado del apellido)
+    // 5.5 ICONO CAPITÁN (Estilo Carnet - 400px a la derecha)
     if (player.name.includes("(C)")) {
         const nameW = ctx.measureText(`${player.number} | ${displayName}`).width;
-        const capX = currentX + nameW + 100; // Alejado 100px
+        const capX = currentX + nameW + 400; // Movido 400px a la derecha
         ctx.save();
         // Sombra propia para el icono
         ctx.shadowColor = "rgba(0,0,0,0.5)";
