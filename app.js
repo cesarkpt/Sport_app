@@ -705,10 +705,10 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
     
     await drawSportsTicker(ctxOut, player);
     
-    // 2.5 LOGO DE LA APP (Arriba Izquierda - Bajado 15px de 60 a 75)
+    // 2.5 LOGO DE LA APP (Arriba Izquierda - Bajado otros 15px de 75 a 90)
     try {
         const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
-        drawImageProp(ctxOut, logoImg, 100, 75, 300, 140, 0, 0);
+        drawImageProp(ctxOut, logoImg, 100, 90, 300, 140, 0, 0);
     } catch(e) {}
 
     // --- 2.6 INFO DE PARTIDO ---
@@ -867,12 +867,14 @@ async function drawCarnetOverlay(ctx, player) {
         } catch(e) {}
     }
 
-    // 5. NOMBRE DEL JUGADOR
+    // 5. NOMBRE DEL JUGADOR (CON SOMBRA AGRESIVA)
     const finalX = 130 - 10; 
     ctx.textAlign = "left";
     ctx.save();
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = "black";
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = "rgba(0,0,0,0.9)";
+    ctx.shadowOffsetX = 3;
+    ctx.shadowOffsetY = 3;
     
     ctx.fillStyle = "rgba(255,255,255,0.8)";
     ctx.font = "400 35px Outfit";
@@ -1000,10 +1002,10 @@ async function drawSportsTicker(ctx, player) {
     ctx.fillText(`${player.number} | ${displayName}`, currentX, bY + 82);
     ctx.restore();
     
-    // 5.5 ICONO CAPITÁN (Estilo Carnet - Subido 10px)
+    // 5.5 ICONO CAPITÁN (Estilo Carnet - Separado 15px del nombre)
     if (player.name.includes("(C)")) {
         const nameW = ctx.measureText(`${player.number} | ${displayName}`).width;
-        const capX = currentX + nameW + 40;
+        const capX = currentX + nameW + 15 + 24; // 15px de margen + radio de 24
         ctx.save();
         ctx.fillStyle = "#ff9800";
         ctx.beginPath();
@@ -1031,7 +1033,7 @@ async function drawMatchInfo(ctx, teamA, teamB) {
     const totalW = (sSize * 2) + 20;
     // Alineado con el final de la barra negra (100 + 1720 = 1820)
     const x = 1820 - totalW; 
-    const y = 75; // Bajado 15px para alinear con el logo
+    const y = 90; // Bajado otros 15px (total 90)
     
     ctx.save();
     ctx.globalAlpha = 1.0;
