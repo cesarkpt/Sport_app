@@ -705,10 +705,10 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
     
     await drawSportsTicker(ctxOut, player);
     
-    // 2.5 LOGO DE LA APP (Arriba Izquierda)
+    // 2.5 LOGO DE LA APP (Arriba Izquierda - Bajado 15px de 60 a 75)
     try {
         const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
-        drawImageProp(ctxOut, logoImg, 100, 60, 300, 140, 0, 0);
+        drawImageProp(ctxOut, logoImg, 100, 75, 300, 140, 0, 0);
     } catch(e) {}
 
     // --- 2.6 INFO DE PARTIDO ---
@@ -916,28 +916,32 @@ async function drawCarnetOverlay(ctx, player) {
 
 
 async function drawBackground(ctx, color, color2) {
-    // 1. Imagen de Estadio (FONDO PROFUNDO)
+    // 0. Fondo Negro Base
+    ctx.fillStyle = "#0a0e14";
+    ctx.fillRect(0, 0, 1920, 1080);
+
+    // 1. Imagen de Estadio (AL FONDO con opacidad)
     try {
         const bgImg = await loadImg("https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=1920&auto=format&fit=crop");
         ctx.save();
-        // Desenfoque extremo y leve reducción de brillo para el cristal
-        ctx.filter = "blur(25px) brightness(0.8)"; 
-        ctx.globalAlpha = 1.0; 
+        ctx.globalAlpha = 0.4; // Imagen al 40%
         ctx.drawImage(bgImg, 0, 0, 1920, 1080);
         ctx.restore();
-    } catch(e) {
-        ctx.fillStyle = "#0a0e14";
-        ctx.fillRect(0, 0, 1920, 1080);
-    }
+    } catch(e) {}
     
-    // 2. Capa de "Ahumado" (Profundidad y contraste)
+    // 2. EFECTO CRISTAL AHUMADO (ENCIMA DE LA IMAGEN)
+    ctx.save();
+    // Simular el esmerilado aplicando un overlay con blur (el blur de Canvas afecta a lo que se dibuja)
+    // Dibujamos una capa semi-transparente y le aplicamos desenfoque
     ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
-    ctx.fillRect(0, 0, 1920, 1080);
+    ctx.filter = "blur(25px)"; 
+    ctx.fillRect(-50, -50, 2020, 1180); // Un poco más grande por el blur
+    ctx.restore();
 
     // 3. Overlay de color del equipo (Vignette suave)
     const grd = ctx.createRadialGradient(960, 540, 100, 960, 540, 1200);
     grd.addColorStop(0, "rgba(0, 0, 0, 0)");
-    grd.addColorStop(1, (color2 || color) + "33"); // Muy sutil
+    grd.addColorStop(1, (color2 || color) + "33"); 
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, 1920, 1080);
 }
@@ -982,26 +986,33 @@ async function drawSportsTicker(ctx, player) {
         currentX += 110;
     }
 
-    // 5. Nombre y Número
+    // 5. Nombre y Número (CON SOMBRA AGRESIVA)
     ctx.textAlign = "left";
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.9)";
+    ctx.shadowBlur = 20;
+    ctx.shadowOffsetX = 5;
+    ctx.shadowOffsetY = 5;
+    
     ctx.fillStyle = "#FFF";
     ctx.font = "900 65px Outfit";
     const displayName = player.name.replace(" (C)", "");
     ctx.fillText(`${player.number} | ${displayName}`, currentX, bY + 82);
+    ctx.restore();
     
-    // 5.5 ICONO CAPITÁN (Estilo Carnet)
+    // 5.5 ICONO CAPITÁN (Estilo Carnet - Subido 10px)
     if (player.name.includes("(C)")) {
         const nameW = ctx.measureText(`${player.number} | ${displayName}`).width;
         const capX = currentX + nameW + 40;
         ctx.save();
         ctx.fillStyle = "#ff9800";
         ctx.beginPath();
-        ctx.arc(capX, bY + 68, 24, 0, Math.PI * 2);
+        ctx.arc(capX, bY + 58, 24, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "black";
         ctx.font = "900 28px Outfit";
         ctx.textAlign = "center";
-        ctx.fillText("C", capX, bY + 78);
+        ctx.fillText("C", capX, bY + 68);
         ctx.restore();
     }
 
@@ -1020,7 +1031,7 @@ async function drawMatchInfo(ctx, teamA, teamB) {
     const totalW = (sSize * 2) + 20;
     // Alineado con el final de la barra negra (100 + 1720 = 1820)
     const x = 1820 - totalW; 
-    const y = 60; 
+    const y = 75; // Bajado 15px para alinear con el logo
     
     ctx.save();
     ctx.globalAlpha = 1.0;
