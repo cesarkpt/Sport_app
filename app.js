@@ -1194,8 +1194,12 @@ function downloadImage(canvasId, name) {
 
 function resetApp() {
     elements.resultArea.classList.add('hidden');
+    elements.processingArea.classList.add('hidden');
+    document.getElementById('editPanel').classList.add('hidden');
     elements.uploadSection.classList.remove('hidden');
     elements.imageInput.value = '';
+    // Recargar para limpiar estados de IA si es necesario
+    // location.reload(); 
 }
 
 function drawPerimeterShadow(ctx, w, h) {

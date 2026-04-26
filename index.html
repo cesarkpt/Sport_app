@@ -246,7 +246,10 @@
                                 </div>
                             </div>
                         </div>
-                        <button class="btn-primary" id="confirmEditBtn" style="margin-top:15px">CONFIRMAR Y CONTINUAR</button>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+                            <button class="btn-primary" id="confirmEditBtn">CONFIRMAR</button>
+                            <button class="btn-secondary" onclick="resetApp()" style="background: rgba(255,0,0,0.1); color: #ff4444; border-color: rgba(255,0,0,0.2);">CANCELAR</button>
+                        </div>
                     </div>
 
                     <div class="step" id="step2">
