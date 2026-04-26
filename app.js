@@ -410,7 +410,7 @@ async function processPlayerPhoto(processingImg, originalImg) {
     
     // 3. Composición de Layout
     updateStep(3, "Creando arte HD...");
-    await generateLayouts(finalPlayerImg, finalData.data, shouldRemoveBg, finalData.crop);
+    await generateLayouts(finalPlayerImg, finalData.data, shouldRemoveBg, finalData.crop, finalData.cropHD);
         
         // 4. Guardado Automático en Drive
         updateStep(3, "Subiendo a Drive...");
@@ -429,7 +429,7 @@ async function processPlayerPhoto(processingImg, originalImg) {
         alert("Ocurrió un error al analizar la foto. Intentaremos continuar manualmente.");
         const fallbackData = { name: "ERROR IA", team: "DESCONOCIDO", number: "??", position: "DEL", teamCode: "DFT", color: "#777", color2: "#777" };
         const corrected = await waitForManualCorrection(fallbackData, "??", originalImg);
-        await generateLayouts(originalImg, corrected.data, false, corrected.crop);
+        await generateLayouts(originalImg, corrected.data, false, corrected.crop, corrected.cropHD);
         
         // También guardar en Drive en modo manual/emergencia
         await saveToDrive(elements.outputCanvas.toDataURL('image/png'), corrected.data);
@@ -478,56 +478,58 @@ async function waitForManualCorrection(initialData, detectedNumber, playerImg) {
     const editCapBtn = document.getElementById('editCapBtn');
     const confirmBtn = document.getElementById('confirmEditBtn');
     
-    // --- LÓGICA DEL CROPPER MANUAL ---
+    // --- CROPPER 1: CARNET ---
     const cropperImg = document.getElementById('cropperImg');
     const cropperBox = document.getElementById('cropperBox');
-    const container = document.getElementById('cropperContainer');
     const zoomSlider = document.getElementById('cropperZoom');
-    
     cropperImg.src = playerImg.src || playerImg.toDataURL();
+    let drag1 = { isDragging: false, startY: 0, startX: 0, currY: -50, currX: -50, zoom: 1 };
     
-    let isDragging = false;
-    let startY, startX;
-    let currentY = -50, currentX = -50; 
-    let currentZoom = 1;
+    // --- CROPPER 2: PRO HD ---
+    const cropperImgHD = document.getElementById('cropperImgHD');
+    const cropperBoxHD = document.getElementById('cropperBoxHD');
+    const zoomSliderHD = document.getElementById('cropperZoomHD');
+    cropperImgHD.src = playerImg.src || playerImg.toDataURL();
+    let drag2 = { isDragging: false, startY: 0, startX: 0, currY: -20, currX: -100, zoom: 0.4 };
 
-    const updateCropperUI = () => {
-        cropperBox.style.top = currentY + "px";
-        cropperBox.style.left = currentX + "px";
-        cropperImg.style.width = (400 * currentZoom) + "px";
+    const updateUI = (box, drag, img, zoomEl) => {
+        box.style.top = drag.currY + "px";
+        box.style.left = drag.currX + "px";
+        img.style.width = (400 * drag.zoom) + "px";
     };
 
-    // Aplicar estado inicial
-    updateCropperUI();
+    updateUI(cropperBox, drag1, cropperImg);
+    updateUI(cropperBoxHD, drag2, cropperImgHD);
 
-    zoomSlider.oninput = () => {
-        currentZoom = parseFloat(zoomSlider.value);
-        updateCropperUI();
+    zoomSlider.oninput = () => { drag1.zoom = parseFloat(zoomSlider.value); updateUI(cropperBox, drag1, cropperImg); };
+    zoomSliderHD.oninput = () => { drag2.zoom = parseFloat(zoomSliderHD.value); updateUI(cropperBoxHD, drag2, cropperImgHD); };
+
+    // Eventos Genéricos de Arrastre
+    const setupDrag = (container, dragObj, box, img) => {
+        const start = (e) => {
+            dragObj.isDragging = true;
+            const event = e.touches ? e.touches[0] : e;
+            dragObj.startY = event.clientY - dragObj.currY;
+            dragObj.startX = event.clientX - dragObj.currX;
+        };
+        const move = (e) => {
+            if (!dragObj.isDragging) return;
+            const event = e.touches ? e.touches[0] : e;
+            dragObj.currY = event.clientY - dragObj.startY;
+            dragObj.currX = event.clientX - dragObj.startX;
+            updateUI(box, dragObj, img);
+        };
+        const stop = () => dragObj.isDragging = false;
+        container.addEventListener('mousedown', start);
+        container.addEventListener('touchstart', start);
+        window.addEventListener('mousemove', move);
+        window.addEventListener('touchmove', move);
+        window.addEventListener('mouseup', stop);
+        window.addEventListener('touchend', stop);
     };
-    
-    const startDrag = (e) => {
-        isDragging = true;
-        const event = e.touches ? e.touches[0] : e;
-        startY = event.clientY - currentY;
-        startX = event.clientX - currentX;
-    };
 
-    const doDrag = (e) => {
-        if (!isDragging) return;
-        const event = e.touches ? e.touches[0] : e;
-        currentY = event.clientY - startY;
-        currentX = event.clientX - startX;
-        updateCropperUI();
-    };
-
-    const stopDrag = () => isDragging = false;
-
-    container.addEventListener('mousedown', startDrag);
-    container.addEventListener('touchstart', startDrag);
-    window.addEventListener('mousemove', doDrag);
-    window.addEventListener('touchmove', doDrag);
-    window.addEventListener('mouseup', stopDrag);
-    window.addEventListener('touchend', stopDrag);
+    setupDrag(document.getElementById('cropperContainer'), drag1, cropperBox, cropperImg);
+    setupDrag(document.getElementById('cropperContainerHD'), drag2, cropperBoxHD, cropperImgHD);
 
     // Poblar campos iniciales... (resto igual)
     editName.value = initialData.name.replace(" (C)", "");
@@ -574,16 +576,13 @@ async function waitForManualCorrection(initialData, detectedNumber, playerImg) {
             const finalPos = activePosBtn ? activePosBtn.innerText : "DEL";
             const finalCap = editCapBtn.classList.contains('active');
 
-            // Calcular geometría del crop manual con ZOOM
-            const finalImgWidthInCropper = 400 * currentZoom;
-            const scale = playerImg.width / finalImgWidthInCropper; 
-            
-            const cropData = {
-                x: -currentX * scale,
-                y: -currentY * scale,
-                w: 200 * scale,
-                h: 280 * scale
-            };
+            // Calcular geometría CROP 1 (Carnet)
+            const s1 = playerImg.width / (400 * drag1.zoom);
+            const crop1 = { x: -drag1.currX * s1, y: -drag1.currY * s1, w: 200 * s1, h: 280 * s1 };
+
+            // Calcular geometría CROP 2 (Pro HD)
+            const s2 = playerImg.width / (400 * drag2.zoom);
+            const crop2 = { x: -drag2.currX * s2, y: -drag2.currY * s2, w: 320 * s2, h: 180 * s2 };
 
             const updatedData = {
                 name: editName.value.toUpperCase() + (finalCap ? " (C)" : ""),
@@ -597,7 +596,7 @@ async function waitForManualCorrection(initialData, detectedNumber, playerImg) {
             };
 
             editPanel.classList.add('hidden');
-            resolve({ data: updatedData, crop: cropData });
+            resolve({ data: updatedData, crop: crop1, cropHD: crop2 });
         };
     });
 }
@@ -635,12 +634,11 @@ async function removeBackground(img) {
     });
 }
 
-async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manualCrop = null) {
+async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manualCrop = null, manualCropHD = null) {
     // --- 1. ENCUADRE CARNET (Cara y Hombros) ---
-    // Si hay ajuste manual, lo usamos. Si no, smart crop.
     const carnetCrop = manualCrop || createSmartCrop(playerCanvas, shouldRemoveBg);
     
-    // --- 2. CANVAS DE TRANSMISIÓN (Plano Americano) ---
+    // --- 2. CANVAS DE TRANSMISIÓN (Plano Americano / Manual) ---
     const ctxOut = elements.outputCanvas.getContext('2d');
     elements.outputCanvas.width = CONFIG.outputWidth;
     elements.outputCanvas.height = CONFIG.outputHeight;
@@ -648,31 +646,31 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
     if (shouldRemoveBg) {
         await drawBackground(ctxOut, player.color);
     } else {
-        // Ajustar imagen original para que no se deforme (Cover)
         const scale = Math.max(CONFIG.outputWidth / playerCanvas.width, CONFIG.outputHeight / playerCanvas.height);
         const w = playerCanvas.width * scale;
         const h = playerCanvas.height * scale;
         ctxOut.drawImage(playerCanvas, (CONFIG.outputWidth - w) / 2, (CONFIG.outputHeight - h) / 2, w, h);
     }
     
-    // Jugador en Plano Americano
-    if (shouldRemoveBg) {
+    // Jugador (Priorizar manualCropHD)
+    if (manualCropHD) {
+        ctxOut.drawImage(playerCanvas, manualCropHD.x, manualCropHD.y, manualCropHD.w, manualCropHD.h, 100, 100, CONFIG.outputWidth - 200, CONFIG.outputHeight - 200);
+    } else if (shouldRemoveBg) {
         const scale = (CONFIG.outputHeight * 0.85) / playerCanvas.height;
         const pW = playerCanvas.width * scale;
         const pH = playerCanvas.height * scale;
         ctxOut.save();
         ctxOut.shadowColor = "rgba(0,0,0,0.6)";
         ctxOut.shadowBlur = 30;
-        // Ajuste para no cortar cabezas: bajar 20px
         ctxOut.drawImage(playerCanvas, (CONFIG.outputWidth - pW) / 2, (CONFIG.outputHeight - pH) + 20, pW, pH);
         ctxOut.restore();
     }
     
     await drawSportsTicker(ctxOut, player);
     
-    // 2.5 LOGO DE LA APP (Arriba Izquierda)
+    // 2.5 LOGO DE LA APP (Arriba Izquierda) - Forzar transparencia con t=0
     try {
-        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/12JwoN7xaFr9r_2UM_GUg5shi34pXSizn");
+        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/12JwoN7xaFr9r_2UM_GUg5shi34pXSizn?t=0");
         ctxOut.drawImage(logoImg, 100, 60, 220, 100);
     } catch(e) {}
 
@@ -775,10 +773,10 @@ function drawCarnetOverlay(ctx, player) {
     const h = CONFIG.carnetHeight;
     const w = CONFIG.carnetWidth;
     
-    // 1. MI LOGO EN EL CARNET (Arriba Izquierda, sobre la barra)
+    // 1. MI LOGO EN EL CARNET
     try {
-        const logoImg = new Image(); logoImg.src = "https://lh3.googleusercontent.com/d/12JwoN7xaFr9r_2UM_GUg5shi34pXSizn";
-        ctx.drawImage(logoImg, 10, 20, 80, 40);
+        const logoImg = new Image(); logoImg.src = "https://lh3.googleusercontent.com/d/12JwoN7xaFr9r_2UM_GUg5shi34pXSizn?t=0";
+        ctx.drawImage(logoImg, 15, 20, 80, 40);
     } catch(e) {}
 
     // 2. NÚMERO GIGANTE AL FONDO
@@ -813,41 +811,52 @@ function drawCarnetOverlay(ctx, player) {
     const firstName = nameParts[0] || "";
     const lastName = nameParts.slice(1).join(" ") || "";
 
-    // 4. ESCUDO AL LADO DEL NOMBRE
+    // 4. ESCUDO SOLAPANDO LA BARRA LATERAL
     let textX = 90;
     if (player.shield) {
         try {
             const sImg = new Image(); sImg.src = player.shield;
-            ctx.drawImage(sImg, 80, h - 165, 90, 90);
-            textX = 190;
+            // Solapa barra (x=20)
+            ctx.drawImage(sImg, 20, h - 165, 100, 100);
+            textX = 140; // Nombre más a la izquierda, cerca del escudo
         } catch(e) {}
     }
 
     ctx.textAlign = "left";
-    ctx.fillStyle = "rgba(255,255,255,0.7)";
+    ctx.save();
+    // Sombras para legibilidad
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = "black";
+    
+    // Nombre (Pequeño)
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
     ctx.font = "400 35px Outfit";
     ctx.fillText(firstName, textX, h - 110);
     
+    // Apellido (Grande)
     ctx.fillStyle = "white";
     ctx.font = "900 65px Outfit";
     ctx.fillText(lastName.toUpperCase(), textX, h - 50);
+    ctx.restore();
     
+    // 5. NÚMERO PRINCIPAL (DERECHA)
     ctx.fillStyle = player.color;
     ctx.font = "900 130px Outfit";
     ctx.textAlign = "right";
     ctx.fillText(player.number, w - 40, h - 50);
 
-    // Icono Capitán (C) 
+    // 6. Icono Capitán (C) CENTRADO VERTICAL, RECARGADO A LA DERECHA
     if (player.name.includes("(C)")) {
         ctx.save();
         ctx.fillStyle = "#ff9800";
         ctx.beginPath();
-        ctx.arc(w - 100, h - 160, 28, 0, Math.PI * 2);
+        // Recargado a la derecha, altura media del área de nombre
+        ctx.arc(w - 60, h - 180, 28, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "black";
         ctx.font = "900 32px Outfit";
         ctx.textAlign = "center";
-        ctx.fillText("C", w - 100, h - 148);
+        ctx.fillText("C", w - 60, h - 168);
         ctx.restore();
     }
 }
