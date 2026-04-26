@@ -38,6 +38,47 @@ function toggleTeamManager() {
     }
 }
 
+async function syncWithCloud() {
+    const btn = document.querySelector('button[onclick="syncWithCloud()"]');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "CARGANDO... ⏳";
+    btn.disabled = true;
+
+    try {
+        let result;
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            result = await new Promise((resolve, reject) => {
+                google.script.run
+                    .withSuccessHandler(resolve)
+                    .withFailureHandler(reject)
+                    .getAllTeamsData();
+            });
+        } else {
+            const resp = await fetch(`${GAS_WEB_APP_URL}?action=getAllTeamsData`);
+            result = await resp.json();
+        }
+
+        if (result && result.success) {
+            if (result.data && Object.keys(result.data).length > 0) {
+                allTeams = result.data;
+                localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
+                renderTeamsList();
+                alert("¡Equipos sincronizados con éxito! ✅");
+            } else {
+                alert("No hay datos guardados en la nube todavía.");
+            }
+        } else {
+            alert("Error: " + (result ? result.error : "Error de respuesta"));
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Error de conexión. Verifica tu internet o el despliegue del script.");
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
 function renderTeamsList() {
     const list = document.getElementById('teamsList');
     const strip = document.getElementById('teamStrip');
