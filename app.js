@@ -20,7 +20,7 @@ if (legacyTeam && legacyTeam.name) {
     allTeams[legacyId] = {
         ...legacyTeam,
         id: legacyId,
-        code: legacyTeam.name.substring(0,3).toUpperCase()
+        code: legacyTeam.name.substring(0, 3).toUpperCase()
     };
     localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
     localStorage.removeItem('sportshub_team'); // Limpiar viejo
@@ -42,63 +42,43 @@ function toggleTeamManager() {
 }
 
 async function syncWithCloud() {
-    alert("🔄 Iniciando sincronización... Por favor, no cierres esta ventana.");
-    
-    const btn = document.getElementById('btnSyncCloud') || document.querySelector('button[onclick*="syncWithCloud"]');
+    const btn = document.getElementById('btnSyncCloud');
     const originalText = btn ? btn.innerHTML : "NUBE 🔄";
     
     if (btn) {
-        btn.innerHTML = "CONECTANDO... ⏳";
+        btn.innerHTML = "SINCRONIZANDO... ⏳";
         btn.disabled = true;
     }
 
     try {
-        console.log("--- DEBUG SYNC START ---");
         let result;
-        
-        // 1. Verificar si estamos en entorno Google
-        const isGoogleEnv = (typeof google !== 'undefined' && google.script && google.script.run);
-        console.log("¿Entorno Google detectado?:", isGoogleEnv);
-
-        if (isGoogleEnv) {
-            console.log("Llamando a google.script.run.getAllTeamsData()...");
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
             result = await new Promise((resolve, reject) => {
                 google.script.run
-                    .withSuccessHandler(res => {
-                        console.log("Respuesta recibida de GAS:", res);
-                        resolve(res);
-                    })
-                    .withFailureHandler(err => {
-                        console.error("Error en GAS:", err);
-                        reject(err);
-                    })
+                    .withSuccessHandler(res => resolve(res))
+                    .withFailureHandler(err => reject(err))
                     .getAllTeamsData();
             });
         } else {
-            console.log("Llamando a API externa via Fetch...");
-            const url = `${GAS_WEB_APP_URL}?action=getAllTeamsData`;
-            const resp = await fetch(url);
+            const resp = await fetch(`${GAS_WEB_APP_URL}?action=getAllTeamsData`);
             result = await resp.json();
         }
 
         if (result && result.success) {
-            const numTeams = result.data ? Object.keys(result.data).length : 0;
-            console.log("Equipos encontrados en la nube:", numTeams);
-
-            if (numTeams > 0) {
+            if (result.data && Object.keys(result.data).length > 0) {
                 allTeams = result.data;
                 localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
                 renderTeamsList();
-                alert("✅ ÉXITO: Se han cargado " + numTeams + " equipos correctamente.");
+                alert("¡Equipos sincronizados con éxito! ✅");
             } else {
-                alert("ℹ️ La nube está vacía. No hay equipos guardados todavía.");
+                alert("La base de datos en la nube está vacía.");
             }
         } else {
-            alert("❌ EL SERVIDOR RESPONDIÓ CON ERROR:\n" + (result ? result.error : "Sin respuesta"));
+            alert("Error de respuesta: " + (result ? result.error : "Sin respuesta"));
         }
     } catch (e) {
-        console.error("CRITICAL SYNC ERROR:", e);
-        alert("⚠️ ERROR CRÍTICO DE CONEXIÓN:\n" + e.message + "\n\nCausas posibles:\n- No has iniciado sesión en Google.\n- No tienes permisos en la carpeta de Drive.\n- El script ha superado su cuota diaria.");
+        console.error("Sync error:", e);
+        alert("Error de conexión con Drive.");
     } finally {
         if (btn) {
             btn.innerHTML = originalText;
@@ -112,7 +92,7 @@ function renderTeamsList() {
     const strip = document.getElementById('teamStrip');
     list.innerHTML = '';
     strip.innerHTML = '';
-    
+
     Object.entries(allTeams).forEach(([id, team]) => {
         // 1. Card para el Administrador
         const card = document.createElement('div');
@@ -160,13 +140,13 @@ function openTeamEditor(team) {
     document.getElementById('teamCoachInput').value = team.coach || "";
     document.getElementById('teamColor1').value = team.color1;
     document.getElementById('teamColor2').value = team.color2;
-    
+
     document.getElementById('teamEditor')._selectedShield = team.shield;
     document.getElementById('teamEditor')._selectedShieldWhite = team.shieldWhite;
-    
+
     document.getElementById('shieldPreview').src = team.shield || 'https://cdn-icons-png.flaticon.com/512/5351/5351333.png';
     document.getElementById('shieldWhitePreview').src = team.shieldWhite || 'https://cdn-icons-png.flaticon.com/512/5351/5351333.png';
-    
+
     renderRosterList(team.roster);
 }
 
@@ -178,24 +158,24 @@ function closeTeamEditor() {
 function renderRosterList(roster) {
     const list = document.getElementById('rosterList');
     list.innerHTML = '';
-    
+
     // Guardar referencia al roster actual en el DOM
     document.getElementById('teamEditor')._tempRoster = roster;
 
     Object.entries(roster).forEach(([num, player]) => {
         const name = typeof player === 'string' ? player : player.name;
         const pos = player.position || "DEL";
-        
+
         const item = document.createElement('div');
         item.className = 'roster-item-editable';
         item.innerHTML = `
             <input type="number" value="${num}" class="edit-num" onchange="updatePlayerInRoster('${num}', 'number', this.value)">
             <input type="text" value="${name}" class="edit-name" onchange="updatePlayerInRoster('${num}', 'name', this.value)">
             <select class="edit-pos" onchange="updatePlayerInRoster('${num}', 'position', this.value)">
-                <option value="POR" ${pos==='POR'?'selected':''}>POR</option>
-                <option value="DEF" ${pos==='DEF'?'selected':''}>DEF</option>
-                <option value="VOL" ${pos==='VOL'?'selected':''}>VOL</option>
-                <option value="DEL" ${pos==='DEL'?'selected':''}>DEL</option>
+                <option value="POR" ${pos === 'POR' ? 'selected' : ''}>POR</option>
+                <option value="DEF" ${pos === 'DEF' ? 'selected' : ''}>DEF</option>
+                <option value="VOL" ${pos === 'VOL' ? 'selected' : ''}>VOL</option>
+                <option value="DEL" ${pos === 'DEL' ? 'selected' : ''}>DEL</option>
             </select>
             <button class="delete-btn" onclick="removePlayer('${num}')">×</button>
         `;
@@ -238,13 +218,13 @@ function addPlayerToRoster() {
     if (!num || !name) return alert("Completa número y nombre");
 
     const roster = (editingTeamId && allTeams[editingTeamId]) ? allTeams[editingTeamId].roster : {};
-    
-    roster[num] = { 
-        name: name.toUpperCase(), 
+
+    roster[num] = {
+        name: name.toUpperCase(),
         position: pos,
-        isCaptain: isCap 
+        isCaptain: isCap
     };
-    
+
     document.getElementById('teamEditor')._tempRoster = tempRoster;
     document.getElementById('playerNum').value = '';
     document.getElementById('playerName').value = '';
@@ -265,7 +245,7 @@ async function saveTeam() {
     const teamData = {
         id: editingTeamId,
         name: teamName,
-        code: document.getElementById('teamCodeInput').value.toUpperCase().substring(0,3) || teamName.substring(0,3).toUpperCase(),
+        code: document.getElementById('teamCodeInput').value.toUpperCase().substring(0, 3) || teamName.substring(0, 3).toUpperCase(),
         coach: document.getElementById('teamCoachInput').value.toUpperCase(),
         color1: document.getElementById('teamColor1').value,
         color2: document.getElementById('teamColor2').value,
@@ -276,13 +256,13 @@ async function saveTeam() {
 
     const shieldInput = document.getElementById('shieldInput');
     if (shieldInput.files[0]) teamData.shield = await imageToBase64(shieldInput.files[0]);
-    
+
     const shieldWhiteInput = document.getElementById('shieldWhiteInput');
     if (shieldWhiteInput.files[0]) teamData.shieldWhite = await imageToBase64(shieldWhiteInput.files[0]);
 
     allTeams[editingTeamId] = teamData;
     localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
-    
+
     if (!activeTeamId) activeTeamId = editingTeamId;
     localStorage.setItem('sportshub_active_team_id', activeTeamId);
 
@@ -315,14 +295,14 @@ function syncWithCloud() {
     if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
             .withSuccessHandler((response) => {
-                    if (Object.keys(response.data).length === 0) {
-                        alert("La nube está vacía ☁️. Asegúrate de haber guardado el equipo en el otro dispositivo primero.");
-                    } else {
-                        allTeams = response.data;
-                        localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
-                        renderTeamsList();
-                        alert("Sincronización completa 🔄 (" + Object.keys(allTeams).length + " equipos)");
-                    }
+                if (Object.keys(response.data).length === 0) {
+                    alert("La nube está vacía ☁️. Asegúrate de haber guardado el equipo en el otro dispositivo primero.");
+                } else {
+                    allTeams = response.data;
+                    localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
+                    renderTeamsList();
+                    alert("Sincronización completa 🔄 (" + Object.keys(allTeams).length + " equipos)");
+                }
             })
             .getAllTeamsData();
     } else {
@@ -390,7 +370,7 @@ async function handleImageUpload(e) {
     elements.processingArea.classList.remove('hidden');
 
     const img = await loadImage(file);
-    
+
     // 1. Mostrar preview inmediato
     const ctx = elements.inputCanvas.getContext('2d');
     elements.inputCanvas.width = img.width;
@@ -399,7 +379,7 @@ async function handleImageUpload(e) {
 
     // 2. Optimizar para IA
     const processingImg = await resizeImage(img, CONFIG.maxProcessingSize);
-    
+
     processPlayerPhoto(processingImg, img);
 }
 
@@ -436,7 +416,7 @@ async function resizeImage(img, maxSize) {
     canvas.height = height;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(img, 0, 0, width, height);
-    
+
     const resizedImg = new Image();
     resizedImg.src = canvas.toDataURL('image/jpeg', 0.8);
     await new Promise(r => resizedImg.onload = r);
@@ -467,10 +447,10 @@ async function processPlayerPhoto(processingImg, originalImg) {
         updateStep(1, "Analizando dorsal...");
         const ocrResult = await recognizeText(processingImg);
         let detectedNumber = extractNumber(ocrResult.data.text);
-        
+
         // Obtener equipo activo
         const team = allTeams[activeTeamId] || { name: "DRAFT", code: "DFT", coach: "", color1: "#00ff88", color2: "#00d4ff", roster: {} };
-        
+
         // INTELIGENCIA: Si el número detectado no está en la nómina, 
         // pero al invertirlo sí está, sugerir el invertido (ej: 01 -> 10)
         if (!team.roster[detectedNumber]) {
@@ -499,31 +479,31 @@ async function processPlayerPhoto(processingImg, originalImg) {
             shield: team.shield
         };
 
-    // --- IA DE RECORTE (Si está activa) ---
-    const shouldRemoveBg = document.getElementById('bgToggle').checked;
-    let finalPlayerImg;
-    if (shouldRemoveBg) {
-        updateStep(2, "IA de recorte...");
-        finalPlayerImg = await removeBackground(originalImg);
-        updateStep(2, "Recorte completado");
-    } else {
-        updateStep(2, "Fondo original conservado");
-        finalPlayerImg = originalImg;
-    }
+        // --- IA DE RECORTE (Si está activa) ---
+        const shouldRemoveBg = document.getElementById('bgToggle').checked;
+        let finalPlayerImg;
+        if (shouldRemoveBg) {
+            updateStep(2, "IA de recorte...");
+            finalPlayerImg = await removeBackground(originalImg);
+            updateStep(2, "Recorte completado");
+        } else {
+            updateStep(2, "Fondo original conservado");
+            finalPlayerImg = originalImg;
+        }
 
-    // --- PAUSA PARA CORRECCIÓN MANUAL Y ENCUADRE ---
-    const finalData = await waitForManualCorrection(playerData, detectedNumber, finalPlayerImg);
-    
-    // 3. Composición de Layout
-    updateStep(3, "Creando arte HD...");
-    await generateLayouts(finalPlayerImg, finalData.data, shouldRemoveBg, finalData.crop, finalData.cropHD);
-        
+        // --- PAUSA PARA CORRECCIÓN MANUAL Y ENCUADRE ---
+        const finalData = await waitForManualCorrection(playerData, detectedNumber, finalPlayerImg);
+
+        // 3. Composición de Layout
+        updateStep(3, "Creando arte HD...");
+        await generateLayouts(finalPlayerImg, finalData.data, shouldRemoveBg, finalData.crop, finalData.cropHD);
+
         // 4. Guardado Automático en Drive
         updateStep(3, "Subiendo a Drive...");
         await saveToDrive(elements.outputCanvas.toDataURL('image/png'), finalData.data);
-        
+
         updateStep(3, "Listo para descargar");
-        
+
         // 5. Mostrar Resultados
         setTimeout(() => {
             elements.processingArea.classList.add('hidden');
@@ -536,7 +516,7 @@ async function processPlayerPhoto(processingImg, originalImg) {
         const fallbackData = { name: "ERROR IA", team: "DESCONOCIDO", number: "??", position: "DEL", teamCode: "DFT", color: "#777", color2: "#777" };
         const corrected = await waitForManualCorrection(fallbackData, "??", originalImg);
         await generateLayouts(originalImg, corrected.data, false, corrected.crop, corrected.cropHD);
-        
+
         // También guardar en Drive en modo manual/emergencia
         await saveToDrive(elements.outputCanvas.toDataURL('image/png'), corrected.data);
 
@@ -583,14 +563,14 @@ async function waitForManualCorrection(initialData, detectedNumber, playerImg) {
     const editTeam = document.getElementById('editTeam');
     const editCapBtn = document.getElementById('editCapBtn');
     const confirmBtn = document.getElementById('confirmEditBtn');
-    
+
     // --- CROPPER 1: CARNET ---
     const cropperImg = document.getElementById('cropperImg');
     const cropperBox = document.getElementById('cropperBox');
     const zoomSlider = document.getElementById('cropperZoom');
     cropperImg.src = playerImg.src || playerImg.toDataURL();
     let drag1 = { isDragging: false, startY: 0, startX: 0, currY: -50, currX: -50, zoom: 1 };
-    
+
     // --- CROPPER 2: PRO HD ---
     const cropperImgHD = document.getElementById('cropperImgHD');
     const cropperBoxHD = document.getElementById('cropperBoxHD');
@@ -641,13 +621,13 @@ async function waitForManualCorrection(initialData, detectedNumber, playerImg) {
     editName.value = initialData.name.replace(" (C)", "");
     editNumber.value = detectedNumber === "??" ? "" : detectedNumber;
     editTeam.value = initialData.team;
-    
+
     // Setear posición inicial en los botones
     const pos = initialData.position || "DEL";
     document.querySelectorAll('#editPosBtns .pos-btn').forEach(b => {
         b.classList.toggle('active', b.innerText === pos);
     });
-    
+
     // Setear capitán
     const isCap = initialData.name.includes("(C)");
     editCapBtn.classList.toggle('active', isCap);
@@ -661,13 +641,13 @@ async function waitForManualCorrection(initialData, detectedNumber, playerImg) {
             const name = typeof p === 'string' ? p : p.name;
             const pos = typeof p === 'string' ? "DEL" : (p.position || "DEL");
             const cap = typeof p === 'string' ? false : p.isCaptain;
-            
+
             editName.value = name;
             editCapBtn.classList.toggle('active', cap);
             document.querySelectorAll('#editPosBtns .pos-btn').forEach(b => {
                 b.classList.toggle('active', b.innerText === pos);
             });
-            
+
             editName.style.borderColor = "var(--primary)";
             setTimeout(() => editName.style.borderColor = "", 500);
         }
@@ -729,11 +709,11 @@ async function removeBackground(img) {
             ctx.filter = 'blur(3px)'; // Suaviza los bordes de la máscara
             ctx.drawImage(results.segmentationMask, 0, 0, canvas.width, canvas.height);
             ctx.restore();
-            
+
             // 2. Extraer jugador con bordes suaves
             ctx.globalCompositeOperation = 'source-in';
             ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-            
+
             resolve(canvas);
         });
         selfieSegmentation.send({ image: img });
@@ -743,12 +723,12 @@ async function removeBackground(img) {
 async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manualCrop = null, manualCropHD = null) {
     // --- 1. ENCUADRE CARNET (Cara y Hombros) ---
     const carnetCrop = manualCrop || createSmartCrop(playerCanvas, shouldRemoveBg);
-    
+
     // --- 2. CANVAS DE TRANSMISIÓN (Plano Americano / Manual) ---
     const ctxOut = elements.outputCanvas.getContext('2d');
     elements.outputCanvas.width = CONFIG.outputWidth;
     elements.outputCanvas.height = CONFIG.outputHeight;
-    
+
     if (shouldRemoveBg) {
         await drawBackground(ctxOut, player.color);
     } else {
@@ -757,14 +737,14 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
         const h = playerCanvas.height * scale;
         ctxOut.drawImage(playerCanvas, (CONFIG.outputWidth - w) / 2, (CONFIG.outputHeight - h) / 2, w, h);
     }
-    
+
     // Jugador (ESCALADO AL ANCHO DE LA BARRA TICKER: 1720px)
     if (manualCropHD) {
         const targetW = 1720;
         const scale = targetW / manualCropHD.w;
         const finalW = targetW;
         const finalH = manualCropHD.h * scale;
-        
+
         ctxOut.save();
         if (shouldRemoveBg) {
             ctxOut.shadowColor = "rgba(0,0,0,0.6)";
@@ -772,8 +752,8 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
         }
         // Dibujar alineado con la parte superior del logo (Y=90)
         const finalY = 90;
-        ctxOut.drawImage(playerCanvas, 
-            manualCropHD.x, manualCropHD.y, manualCropHD.w, manualCropHD.h, 
+        ctxOut.drawImage(playerCanvas,
+            manualCropHD.x, manualCropHD.y, manualCropHD.w, manualCropHD.h,
             (CONFIG.outputWidth - finalW) / 2, finalY, finalW, finalH
         );
         ctxOut.restore();
@@ -787,7 +767,7 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
         ctxOut.drawImage(playerCanvas, (CONFIG.outputWidth - pW) / 2, (CONFIG.outputHeight - pH) + 20, pW, pH);
         ctxOut.restore();
     }
-    
+
     /* 
     // COMENTADO: Sombra inferior eliminada por petición de fondo totalmente negro
     const grdShadow = ctxOut.createLinearGradient(0, CONFIG.outputHeight - 300, 0, CONFIG.outputHeight);
@@ -796,17 +776,17 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
     ctxOut.fillStyle = grdShadow;
     ctxOut.fillRect(0, CONFIG.outputHeight - 300, CONFIG.outputWidth, 300);
     */
-    
+
     // --- SOMBRA PERIMETRAL (4 Lados - Estilo Carnet) ---
     drawPerimeterShadow(ctxOut, CONFIG.outputWidth, CONFIG.outputHeight);
-    
+
     await drawSportsTicker(ctxOut, player);
-    
+
     // 2.5 LOGO DE LA APP (Arriba Izquierda - Bajado otros 15px de 75 a 90)
     try {
         const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
         drawImageProp(ctxOut, logoImg, 100, 90, 300, 140, 0, 0);
-    } catch(e) {}
+    } catch (e) { }
 
     // --- 2.6 INFO DE PARTIDO ---
     if (selectedMatchTeamA && selectedMatchTeamB) {
@@ -819,7 +799,7 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
     const ch = CONFIG.carnetHeight;
     elements.carnetCanvas.width = cw;
     elements.carnetCanvas.height = ch;
-    
+
     // Fondo Carnet con Degradado 45 grados (Si se quita el fondo)
     if (shouldRemoveBg) {
         const grdBg = ctxCarnet.createLinearGradient(0, 0, cw, ch);
@@ -827,7 +807,7 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
         grdBg.addColorStop(1, player.color2 || player.color);
         ctxCarnet.fillStyle = grdBg;
         ctxCarnet.fillRect(0, 0, cw, ch);
-        
+
         // Textura sutil
         ctxCarnet.fillStyle = "rgba(0,0,0,0.2)";
         ctxCarnet.fillRect(0, 0, cw, ch);
@@ -835,7 +815,7 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
         ctxCarnet.fillStyle = "#111";
         ctxCarnet.fillRect(0, 0, cw, ch);
     }
-    
+
     // Jugador con Zoom (Smart Crop o Manual)
     if (manualCrop) {
         // Usar coordenadas manuales directamente sobre el canvas original
@@ -845,7 +825,7 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
         const cScale = cw / carnetCrop.width;
         ctxCarnet.drawImage(carnetCrop, 0, 0, carnetCrop.width, carnetCrop.height, 0, 0, cw, carnetCrop.height * cScale);
     }
-    
+
     // Barra lateral Degradada (50px)
     const barW = 50;
     const grdSide = ctxCarnet.createLinearGradient(0, 0, 0, ch);
@@ -860,7 +840,7 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
 function createSmartCrop(playerCanvas, isTransparent = true) {
     const ctx = playerCanvas.getContext('2d');
     const pixels = ctx.getImageData(0, 0, playerCanvas.width, playerCanvas.height).data;
-    
+
     // Encontrar el primer pixel no transparente (Tope de la cabeza)
     let top = 0;
     if (isTransparent) {
@@ -876,7 +856,7 @@ function createSmartCrop(playerCanvas, isTransparent = true) {
         // Si no es transparente (fondo original), asumimos que la cabeza está al 10% del tope
         top = playerCanvas.height * 0.1;
     }
-    
+
     // Definir área de carnet
     const cropHeight = playerCanvas.height * 0.45;
     const cropWidth = cropHeight * (CONFIG.carnetWidth / CONFIG.carnetHeight);
@@ -884,7 +864,7 @@ function createSmartCrop(playerCanvas, isTransparent = true) {
     tempCanvas.width = cropWidth;
     tempCanvas.height = cropHeight;
     const tCtx = tempCanvas.getContext('2d');
-    
+
     const xOffset = (playerCanvas.width - cropWidth) / 2;
     tCtx.drawImage(playerCanvas, xOffset, top, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
     return tempCanvas;
@@ -906,12 +886,12 @@ async function drawShield(ctx, shieldUrl) {
 async function drawCarnetOverlay(ctx, player) {
     const h = CONFIG.carnetHeight;
     const w = CONFIG.carnetWidth;
-    
+
     // 1. MI LOGO EN EL CARNET (Arriba Izquierda - Más grande)
     try {
         const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
-        drawImageProp(ctx, logoImg, 15, 20, 180, 90, 0, 0); 
-    } catch(e) {}
+        drawImageProp(ctx, logoImg, 15, 20, 180, 90, 0, 0);
+    } catch (e) { }
 
     // 2. INFO PARTIDO EN CARNET (Match Day)
     if (selectedMatchTeamA && selectedMatchTeamB) {
@@ -919,10 +899,10 @@ async function drawCarnetOverlay(ctx, player) {
         const teamB = allTeams[selectedMatchTeamB];
         const stage = document.getElementById('matchStage').value;
         const date = document.getElementById('matchDate').value || "";
-        
+
         const ms = 60; // Aumentado de 40 a 60
         const totalW = (ms * 2) + 15;
-        const startX = w - totalW - 25; 
+        const startX = w - totalW - 25;
         const my = 20;
 
         try {
@@ -930,11 +910,11 @@ async function drawCarnetOverlay(ctx, player) {
             drawImageProp(ctx, imgA, startX, my, ms, ms);
             const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
             drawImageProp(ctx, imgB, startX + ms + 15, my, ms, ms);
-        } catch(e) {}
-        
+        } catch (e) { }
+
         ctx.fillStyle = "rgba(255,255,255,0.9)";
         ctx.textAlign = "center";
-        const centerX = startX + totalW/2;
+        const centerX = startX + totalW / 2;
         ctx.font = "900 18px Outfit"; // Aumentado de 12 a 18
         ctx.fillText(stage.toUpperCase(), centerX, my + ms + 25);
         ctx.font = "400 14px Outfit"; // Aumentado de 10 a 14
@@ -944,12 +924,12 @@ async function drawCarnetOverlay(ctx, player) {
     // 3. (ELIMINADO NÚMERO GIGANTE)
 
     // Degradado inferior
-    const grd = ctx.createLinearGradient(0, h-350, 0, h);
+    const grd = ctx.createLinearGradient(0, h - 350, 0, h);
     grd.addColorStop(0, "transparent");
     grd.addColorStop(1, "black");
     ctx.fillStyle = grd;
-    ctx.fillRect(0, h-350, w, 350);
-    
+    ctx.fillRect(0, h - 350, w, 350);
+
     const cleanName = player.name.replace(" (C)", "");
     const nameParts = cleanName.split(" ");
     const firstName = nameParts[0] || "";
@@ -960,20 +940,20 @@ async function drawCarnetOverlay(ctx, player) {
     if (player.shield) {
         try {
             const sImg = await loadImg(player.shield);
-            ctx.drawImage(sImg, 10, h - 150, 100, 100); 
-        } catch(e) {}
+            ctx.drawImage(sImg, 10, h - 150, 100, 100);
+        } catch (e) { }
     }
 
     // 5. NOMBRE DEL JUGADOR (Dinamismo para evitar solapamiento)
-    const finalX = 130 - 10; 
+    const finalX = 130 - 10;
     let firstSize = 28;
     let lastSize = 50;
-    
+
     // Medir ancho para ajuste dinámico
     ctx.font = `900 ${lastSize}px Outfit`;
     const nameWidth = ctx.measureText(lastName.toUpperCase()).width;
     const limitX = w - 180; // Margen antes del número
-    
+
     if (finalX + nameWidth > limitX) {
         firstSize *= 0.8;
         lastSize *= 0.8;
@@ -982,14 +962,14 @@ async function drawCarnetOverlay(ctx, player) {
     ctx.textAlign = "left";
     ctx.save();
     ctx.shadowBlur = 15;
-    ctx.shadowColor = "rgba(0, 0, 0, 0.3)"; 
+    ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
     ctx.shadowOffsetX = 2;
     ctx.shadowOffsetY = 2;
-    
+
     ctx.fillStyle = "rgba(255,255,255,0.8)";
     ctx.font = `400 ${firstSize}px Outfit`;
     ctx.fillText(firstName, finalX, h - 100);
-    
+
     ctx.fillStyle = "white";
     ctx.font = `900 ${lastSize}px Outfit`;
     ctx.fillText(lastName.toUpperCase(), finalX, h - 50);
@@ -1003,19 +983,19 @@ async function drawCarnetOverlay(ctx, player) {
         ctx.fillText(` [${player.position.toUpperCase()}]`, finalX + firstNameW + 5, h - 100);
         ctx.restore();
     }
-    
+
     ctx.restore();
 
     // 6. NÚMERO CON DEGRADADO (Reducido a 140px)
     ctx.save();
     const grdNum = ctx.createLinearGradient(w - 150, h - 150, w, h - 50);
     const hexToRgba = (hex, alpha) => {
-        const r = parseInt(hex.slice(1,3), 16), g = parseInt(hex.slice(3,5), 16), b = parseInt(hex.slice(5,7), 16);
+        const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
         return `rgba(${r},${g},${b},${alpha})`;
     };
     grdNum.addColorStop(0, hexToRgba(player.color, 0.6));
     grdNum.addColorStop(1, hexToRgba(player.color2 || player.color, 0.6));
-    
+
     ctx.fillStyle = grdNum;
     ctx.font = "italic 900 140px Outfit";
     ctx.textAlign = "right";
@@ -1041,19 +1021,19 @@ async function drawCarnetOverlay(ctx, player) {
 
 async function drawBackground(ctx, color, color2) {
     // Fondo TOTALMENTE NEGRO sin elementos por petición del usuario
-    ctx.fillStyle = "#000000"; 
+    ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, 1920, 1080);
 }
 
 async function drawSportsTicker(ctx, player) {
     const bY = 1080 - 180;
-    
+
     // 1. Fondo Glassmorphism
     ctx.fillStyle = "rgba(0,0,0,0.85)";
     ctx.beginPath();
     ctx.roundRect(100, bY, 1720, 120, 15);
     ctx.fill();
-    
+
     // 2. Barras laterales de color (Bicolor)
     ctx.fillStyle = player.color;
     ctx.fillRect(100, bY, 15, 60);
@@ -1069,7 +1049,7 @@ async function drawSportsTicker(ctx, player) {
             const shieldSize = 140; // Más grande que la barra (120)
             ctx.drawImage(sImg, currentX, bY - 20, shieldSize, shieldSize);
             currentX += shieldSize + 10;
-        } catch(e) {}
+        } catch (e) { }
     }
 
     // 4. Posición Badge
@@ -1092,13 +1072,13 @@ async function drawSportsTicker(ctx, player) {
     ctx.shadowBlur = 20;
     ctx.shadowOffsetX = 5;
     ctx.shadowOffsetY = 5;
-    
+
     ctx.fillStyle = "#FFF";
     ctx.font = "900 65px Outfit";
     const displayName = player.name.replace(" (C)", "");
     ctx.fillText(`${player.number} | ${displayName}`, currentX, bY + 82);
     ctx.restore();
-    
+
     // 5.5 ICONO CAPITÁN (Estilo Carnet - 400px a la derecha)
     if (player.name.includes("(C)")) {
         const nameW = ctx.measureText(`${player.number} | ${displayName}`).width;
@@ -1128,39 +1108,39 @@ async function drawSportsTicker(ctx, player) {
 async function drawMatchInfo(ctx, teamA, teamB) {
     const stage = document.getElementById('matchStage').value;
     const date = document.getElementById('matchDate').value || new Date().toLocaleDateString();
-    
-    const sSize = 100; 
+
+    const sSize = 100;
     const totalW = (sSize * 2) + 20;
     // Alineado con el final de la barra negra (100 + 1720 = 1820)
-    const x = 1820 - totalW; 
+    const x = 1820 - totalW;
     const y = 90; // Bajado otros 15px (total 90)
-    
+
     ctx.save();
     ctx.globalAlpha = 1.0;
-    
+
     if (teamA.shieldWhite || teamA.shield) {
         try {
             const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
             drawImageProp(ctx, imgA, x, y, sSize, sSize);
-        } catch(e) {}
+        } catch (e) { }
     }
-    
+
     if (teamB.shieldWhite || teamB.shield) {
         try {
             const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
             drawImageProp(ctx, imgB, x + sSize + 20, y, sSize, sSize);
-        } catch(e) {}
+        } catch (e) { }
     }
     ctx.restore();
-    
+
     // Texto Info CENTRADO respecto a los escudos
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
-    const centerX = x + totalW/2;
+    const centerX = x + totalW / 2;
 
     ctx.font = "900 30px Outfit";
     ctx.fillText(stage, centerX, y + sSize + 40);
-    
+
     ctx.font = "400 22px Outfit";
     ctx.fillStyle = "rgba(255,255,255,0.8)";
     ctx.fillText(date, centerX, y + sSize + 70);
@@ -1171,7 +1151,7 @@ function updateStep(num, text) {
     if (!el) return;
     const status = el.querySelector('p');
     status.innerText = text;
-    
+
     // Remover active de otros y poner en este
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
     el.classList.add('active');
@@ -1181,7 +1161,7 @@ function downloadImage(canvasId, name) {
     const canvas = document.getElementById(canvasId);
     const link = document.createElement('a');
     link.download = `sportshub_${name}_${Date.now()}.png`;
-    
+
     // Intentar WebP para mayor compresión si es para web, pero PNG es más compatible para descarga
     link.href = canvas.toDataURL('image/png');
     link.click();
@@ -1196,7 +1176,7 @@ function resetApp() {
 function drawPerimeterShadow(ctx, w, h) {
     ctx.save();
     // 1. Degradado Radial masivo para las esquinas
-    const grd = ctx.createRadialGradient(w/2, h/2, w/4, w/2, h/2, w/1.1);
+    const grd = ctx.createRadialGradient(w / 2, h / 2, w / 4, w / 2, h / 2, w / 1.1);
     grd.addColorStop(0, "transparent");
     grd.addColorStop(1, "rgba(0,0,0,0.85)");
     ctx.fillStyle = grd;
@@ -1204,20 +1184,20 @@ function drawPerimeterShadow(ctx, w, h) {
 
     // 2. Refuerzo en bordes (Linear)
     const edgeSize = 250;
-    
+
     // Superior
-    const grdTop = ctx.createLinearGradient(0,0,0,edgeSize);
+    const grdTop = ctx.createLinearGradient(0, 0, 0, edgeSize);
     grdTop.addColorStop(0, "rgba(0,0,0,0.9)");
     grdTop.addColorStop(1, "transparent");
     ctx.fillStyle = grdTop;
-    ctx.fillRect(0,0,w,edgeSize);
+    ctx.fillRect(0, 0, w, edgeSize);
 
     // Inferior
-    const grdBot = ctx.createLinearGradient(0,h,0,h-edgeSize);
+    const grdBot = ctx.createLinearGradient(0, h, 0, h - edgeSize);
     grdBot.addColorStop(0, "rgba(0,0,0,0.9)");
     grdBot.addColorStop(1, "transparent");
     ctx.fillStyle = grdBot;
-    ctx.fillRect(0,h-edgeSize,w,edgeSize);
+    ctx.fillRect(0, h - edgeSize, w, edgeSize);
 
     ctx.restore();
 }
@@ -1244,16 +1224,16 @@ async function initCarouselCropper(input) {
 
     const img = await loadImg(URL.createObjectURL(file));
     carouselState.img = img;
-    
+
     const viewImg = document.getElementById('carouselImg');
     viewImg.src = img.src;
-    
+
     document.getElementById('carouselUploadArea').classList.add('hidden');
     document.getElementById('carouselEditor').classList.remove('hidden');
-    
+
     // Inicializar posición
     resetCarouselPosition();
-    
+
     // Eventos de Arrastre
     const container = document.getElementById('carouselContainer');
     container.onmousedown = (e) => {
@@ -1277,7 +1257,7 @@ async function initCarouselCropper(input) {
         const centerY = cH / 2;
         const relX = (centerX - carouselState.x) / carouselState.scale;
         const relY = (centerY - carouselState.y) / carouselState.scale;
-        
+
         carouselState.scale = newScale;
         carouselState.x = centerX - relX * newScale;
         carouselState.y = centerY - relY * newScale;
@@ -1295,17 +1275,17 @@ function resetCarouselPosition() {
     const container = document.getElementById('carouselContainer');
     const cW = container.clientWidth;
     const cH = container.clientHeight;
-    
+
     carouselState.scale = Math.max(cW / carouselState.img.width, cH / carouselState.img.height);
     carouselState.x = (cW - carouselState.img.width * carouselState.scale) / 2;
     carouselState.y = (cH - carouselState.img.height * carouselState.scale) / 2;
     carouselState.rotate = 0;
-    
+
     const zoomInput = document.getElementById('carouselZoom');
     if (zoomInput) zoomInput.value = carouselState.scale;
     const rotateInput = document.getElementById('carouselRotate');
     if (rotateInput) rotateInput.value = 0;
-    
+
     updateCarouselImg();
 }
 
@@ -1324,11 +1304,11 @@ async function confirmCarouselFraming() {
 
     const ctx1 = c1.getContext('2d');
     const ctx2 = c2.getContext('2d');
-    
+
     // Calcular coordenadas reales basadas en el contenedor (que es 2:1)
     const container = document.getElementById('carouselContainer');
     const renderScale = (size * 2) / container.clientWidth;
-    
+
     const realX = carouselState.x * renderScale;
     const realY = carouselState.y * renderScale;
     const realW = carouselState.img.width * carouselState.scale * renderScale;
@@ -1337,17 +1317,17 @@ async function confirmCarouselFraming() {
     // Dibujar en Partes
     [ctx1, ctx2].forEach((ctx, i) => {
         ctx.fillStyle = "#000";
-        ctx.fillRect(0,0,size,size);
-        
+        ctx.fillRect(0, 0, size, size);
+
         ctx.save();
         // Aplicar transformación completa (Traslación + Rotación)
         // El punto de anclaje para la rotación debe ser el centro del panorama
         const totalW = size * 2;
-        ctx.translate(realX - (i * size) + realW/2, realY + realH/2);
+        ctx.translate(realX - (i * size) + realW / 2, realY + realH / 2);
         ctx.rotate(carouselState.rotate * Math.PI / 180);
-        ctx.drawImage(carouselState.img, -realW/2, -realH/2, realW, realH);
+        ctx.drawImage(carouselState.img, -realW / 2, -realH / 2, realW, realH);
         ctx.restore();
-        
+
         // --- VIÑETAS PRO (4 Lados) ---
         drawPerimeterShadow(ctx, size, size);
     });
@@ -1356,15 +1336,15 @@ async function confirmCarouselFraming() {
     try {
         const logo = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
         drawImageProp(ctx1, logo, 80, 80, 300, 140);
-    } catch(e) {}
-    
+    } catch (e) { }
+
     // INFO PARTIDO (Arriba Derecha - Estilo Tarjeta Pro)
     if (selectedMatchTeamA && selectedMatchTeamB) {
         const teamA = allTeams[selectedMatchTeamA];
         const teamB = allTeams[selectedMatchTeamB];
         const stage = document.getElementById('matchStage').value;
         const date = document.getElementById('matchDate').value;
-        
+
         const sSize = 100;
         const totalW = (sSize * 2) + 20;
         const x = size - totalW - 80;
@@ -1375,13 +1355,13 @@ async function confirmCarouselFraming() {
             drawImageProp(ctx1, imgA, x, y, sSize, sSize);
             const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
             drawImageProp(ctx1, imgB, x + sSize + 20, y, sSize, sSize);
-        } catch(e) {}
+        } catch (e) { }
 
         ctx1.save();
         ctx1.shadowColor = "black"; ctx1.shadowBlur = 20;
         ctx1.fillStyle = "white";
         ctx1.textAlign = "center";
-        const centerX = x + totalW/2;
+        const centerX = x + totalW / 2;
         ctx1.font = "900 35px Outfit";
         ctx1.fillText(stage.toUpperCase(), centerX, y + sSize + 40);
         ctx1.font = "400 25px Outfit";
@@ -1405,9 +1385,9 @@ async function confirmCarouselFraming() {
             ctx.save();
             ctx.shadowColor = "rgba(0,0,0,0.6)"; ctx.shadowBlur = 25;
             ctx.fillStyle = "rgba(0,0,0,0.92)";
-            
+
             const relX = bX_total - offsetX;
-            
+
             // Dibujar fondo
             ctx.beginPath();
             ctx.roundRect(relX, bY, barW, barH, 25);
@@ -1422,7 +1402,7 @@ async function confirmCarouselFraming() {
                 try {
                     const sImg = await loadImg(team.shield);
                     ctx.drawImage(sImg, relX + 60, bY - 35, 200, 200);
-                } catch(e) {}
+                } catch (e) { }
             }
 
             // Nombre
@@ -1461,7 +1441,7 @@ function openShieldGallery(type = 'main') {
             .withSuccessHandler(renderShieldGallery)
             .withFailureHandler(handleShieldError)
             .getShieldsFromDrive();
-    } 
+    }
     // 2. Fallback: Llamada vía API a la Web App desplegada (Si estamos en local/GitHub)
     else {
         fetch(`${GAS_WEB_APP_URL}?action=getShields`)
@@ -1515,7 +1495,7 @@ function handleShieldError(err) {
 
 async function selectShield(fileId) {
     const highResUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
-    
+
     // Mostrar feedback de carga
     const grid = document.getElementById('shieldGrid');
     const oldContent = grid.innerHTML;
@@ -1530,10 +1510,10 @@ async function selectShield(fileId) {
             document.getElementById('teamEditor')._selectedShield = base64;
             document.getElementById('shieldPreview').src = base64;
         }
-        
+
         alert("Escudo seleccionado ✅");
         closeShieldGallery();
-    } catch(e) {
+    } catch (e) {
         if (currentShieldType === 'white') {
             document.getElementById('teamEditor')._selectedShieldWhite = highResUrl;
             document.getElementById('shieldWhitePreview').src = highResUrl;
@@ -1594,10 +1574,10 @@ let currentPickerSlot = null;
 function initMatchSettings() {
     const stage = localStorage.getItem('sportshub_match_stage') || "FASE DE GRUPOS";
     const date = localStorage.getItem('sportshub_match_date') || new Date().toLocaleDateString();
-    
+
     document.getElementById('matchStage').value = stage;
     document.getElementById('matchDate').value = date;
-    
+
     if (selectedMatchTeamA && allTeams[selectedMatchTeamA]) {
         const img = document.getElementById('imgA');
         img.src = allTeams[selectedMatchTeamA].shield;
@@ -1610,9 +1590,9 @@ function initMatchSettings() {
         img.classList.remove('hidden');
         document.querySelector('#slotB .placeholder').classList.add('hidden');
     }
-    
+
     updateMatchPreview();
-    
+
     // Listeners para auto-guardado
     document.getElementById('matchStage').addEventListener('change', saveMatchSettings);
     document.getElementById('matchDate').addEventListener('input', saveMatchSettings);
@@ -1632,15 +1612,15 @@ function updateMatchPreview() {
         preview.innerHTML = '<span class="preview-text">⚠️ Configura el partido</span>';
         return;
     }
-    
+
     const teamA = allTeams[selectedMatchTeamA];
     const teamB = allTeams[selectedMatchTeamB];
     const stage = document.getElementById('matchStage').value;
-    
+
     // Usar escudos blancos si existen para el preview
     const sA = teamA.shieldWhite || teamA.shield;
     const sB = teamB.shieldWhite || teamB.shield;
-    
+
     preview.innerHTML = `
         <div class="preview-text">
             <img src="${sA}" class="preview-shield">
@@ -1656,7 +1636,7 @@ function openMatchShieldPicker(slot) {
     const modal = document.getElementById('matchShieldPickerModal');
     const grid = document.getElementById('matchShieldGrid');
     modal.classList.remove('hidden');
-    
+
     grid.innerHTML = '';
     Object.entries(allTeams).forEach(([id, team]) => {
         const item = document.createElement('div');
@@ -1738,7 +1718,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function showResultTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    
+
     document.getElementById(tabId + 'Tab').classList.remove('hidden');
     event.currentTarget.classList.add('active');
 }
