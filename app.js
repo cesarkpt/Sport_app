@@ -708,7 +708,7 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
     // 2.5 LOGO DE LA APP (Arriba Izquierda)
     try {
         const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
-        drawImageProp(ctxOut, logoImg, 100, 60, 220, 100, 0, 0);
+        drawImageProp(ctxOut, logoImg, 100, 60, 300, 140, 0, 0);
     } catch(e) {}
 
     // --- 2.6 INFO DE PARTIDO ---
@@ -818,36 +818,41 @@ function drawCarnetOverlay(ctx, player) {
         };
     } catch(e) {}
 
-    // 2. INFO PARTIDO EN CARNET (Match Shields + Info)
+    // 2. INFO PARTIDO EN CARNET (Match Shields + Info CENTRADO)
     if (selectedMatchTeamA && selectedMatchTeamB) {
         const teamA = allTeams[selectedMatchTeamA];
         const teamB = allTeams[selectedMatchTeamB];
         const stage = document.getElementById('matchStage').value;
         const date = document.getElementById('matchDate').value || "";
         
-        const mx = w - 160, my = 20, ms = 60;
+        const ms = 65;
+        const totalW = (ms * 2) + 15;
+        const startX = w - totalW - 25; // Margen derecho
+        const my = 25;
+
         const loadAndDrawMatch = async () => {
             try {
                 const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
-                drawImageProp(ctx, imgA, mx, my, ms, ms);
+                drawImageProp(ctx, imgA, startX, my, ms, ms);
                 const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-                drawImageProp(ctx, imgB, mx + ms + 15, my, ms, ms);
+                drawImageProp(ctx, imgB, startX + ms + 15, my, ms, ms);
             } catch(e) {}
         };
         loadAndDrawMatch();
         
         ctx.fillStyle = "rgba(255,255,255,0.9)";
-        ctx.textAlign = "right";
-        ctx.font = "900 16px Outfit";
-        ctx.fillText(stage, w - 20, my + ms + 25);
+        ctx.textAlign = "center";
+        const centerX = startX + totalW/2;
+        ctx.font = "900 18px Outfit";
+        ctx.fillText(stage, centerX, my + ms + 30);
         ctx.font = "400 14px Outfit";
-        ctx.fillText(date, w - 20, my + ms + 45);
+        ctx.fillText(date, centerX, my + ms + 50);
     }
 
-    // 3. NÚMERO GIGANTE AL FONDO (CURSIVA, 80% OPACIDAD, MÁS GRANDE)
+    // 3. NÚMERO GIGANTE AL FONDO
     ctx.save();
     ctx.textAlign = "center";
-    ctx.fillStyle = "rgba(255,255,255,0.12)"; // Sutil pero presente
+    ctx.fillStyle = "rgba(255,255,255,0.12)"; 
     ctx.font = "italic 900 500px Outfit";
     ctx.fillText(player.number, w/2, h/2 + 150);
     ctx.restore();
@@ -864,7 +869,7 @@ function drawCarnetOverlay(ctx, player) {
     const firstName = nameParts[0] || "";
     const lastName = nameParts.slice(1).join(" ") || "";
 
-    // 4. ESCUDO DEL EQUIPO (Bajado 10px respecto al anterior h-165)
+    // 4. ESCUDO DEL EQUIPO 
     let textX = 140;
     const drawTeamShield = async () => {
         if (player.shield) {
@@ -876,7 +881,7 @@ function drawCarnetOverlay(ctx, player) {
     };
     drawTeamShield();
 
-    // 5. NOMBRE DEL JUGADOR (Retrocedido 10px respecto al anterior 140)
+    // 5. NOMBRE DEL JUGADOR
     const finalX = textX - 10;
     ctx.textAlign = "left";
     ctx.save();
@@ -892,8 +897,11 @@ function drawCarnetOverlay(ctx, player) {
     ctx.fillText(lastName.toUpperCase(), finalX, h - 50);
     ctx.restore();
     
-    // 6. NÚMERO DE JUGADOR (Detrás del nombre, grande, cursiva, 80% opacidad)
-    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    // 6. NÚMERO DE JUGADOR (CON DEGRADADO DE LA BARRA)
+    const grdNum = ctx.createLinearGradient(w - 150, h - 150, w, h - 50);
+    grdNum.addColorStop(0, player.color);
+    grdNum.addColorStop(1, player.color2 || player.color);
+    ctx.fillStyle = grdNum;
     ctx.font = "italic 900 160px Outfit";
     ctx.textAlign = "right";
     ctx.fillText(player.number, w - 30, h - 50);
@@ -913,13 +921,13 @@ function drawCarnetOverlay(ctx, player) {
     }
 }
 
-async function drawBackground(ctx, color) {
-    // 1. Fondo de Estadio (Imagen Premium con efecto Cristal Ahumado)
+async function drawBackground(ctx, color, color2) {
+    // 1. Imagen de Estadio (AL FONDO)
     try {
         const bgImg = await loadImg("https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=1920&auto=format&fit=crop");
         ctx.save();
-        ctx.filter = "blur(15px)"; // Efecto desenfoque más fuerte
-        ctx.globalAlpha = 0.4;     
+        ctx.filter = "blur(15px)"; 
+        ctx.globalAlpha = 0.5; // Un poco más de presencia inicial
         ctx.drawImage(bgImg, 0, 0, 1920, 1080);
         ctx.restore();
     } catch(e) {
@@ -927,19 +935,15 @@ async function drawBackground(ctx, color) {
         ctx.fillRect(0, 0, 1920, 1080);
     }
     
-    // Overlay oscuro adicional para efecto "ahumado"
-    ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
-    ctx.fillRect(0, 0, 1920, 1080);
-
-    // 2. Overlay de color del equipo (Vignette)
+    // 2. Overlay de color del equipo (Vignette) - SOBRE LA IMAGEN
     const grd = ctx.createRadialGradient(960, 540, 100, 960, 540, 1200);
-    grd.addColorStop(0, "rgba(26, 37, 51, 0.4)");
-    grd.addColorStop(1, color + "44"); // Color con transparencia
+    grd.addColorStop(0, "rgba(10, 14, 20, 0.4)");
+    grd.addColorStop(1, (color2 || color) + "55"); 
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, 1920, 1080);
     
-    // Overlay oscuro para legibilidad
-    ctx.fillStyle = "rgba(0,0,0,0.5)";
+    // 3. Vidrio Oscuro (Smoked Glass Final)
+    ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
     ctx.fillRect(0, 0, 1920, 1080);
 }
 
@@ -1000,12 +1004,12 @@ async function drawMatchInfo(ctx, teamA, teamB) {
     const stage = document.getElementById('matchStage').value;
     const date = document.getElementById('matchDate').value || new Date().toLocaleDateString();
     
-    const x = CONFIG.outputWidth - 450; 
+    const sSize = 110; 
+    const totalW = (sSize * 2) + 20;
+    const x = CONFIG.outputWidth - 20 - totalW; // 20px de margen derecho
     const y = 80;
-    const sSize = 110; // Escudos más grandes
     
     ctx.save();
-    // Sin ajustes de color, conservando original
     ctx.globalAlpha = 1.0;
     
     if (teamA.shieldWhite || teamA.shield) {
@@ -1022,19 +1026,18 @@ async function drawMatchInfo(ctx, teamA, teamB) {
         } catch(e) {}
     }
     ctx.restore();
-    ctx.globalCompositeOperation = "source-over"; // Reset
     
     // Texto Info CENTRADO respecto a los escudos
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
-    const centerX = x + sSize + 10;
+    const centerX = x + totalW/2;
 
-    ctx.font = "900 22px Outfit";
-    ctx.fillText(stage, centerX, y + sSize + 40);
+    ctx.font = "900 35px Outfit";
+    ctx.fillText(stage, centerX, y + sSize + 50);
     
-    ctx.font = "400 18px Outfit";
-    ctx.fillStyle = "rgba(255,255,255,0.7)";
-    ctx.fillText(date, centerX, y + sSize + 65);
+    ctx.font = "400 25px Outfit";
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.fillText(date, centerX, y + sSize + 85);
 }
 
 function updateStep(num, text) {
