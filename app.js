@@ -1283,23 +1283,43 @@ async function confirmCarouselFraming() {
         drawPerimeterShadow(ctx, size, size);
     });
 
-    // Branding Slide 1: Logo y Match Info (Corregido: Carga asíncrona)
+    // Branding Slide 1: Logo (Arriba Izquierda)
     try {
         const logo = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
         drawImageProp(ctx1, logo, 80, 80, 300, 140);
     } catch(e) {}
     
-    const stage = document.getElementById('matchStage').value;
-    const date = document.getElementById('matchDate').value;
-    ctx1.save();
-    ctx1.shadowColor = "black"; ctx1.shadowBlur = 20;
-    ctx1.fillStyle = "white";
-    ctx1.textAlign = "left";
-    ctx1.font = "900 55px Outfit";
-    ctx1.fillText(stage.toUpperCase(), 80, size - 140);
-    ctx1.font = "400 35px Outfit";
-    ctx1.fillText(date, 80, size - 85);
-    ctx1.restore();
+    // INFO PARTIDO (Arriba Derecha - Estilo Tarjeta Pro)
+    if (selectedMatchTeamA && selectedMatchTeamB) {
+        const teamA = allTeams[selectedMatchTeamA];
+        const teamB = allTeams[selectedMatchTeamB];
+        const stage = document.getElementById('matchStage').value;
+        const date = document.getElementById('matchDate').value;
+        
+        const sSize = 100;
+        const totalW = (sSize * 2) + 20;
+        const x = size - totalW - 80;
+        const y = 80;
+
+        try {
+            const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
+            drawImageProp(ctx1, imgA, x, y, sSize, sSize);
+            const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
+            drawImageProp(ctx1, imgB, x + sSize + 20, y, sSize, sSize);
+        } catch(e) {}
+
+        ctx1.save();
+        ctx1.shadowColor = "black"; ctx1.shadowBlur = 20;
+        ctx1.fillStyle = "white";
+        ctx1.textAlign = "center";
+        const centerX = x + totalW/2;
+        ctx1.font = "900 35px Outfit";
+        ctx1.fillText(stage.toUpperCase(), centerX, y + sSize + 40);
+        ctx1.font = "400 25px Outfit";
+        ctx1.fillStyle = "rgba(255,255,255,0.8)";
+        ctx1.fillText(date, centerX, y + sSize + 75);
+        ctx1.restore();
+    }
 
     // Branding Slide 2: Ticker de Equipo (ÚNICA BARRA CENTRADA EN EL CORTE)
     if (selectedMatchTeamA) {
