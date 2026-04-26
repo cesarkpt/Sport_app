@@ -414,7 +414,7 @@ async function processPlayerPhoto(processingImg, originalImg) {
         
         // 4. Guardado Automático en Drive
         updateStep(3, "Subiendo a Drive...");
-        await saveToDrive(elements.outputCanvas.toDataURL('image/png'), finalData);
+        await saveToDrive(elements.outputCanvas.toDataURL('image/png'), finalData.data);
         
         updateStep(3, "Listo para descargar");
         
@@ -428,8 +428,8 @@ async function processPlayerPhoto(processingImg, originalImg) {
         console.error("Error en procesamiento:", error);
         alert("Ocurrió un error al analizar la foto. Intentaremos continuar manualmente.");
         const fallbackData = { name: "ERROR IA", team: "DESCONOCIDO", number: "??", position: "DEL", teamCode: "DFT", color: "#777", color2: "#777" };
-        const corrected = await waitForManualCorrection(fallbackData, "??");
-        await generateLayouts(originalImg, corrected, false);
+        const corrected = await waitForManualCorrection(fallbackData, "??", originalImg);
+        await generateLayouts(originalImg, corrected.data, false, corrected.crop);
         elements.processingArea.classList.add('hidden');
         elements.resultArea.classList.remove('hidden');
     }
