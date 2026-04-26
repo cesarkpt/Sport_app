@@ -1,3 +1,4 @@
+console.log("🚀 Sports Hub Pro v1.4.2 cargado correctamente.");
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
     maxProcessingSize: 800, // Tamaño máximo para procesar con IA (más rápido en móviles)
