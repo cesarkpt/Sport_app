@@ -43,48 +43,57 @@ function toggleTeamManager() {
 
 async function syncWithCloud() {
     const btn = document.getElementById('btnSyncCloud');
-    const originalText = btn ? btn.innerHTML : "NUBE 🔄";
-    
-    if (btn) {
-        btn.innerHTML = "SINCRONIZANDO... ⏳";
-        btn.disabled = true;
-    }
+    if (!btn) return console.error("No se encontró el botón de sincronización.");
+
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "CONECTANDO... ⏳";
+    btn.disabled = true;
+
+    // Timeout de seguridad de 12 segundos
+    const syncTimeout = setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        alert("⚠️ EL SERVIDOR TARDA DEMASIADO\nEs posible que Google esté saturado o necesites iniciar sesión nuevamente.");
+    }, 12000);
 
     try {
-        let result;
+        let result = null;
+
         if (typeof google !== 'undefined' && google.script && google.script.run) {
+            // Caso 1: Dentro de Google Apps Script
             result = await new Promise((resolve, reject) => {
-                const tout = setTimeout(() => reject(new Error("Timeout")), 15000);
                 google.script.run
-                    .withSuccessHandler(res => { clearTimeout(tout); resolve(res); })
-                    .withFailureHandler(err => { clearTimeout(tout); reject(err); })
+                    .withSuccessHandler(res => resolve(res))
+                    .withFailureHandler(err => reject(err))
                     .getAllTeamsData();
             });
         } else {
-            const resp = await fetch(`${GAS_WEB_APP_URL}?action=getAllTeamsData`);
-            result = await resp.json();
+            // Caso 2: Web App externa
+            const response = await fetch(`${GAS_WEB_APP_URL}?action=getAllTeamsData`);
+            result = await response.json();
         }
+
+        clearTimeout(syncTimeout);
 
         if (result && result.success) {
             if (result.data && Object.keys(result.data).length > 0) {
                 allTeams = result.data;
                 localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
                 renderTeamsList();
-                alert("¡Equipos sincronizados con éxito! ✅");
+                alert("¡Sincronización Exitosa! ✅\nSe han actualizado " + Object.keys(allTeams).length + " equipos.");
             } else {
-                alert("La base de datos en la nube está vacía.");
+                alert("La base de datos en la nube está vacía. ☁️");
             }
         } else {
-            alert("Error de respuesta: " + (result ? result.error : "Sin respuesta"));
+            alert("El servidor no envió datos válidos: " + (result ? result.error : "Desconocido"));
         }
     } catch (e) {
-        console.error("Sync error:", e);
-        alert("Error de conexión con Drive.");
+        clearTimeout(syncTimeout);
+        console.error("Critical Sync Error:", e);
+        alert("FALLO DE CONEXIÓN:\n" + e.message);
     } finally {
-        if (btn) {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
+        btn.innerHTML = originalText;
+        btn.disabled = false;
     }
 }
 
