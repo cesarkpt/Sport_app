@@ -862,10 +862,14 @@ function drawCarnetOverlay(ctx, player) {
 }
 
 async function drawBackground(ctx, color) {
-    // 1. Fondo de Estadio (Imagen Premium)
+    // 1. Fondo de Estadio (Imagen Premium con efecto Cristal Ahumado)
     try {
         const bgImg = await loadImg("https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=1920&auto=format&fit=crop");
+        ctx.save();
+        ctx.filter = "blur(10px)"; // Efecto desenfoque
+        ctx.globalAlpha = 0.4;     // Opacidad al 40%
         ctx.drawImage(bgImg, 0, 0, 1920, 1080);
+        ctx.restore();
     } catch(e) {
         ctx.fillStyle = "#0a0e14";
         ctx.fillRect(0, 0, 1920, 1080);
