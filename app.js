@@ -841,35 +841,35 @@ async function drawCarnetOverlay(ctx, player) {
     // 1. MI LOGO EN EL CARNET (Arriba Izquierda - Más grande)
     try {
         const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
-        drawImageProp(ctx, logoImg, 15, 20, 140, 70, 0, 0);
+        drawImageProp(ctx, logoImg, 15, 20, 180, 90, 0, 0); 
     } catch(e) {}
 
-    // 2. INFO PARTIDO EN CARNET (Match Day REDUCIDO 70%)
+    // 2. INFO PARTIDO EN CARNET (Match Day)
     if (selectedMatchTeamA && selectedMatchTeamB) {
         const teamA = allTeams[selectedMatchTeamA];
         const teamB = allTeams[selectedMatchTeamB];
         const stage = document.getElementById('matchStage').value;
         const date = document.getElementById('matchDate').value || "";
         
-        const ms = 40; 
-        const totalW = (ms * 2) + 10;
-        const startX = w - totalW - 20; 
+        const ms = 60; // Aumentado de 40 a 60
+        const totalW = (ms * 2) + 15;
+        const startX = w - totalW - 25; 
         const my = 20;
 
         try {
             const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
             drawImageProp(ctx, imgA, startX, my, ms, ms);
             const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-            drawImageProp(ctx, imgB, startX + ms + 10, my, ms, ms);
+            drawImageProp(ctx, imgB, startX + ms + 15, my, ms, ms);
         } catch(e) {}
         
-        ctx.fillStyle = "rgba(255,255,255,0.8)";
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
         ctx.textAlign = "center";
         const centerX = startX + totalW/2;
-        ctx.font = "900 12px Outfit";
-        ctx.fillText(stage, centerX, my + ms + 15);
-        ctx.font = "400 10px Outfit";
-        ctx.fillText(date, centerX, my + ms + 28);
+        ctx.font = "900 18px Outfit"; // Aumentado de 12 a 18
+        ctx.fillText(stage.toUpperCase(), centerX, my + ms + 25);
+        ctx.font = "400 14px Outfit"; // Aumentado de 10 a 14
+        ctx.fillText(date, centerX, my + ms + 45);
     }
 
     // 3. (ELIMINADO NÚMERO GIGANTE)
@@ -1154,7 +1154,7 @@ function drawPerimeterShadow(ctx, w, h) {
 }
 
 // --- CARRUSEL INSTAGRAM EQUIPO (CON ENCUADRE Y VIÑETAS) ---
-let carouselState = { img: null, x: 0, y: 0, scale: 1, isDragging: false, startX: 0, startY: 0 };
+let carouselState = { img: null, x: 0, y: 0, scale: 1, rotate: 0, isDragging: false, startX: 0, startY: 0 };
 
 function openTeamCarouselModal() {
     document.getElementById('teamCarouselModal').classList.remove('hidden');
@@ -1214,6 +1214,11 @@ async function initCarouselCropper(input) {
         carouselState.y = centerY - relY * newScale;
         updateCarouselImg();
     };
+
+    document.getElementById('carouselRotate').oninput = (e) => {
+        carouselState.rotate = parseInt(e.target.value);
+        updateCarouselImg();
+    };
 }
 
 function resetCarouselPosition() {
@@ -1225,9 +1230,12 @@ function resetCarouselPosition() {
     carouselState.scale = Math.max(cW / carouselState.img.width, cH / carouselState.img.height);
     carouselState.x = (cW - carouselState.img.width * carouselState.scale) / 2;
     carouselState.y = (cH - carouselState.img.height * carouselState.scale) / 2;
+    carouselState.rotate = 0;
     
     const zoomInput = document.getElementById('carouselZoom');
     if (zoomInput) zoomInput.value = carouselState.scale;
+    const rotateInput = document.getElementById('carouselRotate');
+    if (rotateInput) rotateInput.value = 0;
     
     updateCarouselImg();
 }
@@ -1235,7 +1243,7 @@ function resetCarouselPosition() {
 function updateCarouselImg() {
     const img = document.getElementById('carouselImg');
     img.style.width = (carouselState.img.width * carouselState.scale) + 'px';
-    img.style.transform = `translate(${carouselState.x}px, ${carouselState.y}px)`;
+    img.style.transform = `translate(${carouselState.x}px, ${carouselState.y}px) rotate(${carouselState.rotate}deg)`;
 }
 
 async function confirmCarouselFraming() {
@@ -1261,7 +1269,15 @@ async function confirmCarouselFraming() {
     [ctx1, ctx2].forEach((ctx, i) => {
         ctx.fillStyle = "#000";
         ctx.fillRect(0,0,size,size);
-        ctx.drawImage(carouselState.img, realX - (i * size), realY, realW, realH);
+        
+        ctx.save();
+        // Aplicar transformación completa (Traslación + Rotación)
+        // El punto de anclaje para la rotación debe ser el centro del panorama
+        const totalW = size * 2;
+        ctx.translate(realX - (i * size) + realW/2, realY + realH/2);
+        ctx.rotate(carouselState.rotate * Math.PI / 180);
+        ctx.drawImage(carouselState.img, -realW/2, -realH/2, realW, realH);
+        ctx.restore();
         
         // --- VIÑETAS PRO (4 Lados) ---
         drawPerimeterShadow(ctx, size, size);
