@@ -1005,10 +1005,14 @@ async function drawCarnetOverlay(ctx, player) {
     // 5.1 POSICIÓN (Estilo Tarjeta Pro: Cuadro de color con letras negras)
     if (player.position) {
         ctx.save();
+        // Medir ancho del primer nombre para desplazar el badge dinámicamente
+        ctx.font = `400 ${firstSize}px Outfit`;
+        const firstNameW = ctx.measureText(firstName).width;
+
         const badgeW = 70;
         const badgeH = 35;
-        const bX = finalX;
-        const bY = h - 135;
+        const bX = finalX + firstNameW + 20; // 20px a la derecha del nombre
+        const bY = h - 128; // Ajustado ligeramente el alto para mejor alineación
 
         // Cuadro de color
         ctx.fillStyle = player.color;
@@ -1388,7 +1392,7 @@ async function confirmCarouselFraming() {
         drawImageProp(ctx1, logo, 80, 80, 300, 140);
     } catch (e) { }
 
-    // INFO PARTIDO (Arriba Derecha - Estilo Tarjeta Pro)
+    // INFO PARTIDO (Mover a la Parte 2 - Derecha)
     if (selectedMatchTeamA && selectedMatchTeamB) {
         const teamA = allTeams[selectedMatchTeamA];
         const teamB = allTeams[selectedMatchTeamB];
@@ -1402,22 +1406,22 @@ async function confirmCarouselFraming() {
 
         try {
             const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
-            drawImageProp(ctx1, imgA, x, y, sSize, sSize);
+            drawImageProp(ctx2, imgA, x, y, sSize, sSize);
             const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-            drawImageProp(ctx1, imgB, x + sSize + 20, y, sSize, sSize);
+            drawImageProp(ctx2, imgB, x + sSize + 20, y, sSize, sSize);
         } catch (e) { }
 
-        ctx1.save();
-        ctx1.shadowColor = "black"; ctx1.shadowBlur = 20;
-        ctx1.fillStyle = "white";
-        ctx1.textAlign = "center";
+        ctx2.save();
+        ctx2.shadowColor = "black"; ctx2.shadowBlur = 20;
+        ctx2.fillStyle = "white";
+        ctx2.textAlign = "center";
         const centerX = x + totalW / 2;
-        ctx1.font = "900 35px Outfit";
-        ctx1.fillText(stage.toUpperCase(), centerX, y + sSize + 40);
-        ctx1.font = "400 25px Outfit";
-        ctx1.fillStyle = "rgba(255,255,255,0.8)";
-        ctx1.fillText(date, centerX, y + sSize + 75);
-        ctx1.restore();
+        ctx2.font = "900 35px Outfit";
+        ctx2.fillText(stage.toUpperCase(), centerX, y + sSize + 40);
+        ctx2.font = "400 25px Outfit";
+        ctx2.fillStyle = "rgba(255,255,255,0.8)";
+        ctx2.fillText(date, centerX, y + sSize + 75);
+        ctx2.restore();
     }
 
     // Branding Slide 2: Ticker de Equipo (ÚNICA BARRA CENTRADA EN EL CORTE)
