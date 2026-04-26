@@ -82,6 +82,8 @@ function editTeam(id) {
     openTeamEditor(allTeams[id]);
 }
 
+let currentShieldType = 'main';
+
 function openTeamEditor(team) {
     document.getElementById('teamEditor').classList.remove('hidden');
     document.getElementById('teamNameInput').value = team.name;
@@ -89,8 +91,13 @@ function openTeamEditor(team) {
     document.getElementById('teamCoachInput').value = team.coach || "";
     document.getElementById('teamColor1').value = team.color1;
     document.getElementById('teamColor2').value = team.color2;
+    
     document.getElementById('teamEditor')._selectedShield = team.shield;
+    document.getElementById('teamEditor')._selectedShieldWhite = team.shieldWhite;
+    
     document.getElementById('shieldPreview').src = team.shield || 'https://cdn-icons-png.flaticon.com/512/5351/5351333.png';
+    document.getElementById('shieldWhitePreview').src = team.shieldWhite || 'https://cdn-icons-png.flaticon.com/512/5351/5351333.png';
+    
     renderRosterList(team.roster);
 }
 
@@ -166,13 +173,15 @@ async function saveTeam() {
         color1: document.getElementById('teamColor1').value,
         color2: document.getElementById('teamColor2').value,
         roster: document.getElementById('teamEditor')._tempRoster || (allTeams[editingTeamId] ? allTeams[editingTeamId].roster : {}),
-        shield: document.getElementById('teamEditor')._selectedShield
+        shield: document.getElementById('teamEditor')._selectedShield,
+        shieldWhite: document.getElementById('teamEditor')._selectedShieldWhite
     };
 
     const shieldInput = document.getElementById('shieldInput');
-    if (shieldInput.files[0]) {
-        teamData.shield = await imageToBase64(shieldInput.files[0]);
-    }
+    if (shieldInput.files[0]) teamData.shield = await imageToBase64(shieldInput.files[0]);
+    
+    const shieldWhiteInput = document.getElementById('shieldWhiteInput');
+    if (shieldWhiteInput.files[0]) teamData.shieldWhite = await imageToBase64(shieldWhiteInput.files[0]);
 
     allTeams[editingTeamId] = teamData;
     localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
@@ -954,16 +963,16 @@ async function drawMatchInfo(ctx, teamA, teamB) {
     ctx.globalCompositeOperation = "luminosity";
     ctx.globalAlpha = 0.9;
     
-    if (teamA.shield) {
+    if (teamA.shieldWhite || teamA.shield) {
         try {
-            const imgA = await loadImg(teamA.shield);
+            const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
             ctx.drawImage(imgA, x, y, sSize, sSize);
         } catch(e) {}
     }
     
-    if (teamB.shield) {
+    if (teamB.shieldWhite || teamB.shield) {
         try {
-            const imgB = await loadImg(teamB.shield);
+            const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
             ctx.drawImage(imgB, x + sSize + 20, y, sSize, sSize);
         } catch(e) {}
     }
@@ -1018,7 +1027,8 @@ function toggleUpdates() {
 // --- GALERÍA DE ESCUDOS (DRIVE) ---
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzYBhBQSZzSI5qj9cRgLhjQ-YGonuqnNBTmMRXJH6OllT3XpO0KTXBZP0wOPWv1i4nk/exec";
 
-function openShieldGallery() {
+function openShieldGallery(type = 'main') {
+    currentShieldType = type;
     document.getElementById('shieldGalleryModal').classList.remove('hidden');
     const grid = document.getElementById('shieldGrid');
     grid.innerHTML = '<p class="loading-text">Conectando con Google Drive...</p>';
@@ -1091,24 +1101,39 @@ async function selectShield(fileId) {
 
     try {
         const base64 = await urlToBase64(highResUrl);
-        document.getElementById('teamEditor')._selectedShield = base64;
-        document.getElementById('shieldPreview').src = base64;
+        if (currentShieldType === 'white') {
+            document.getElementById('teamEditor')._selectedShieldWhite = base64;
+            document.getElementById('shieldWhitePreview').src = base64;
+        } else {
+            document.getElementById('teamEditor')._selectedShield = base64;
+            document.getElementById('shieldPreview').src = base64;
+        }
         
         alert("Escudo seleccionado ✅");
         closeShieldGallery();
     } catch(e) {
-        document.getElementById('teamEditor')._selectedShield = highResUrl;
-        document.getElementById('shieldPreview').src = highResUrl;
+        if (currentShieldType === 'white') {
+            document.getElementById('teamEditor')._selectedShieldWhite = highResUrl;
+            document.getElementById('shieldWhitePreview').src = highResUrl;
+        } else {
+            document.getElementById('teamEditor')._selectedShield = highResUrl;
+            document.getElementById('shieldPreview').src = highResUrl;
+        }
         alert("Escudo vinculado (URL) ✅");
         closeShieldGallery();
     }
 }
 
-async function previewLocalShield(input) {
+async function previewLocalShield(input, type = 'main') {
     if (input.files && input.files[0]) {
         const base64 = await imageToBase64(input.files[0]);
-        document.getElementById('teamEditor')._selectedShield = base64;
-        document.getElementById('shieldPreview').src = base64;
+        if (type === 'white') {
+            document.getElementById('teamEditor')._selectedShieldWhite = base64;
+            document.getElementById('shieldWhitePreview').src = base64;
+        } else {
+            document.getElementById('teamEditor')._selectedShield = base64;
+            document.getElementById('shieldPreview').src = base64;
+        }
     }
 }
 

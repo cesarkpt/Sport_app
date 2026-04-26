@@ -73,14 +73,26 @@
                                     <input type="color" id="teamColor2" value="#00d4ff">
                                 </div>
                             </div>
-                            <div class="shield-upload">
-                                <label>Escudo (PNG)</label>
-                                <div class="shield-preview-container">
-                                    <img id="shieldPreview" src="https://cdn-icons-png.flaticon.com/512/5351/5351333.png" alt="Preview">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div class="shield-upload">
+                                    <label>Escudo Principal</label>
+                                    <div class="shield-preview-container">
+                                        <img id="shieldPreview" src="https://cdn-icons-png.flaticon.com/512/5351/5351333.png" alt="Preview">
+                                    </div>
+                                    <div class="shield-actions">
+                                        <input type="file" id="shieldInput" accept="image/*" onchange="previewLocalShield(this, 'main')">
+                                        <button class="browse-btn" onclick="openShieldGallery('main')">DRIVE</button>
+                                    </div>
                                 </div>
-                                <div class="shield-actions">
-                                    <input type="file" id="shieldInput" accept="image/*" onchange="previewLocalShield(this)">
-                                    <button class="browse-btn" onclick="openShieldGallery()">DRIVE</button>
+                                <div class="shield-upload">
+                                    <label>Escudo Blanco</label>
+                                    <div class="shield-preview-container">
+                                        <img id="shieldWhitePreview" src="https://cdn-icons-png.flaticon.com/512/5351/5351333.png" alt="Preview" style="filter: brightness(0) invert(1); background: #333;">
+                                    </div>
+                                    <div class="shield-actions">
+                                        <input type="file" id="shieldWhiteInput" accept="image/*" onchange="previewLocalShield(this, 'white')">
+                                        <button class="browse-btn" onclick="openShieldGallery('white')">DRIVE</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
