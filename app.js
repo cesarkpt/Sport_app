@@ -1715,11 +1715,114 @@ initMatchSettings();
 document.addEventListener('DOMContentLoaded', () => {
     const btnSync = document.getElementById('btnSyncCloud');
     if (btnSync) {
-        btnSync.addEventListener('click', syncWithCloud);
+        btnSync.addEventListener('click', () => {
+            if (confirm("⚠️ ¿Sincronizar desde la nube?\nSe borrarán tus equipos locales y se bajarán los de Drive. ¿Continuar?")) {
+                syncWithCloud();
+            }
+        });
+    }
+
+    const btnUpload = document.getElementById('btnUploadCloud');
+    if (btnUpload) {
+        btnUpload.addEventListener('click', uploadToCloud);
     }
 });
 
-function showResultTab(tabId) {
+async function uploadToCloud() {
+    const btn = document.getElementById('btnUploadCloud');
+    if (!btn) return;
+    const originalText = btn.innerHTML;
+    
+    if (Object.keys(allTeams).length === 0) {
+        return alert("No hay equipos locales para subir.");
+    }
+
+    if (!confirm("📤 ¿Subir equipos a la nube?\nEsto actualizará la base de datos de Drive con tus equipos actuales.")) return;
+
+    btn.innerHTML = "SUBIENDO... ⏳";
+    btn.disabled = true;
+
+    try {
+        let result;
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            result = await new Promise((resolve, reject) => {
+                google.script.run
+                    .withSuccessHandler(res => resolve(res))
+                    .withFailureHandler(err => reject(err))
+                    .saveAllTeamsData(allTeams);
+            });
+        } else {
+            const resp = await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'saveAllTeams', data: allTeams })
+            });
+            result = await resp.json();
+        }
+
+        if (result && result.success) {
+            alert("¡Datos guardados en la nube con éxito! ☁️✅");
+        } else {
+            throw new Error(result ? result.error : "Error desconocido");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Fallo al subir: " + e.message);
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+function openImportModal() {
+    document.getElementById('importModal').classList.remove('hidden');
+}
+
+function closeImportModal() {
+    document.getElementById('importModal').classList.add('hidden');
+}
+
+function processBulkImport() {
+    const text = document.getElementById('importTextArea').value.trim();
+    if (!text) return alert("Pega algún texto primero.");
+
+    const lines = text.split('\n');
+    let count = 0;
+
+    lines.forEach(line => {
+        if (!line.includes(':')) return;
+        
+        const parts = line.split(':');
+        const teamName = parts[0].trim();
+        const playersStr = parts.slice(1).join(':').trim();
+        
+        const teamId = "team_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
+        
+        const players = playersStr.split(',').map((p, index) => ({
+            number: (index + 1).toString(),
+            name: p.trim()
+        })).filter(p => p.name !== "");
+
+        allTeams[teamId] = {
+            id: teamId,
+            name: teamName,
+            code: teamName.substring(0, 3).toUpperCase(),
+            shield: 'https://cdn-icons-png.flaticon.com/512/5351/5351333.png',
+            primaryColor: '#00ff88',
+            secondaryColor: '#000000',
+            roster: players
+        };
+        count++;
+    });
+
+    if (count > 0) {
+        localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
+        renderTeamsList();
+        closeImportModal();
+        alert("✅ Se han importado " + count + " equipos con sus jugadores.");
+    } else {
+        alert("No se reconoció el formato. Usa 'Equipo: Jugador 1, Jugador 2'");
+    }
+}
     document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
 

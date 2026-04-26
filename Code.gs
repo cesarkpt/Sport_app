@@ -44,11 +44,29 @@ function saveAllTeamsData(allTeams) {
 function getAllTeamsData() {
   try {
     const ss = getOrCreateSpreadsheet();
-    const sheet = ss.getSheetByName("Config");
-    if (!sheet) return { success: true, data: {} };
     
-    const json = sheet.getRange(2, 1).getValue();
-    return { success: true, data: json ? JSON.parse(json) : {} };
+    // 1. Intentar formato nuevo (JSON en Config)
+    const configSheet = ss.getSheetByName("Config");
+    if (configSheet) {
+      const json = configSheet.getRange(2, 1).getValue();
+      if (json) return { success: true, data: JSON.parse(json) };
+    }
+    
+    // 2. Fallback: Intentar formato viejo (Hoja Teams)
+    const teamsSheet = ss.getSheetByName("Teams");
+    if (teamsSheet) {
+      const values = teamsSheet.getRange(2, 1, 5, 2).getValues();
+      const team = {};
+      values.forEach(row => {
+        if (row[0] === "roster") team[row[0]] = JSON.parse(row[1]);
+        else team[row[0]] = row[1];
+      });
+      // Convertir a formato multi-equipo
+      const legacyData = { "legacy_1": { ...team, id: "legacy_1", code: team.name ? team.name.substring(0,3).toUpperCase() : "LEG" } };
+      return { success: true, data: legacyData };
+    }
+    
+    return { success: true, data: {} };
   } catch (e) {
     return { success: false, error: e.toString() };
   }
@@ -66,6 +84,21 @@ function getOrCreateSpreadsheet() {
     folder.addFile(file);
     DriveApp.getRootFolder().removeFile(file);
     return ss;
+  }
+}
+
+function saveAllTeamsData(allTeamsData) {
+  try {
+    const ss = getOrCreateSpreadsheet();
+    let configSheet = ss.getSheetByName("Config");
+    if (!configSheet) {
+      configSheet = ss.insertSheet("Config");
+      configSheet.appendRow(["JSON_DATA"]);
+    }
+    configSheet.getRange(2, 1).setValue(JSON.stringify(allTeamsData));
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.toString() };
   }
 }
 

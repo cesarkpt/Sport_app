@@ -44,7 +44,9 @@
                     <h3>MIS EQUIPOS</h3>
                     <div style="display:flex; gap:10px;">
                         <button onclick="createNewTeam()" class="update-btn" style="background:var(--primary); color:var(--bg-dark)">+ NUEVO</button>
-                        <button id="btnSyncCloud" class="update-btn" style="background:var(--secondary); color:var(--bg-dark)">NUBE 🔄</button>
+                        <button onclick="openImportModal()" class="update-btn" style="background:#4caf50; color:white">IMPORTAR 📋</button>
+                        <button id="btnSyncCloud" class="update-btn" style="background:var(--secondary); color:var(--bg-dark)" title="Bajar de la nube">NUBE 🔄</button>
+                        <button id="btnUploadCloud" class="update-btn" style="background:#ff9800; color:var(--bg-dark)" title="Subir a la nube">SUBIR 📤</button>
                         <button onclick="toggleTeamManager()" class="close-btn">&times;</button>
                     </div>
                 </div>
@@ -454,6 +456,23 @@
             <div id="matchShieldGrid" class="shield-grid-mini"></div>
         </div>
     </div>
+    <!-- Modal de Importación Masiva -->
+    <div id="importModal" class="modal hidden">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>IMPORTACIÓN RÁPIDA</h3>
+                <button class="close-btn" onclick="closeImportModal()">×</button>
+            </div>
+            <div style="padding: 15px;">
+                <p style="font-size: 0.8rem; margin-bottom: 10px; color: var(--secondary);">
+                    Pega tu lista aquí (Formato: Equipo: Jugador1, Jugador2...)
+                </p>
+                <textarea id="importTextArea" rows="10" style="width:100%; background:rgba(0,0,0,0.3); color:white; border-radius:10px; padding:10px; font-family:monospace; border:1px solid var(--glass-border);" placeholder="Equipo A: Jugador 1, Jugador 2&#10;Equipo B: Jugador X, Jugador Y"></textarea>
+                <button class="btn-primary" onclick="processBulkImport()" style="margin-top:15px; width:100%">PROCESAR E IMPORTAR</button>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js?v=1.4.2"></script>
 </body>
 </html>
