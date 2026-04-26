@@ -1945,6 +1945,10 @@ async function generateMatchPostals() {
     const stage = document.getElementById('matchStage').value;
     const date = document.getElementById('matchDate').value;
     
+    // Controles de usuario
+    const gScale = parseFloat(document.getElementById('postalScale').value) || 1;
+    const gY = parseInt(document.getElementById('postalY').value) || 0;
+
     const teamA = allTeams[selectedMatchTeamA];
     const teamB = allTeams[selectedMatchTeamB];
 
@@ -1959,7 +1963,10 @@ async function generateMatchPostals() {
         ctx.fillRect(0, 0, width, height);
 
         const crop = lastProcessedCropHD;
-        const scale = Math.max(width / crop.w, height / crop.h);
+        // Ajuste de escala para cubrir el canvas sin distorsión
+        const scaleX = width / crop.w;
+        const scaleY = height / crop.h;
+        const scale = Math.max(scaleX, scaleY);
         const finalW = crop.w * scale;
         const finalH = crop.h * scale;
         const finalX = (width - finalW) / 2;
@@ -1968,11 +1975,14 @@ async function generateMatchPostals() {
         ctx.save();
         ctx.drawImage(lastProcessedPlayerImg, crop.x, crop.y, crop.w, crop.h, finalX, finalY, finalW, finalH);
         drawPerimeterShadow(ctx, width, height);
-        ctx.fillStyle = "rgba(0,0,0,0.5)"; // Más oscuro para que el texto destaque
+        ctx.fillStyle = "rgba(0,0,0,0.5)"; 
         ctx.fillRect(0, 0, width, height);
         ctx.restore();
 
-        // 2. TEXTO - ESTILO: 80% Opacidad y Cursiva
+        // 2. TEXTO Y ASSETS (CON ESCALA Y OFFSET)
+        ctx.save();
+        ctx.translate(0, gY); // Aplicar desplazamiento vertical del grupo
+        
         ctx.textAlign = "center";
         ctx.shadowColor = "black";
         ctx.shadowBlur = 20;
@@ -1981,35 +1991,36 @@ async function generateMatchPostals() {
 
         // A. Palabra Principal (Arriba)
         ctx.fillStyle = "rgba(255,255,255,0.8)";
-        ctx.font = "italic 900 120px Outfit";
-        ctx.fillText(word, width / 2, centerY - 280);
+        ctx.font = `italic 900 ${120 * gScale}px Outfit`;
+        ctx.fillText(word, width / 2, centerY - (280 * gScale));
 
         // B. ESCUDOS (Grandes y en el centro)
         if (teamA && teamB) {
-            const sSize = 250; // Más grandes
-            const totalShieldsW = (sSize * 2) + 100;
+            const sSize = 250 * gScale; 
+            const totalShieldsW = (sSize * 2) + (100 * gScale);
             const sX = (width - totalShieldsW) / 2;
-            const sY = centerY - 200;
+            const sY = centerY - (200 * gScale);
 
             try {
                 const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
                 drawImageProp(ctx, imgA, sX, sY, sSize, sSize);
                 const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-                drawImageProp(ctx, imgB, sX + sSize + 100, sY, sSize, sSize);
+                drawImageProp(ctx, imgB, sX + sSize + (100 * gScale), sY, sSize, sSize);
             } catch (e) {}
 
             // C. STAGE Y FECHA (Debajo de los escudos)
             ctx.fillStyle = "rgba(255,255,255,0.8)";
-            ctx.font = "italic 400 45px Outfit";
-            ctx.fillText(`${stage} • ${date}`, width / 2, sY + sSize + 80);
+            ctx.font = `italic 400 ${45 * gScale}px Outfit`;
+            ctx.fillText(`${stage} • ${date}`, width / 2, sY + sSize + (80 * gScale));
         }
 
         // D. MARCADOR (Abajo del todo)
         ctx.fillStyle = "rgba(255,255,255,0.8)";
-        ctx.font = "italic 900 280px Outfit";
-        ctx.fillText(score, width / 2, centerY + 380);
+        ctx.font = `italic 900 ${280 * gScale}px Outfit`;
+        ctx.fillText(score, width / 2, centerY + (380 * gScale));
+        ctx.restore();
 
-        // E. Logo (Arriba Izquierda)
+        // E. Logo (Estatico arriba izquierda)
         try {
             const logo = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
             ctx.globalAlpha = 0.6;

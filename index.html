@@ -311,7 +311,17 @@
                                 <input type="text" id="postalScore" placeholder="1 - 0" value="0 - 0" style="width: 100%; background: #000; border: 1px solid #333; color: white; padding: 10px; font-size: 0.8rem; border-radius: 8px; text-align: center;">
                             </div>
                         </div>
-                        <button class="btn-primary" onclick="generateMatchPostals()" style="margin-top: 15px; width: 100%; padding: 12px;">GENERAR POSTALES (H + V)</button>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                            <div class="input-group">
+                                <label style="font-size: 0.6rem; opacity: 0.7;">ESCALA GRUPO</label>
+                                <input type="range" id="postalScale" min="0.5" max="1.5" step="0.05" value="1" oninput="generateMatchPostals()" style="width: 100%;">
+                            </div>
+                            <div class="input-group">
+                                <label style="font-size: 0.6rem; opacity: 0.7;">POSICIÓN VERTICAL</label>
+                                <input type="range" id="postalY" min="-400" max="400" step="10" value="0" oninput="generateMatchPostals()" style="width: 100%;">
+                            </div>
+                        </div>
+                        <button class="btn-primary" onclick="generateMatchPostals()" style="margin-top: 15px; width: 100%; padding: 12px;">GENERAR / ACTUALIZAR</button>
                     </div>
 
                     <div id="postalResultArea" class="hidden">
