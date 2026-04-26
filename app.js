@@ -728,6 +728,9 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
     ctxOut.fillRect(0, CONFIG.outputHeight - 300, CONFIG.outputWidth, 300);
     */
     
+    // --- SOMBRA PERIMETRAL (4 Lados - Estilo Carnet) ---
+    drawPerimeterShadow(ctxOut, CONFIG.outputWidth, CONFIG.outputHeight);
+    
     await drawSportsTicker(ctxOut, player);
     
     // 2.5 LOGO DE LA APP (Arriba Izquierda - Bajado otros 15px de 75 a 90)
@@ -1121,9 +1124,131 @@ function resetApp() {
     elements.imageInput.value = '';
 }
 
-function toggleUpdates() {
-    const modal = document.getElementById('updatesModal');
-    modal.classList.toggle('hidden');
+function drawPerimeterShadow(ctx, w, h) {
+    ctx.save();
+    // 1. Degradado Radial masivo para las esquinas
+    const grd = ctx.createRadialGradient(w/2, h/2, w/4, w/2, h/2, w/1.1);
+    grd.addColorStop(0, "transparent");
+    grd.addColorStop(1, "rgba(0,0,0,0.85)");
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, w, h);
+
+    // 2. Refuerzo en bordes (Linear)
+    const edgeSize = 250;
+    
+    // Superior
+    const grdTop = ctx.createLinearGradient(0,0,0,edgeSize);
+    grdTop.addColorStop(0, "rgba(0,0,0,0.9)");
+    grdTop.addColorStop(1, "transparent");
+    ctx.fillStyle = grdTop;
+    ctx.fillRect(0,0,w,edgeSize);
+
+    // Inferior
+    const grdBot = ctx.createLinearGradient(0,h,0,h-edgeSize);
+    grdBot.addColorStop(0, "rgba(0,0,0,0.9)");
+    grdBot.addColorStop(1, "transparent");
+    ctx.fillStyle = grdBot;
+    ctx.fillRect(0,h-edgeSize,w,edgeSize);
+
+    ctx.restore();
+}
+
+// --- CARRUSEL INSTAGRAM EQUIPO ---
+function openTeamCarouselModal() {
+    document.getElementById('teamCarouselModal').classList.remove('hidden');
+}
+
+function closeTeamCarouselModal() {
+    document.getElementById('teamCarouselModal').classList.add('hidden');
+}
+
+async function processTeamCarousel(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const img = await loadImg(URL.createObjectURL(file));
+    const c1 = document.getElementById('carouselCanvas1');
+    const c2 = document.getElementById('carouselCanvas2');
+    const size = 1080;
+    c1.width = size; c1.height = size;
+    c2.width = size; c2.height = size;
+
+    const ctx1 = c1.getContext('2d');
+    const ctx2 = c2.getContext('2d');
+
+    // 1. Dibujar imagen de equipo extendida (Panorama)
+    const scale = size / img.height;
+    const fullW = img.width * scale;
+    const offsetX = (size * 2 - fullW) / 2;
+
+    // Parte 1
+    ctx1.fillStyle = "#000";
+    ctx1.fillRect(0,0,size,size);
+    ctx1.drawImage(img, offsetX, 0, fullW, size);
+    
+    // Parte 2
+    ctx2.fillStyle = "#000";
+    ctx2.fillRect(0,0,size,size);
+    ctx2.drawImage(img, offsetX - size, 0, fullW, size);
+
+    // 2. Sombreado perimetral en ambos
+    [ctx1, ctx2].forEach(ctx => {
+        const grd = ctx.createRadialGradient(size/2, size/2, size/3, size/2, size/2, size/1.1);
+        grd.addColorStop(0, "transparent");
+        grd.addColorStop(1, "rgba(0,0,0,0.8)");
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, size, size);
+    });
+
+    // 3. Branding Parte 1: Logo y Match Info
+    try {
+        const logo = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
+        drawImageProp(ctx1, logo, 60, 60, 250, 120);
+    } catch(e) {}
+
+    const stage = document.getElementById('matchStage').value;
+    const date = document.getElementById('matchDate').value;
+    ctx1.fillStyle = "white";
+    ctx1.textAlign = "left";
+    ctx1.font = "900 40px Outfit";
+    ctx1.fillText(stage.toUpperCase(), 60, size - 120);
+    ctx1.font = "400 30px Outfit";
+    ctx1.fillText(date, 60, size - 80);
+
+    // 4. Branding Parte 2: Ticker de Equipo
+    if (selectedMatchTeamA) {
+        const team = allTeams[selectedMatchTeamA];
+        const barW = 800;
+        const barH = 100;
+        const bX = size - barW - 60;
+        const bY = size - 160;
+
+        ctx2.fillStyle = "rgba(0,0,0,0.85)";
+        ctx2.beginPath();
+        ctx2.roundRect(bX, bY, barW, barH, 15);
+        ctx2.fill();
+
+        ctx2.fillStyle = team.color;
+        ctx2.fillRect(bX, bY, 15, barH);
+
+        if (team.shield) {
+            const sImg = await loadImg(team.shield);
+            ctx2.drawImage(sImg, bX + 40, bY - 20, 130, 130);
+        }
+
+        ctx2.fillStyle = "white";
+        ctx2.textAlign = "left";
+        ctx2.font = "900 45px Outfit";
+        ctx2.fillText(team.name.toUpperCase(), bX + 190, bY + 65);
+    }
+
+    document.getElementById('carouselPreview').classList.remove('hidden');
+    document.getElementById('carouselFooter').classList.remove('hidden');
+}
+
+function downloadCarousel() {
+    downloadImage('carouselCanvas1', 'team_post_1');
+    setTimeout(() => downloadImage('carouselCanvas2', 'team_post_2'), 500);
 }
 
 // --- GALERÍA DE ESCUDOS (DRIVE) ---

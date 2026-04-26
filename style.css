@@ -1395,3 +1395,42 @@ input:checked + .slider:before {
     justify-content: center;
     align-items: center;
 }
+
+/* Carrusel Instagram */
+.carousel-setup {
+    padding: 20px;
+    text-align: center;
+}
+.upload-box {
+    border: 2px dashed rgba(255,255,255,0.2);
+    padding: 40px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.upload-box:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: var(--primary);
+}
+.carousel-preview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+.preview-part {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.preview-part canvas {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.modal-footer {
+    padding: 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    justify-content: flex-end;
+}

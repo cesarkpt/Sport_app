@@ -148,7 +148,7 @@
                 <div id="matchPreview" class="match-preview" onclick="toggleMatchModal()">
                     <span class="preview-text">Sin configurar...</span>
                 </div>
-                <button class="match-btn" onclick="toggleMatchModal()">CONFIG. PARTIDO</button>
+                <button class="match-btn" onclick="openTeamCarouselModal()" style="background: var(--secondary); color: var(--bg-dark)">CARRUSEL EQUIPO</button>
             </section>
 
             <!-- El match-info-strip se movió al modal matchDataModal -->
@@ -330,6 +330,35 @@
                     <span class="update-ver">v1.0</span>
                     <p>Diseño Mobile-First, soporte PWA y optimización de carga.</p>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Carrusel Instagram -->
+    <div id="teamCarouselModal" class="modal hidden">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3>CARRUSEL DE EQUIPO (INSTAGRAM)</h3>
+                <button onclick="closeTeamCarouselModal()" class="close-btn">&times;</button>
+            </div>
+            <div class="carousel-setup">
+                <div class="upload-box" onclick="document.getElementById('teamPhotoInput').click()">
+                    <p>Subir Foto de Equipo (Panorámica sugerida)</p>
+                    <input type="file" id="teamPhotoInput" accept="image/*" style="display:none" onchange="processTeamCarousel(this)">
+                </div>
+                <div id="carouselPreview" class="carousel-preview-grid hidden">
+                    <div class="preview-part">
+                        <span>Parte 1 (Izquierda)</span>
+                        <canvas id="carouselCanvas1"></canvas>
+                    </div>
+                    <div class="preview-part">
+                        <span>Parte 2 (Derecha)</span>
+                        <canvas id="carouselCanvas2"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer hidden" id="carouselFooter">
+                <button class="btn-primary" onclick="downloadCarousel()">DESCARGAR AMBAS IMÁGENES</button>
             </div>
         </div>
     </div>
