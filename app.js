@@ -1183,17 +1183,10 @@ async function initCarouselCropper(input) {
     document.getElementById('carouselEditor').classList.remove('hidden');
     
     // Inicializar posición
-    const container = document.getElementById('carouselContainer');
-    const cW = container.clientWidth;
-    const cH = container.clientHeight;
+    resetCarouselPosition();
     
-    carouselState.scale = Math.max(cW / img.width, cH / img.height);
-    carouselState.x = (cW - img.width * carouselState.scale) / 2;
-    carouselState.y = (cH - img.height * carouselState.scale) / 2;
-    
-    updateCarouselImg();
-
     // Eventos de Arrastre
+    const container = document.getElementById('carouselContainer');
     container.onmousedown = (e) => {
         carouselState.isDragging = true;
         carouselState.startX = e.clientX - carouselState.x;
@@ -1209,7 +1202,8 @@ async function initCarouselCropper(input) {
 
     document.getElementById('carouselZoom').oninput = (e) => {
         const newScale = parseFloat(e.target.value);
-        // Zoom centrado
+        const cW = container.clientWidth;
+        const cH = container.clientHeight;
         const centerX = cW / 2;
         const centerY = cH / 2;
         const relX = (centerX - carouselState.x) / carouselState.scale;
@@ -1220,6 +1214,22 @@ async function initCarouselCropper(input) {
         carouselState.y = centerY - relY * newScale;
         updateCarouselImg();
     };
+}
+
+function resetCarouselPosition() {
+    if (!carouselState.img) return;
+    const container = document.getElementById('carouselContainer');
+    const cW = container.clientWidth;
+    const cH = container.clientHeight;
+    
+    carouselState.scale = Math.max(cW / carouselState.img.width, cH / carouselState.img.height);
+    carouselState.x = (cW - carouselState.img.width * carouselState.scale) / 2;
+    carouselState.y = (cH - carouselState.img.height * carouselState.scale) / 2;
+    
+    const zoomInput = document.getElementById('carouselZoom');
+    if (zoomInput) zoomInput.value = carouselState.scale;
+    
+    updateCarouselImg();
 }
 
 function updateCarouselImg() {
@@ -1278,31 +1288,36 @@ async function confirmCarouselFraming() {
     // Branding Slide 2: Ticker de Equipo
     if (selectedMatchTeamA) {
         const team = allTeams[selectedMatchTeamA];
-        const barW = 850;
-        const barH = 120;
-        const bX = size - barW - 60;
-        const bY = size - 180;
+        const barW = 1000;
+        const barH = 140;
+        const bX = (size - barW) / 2; // Centrado en cada slide
+        const bY = size - 220;
 
-        ctx2.save();
-        ctx2.shadowColor = "rgba(0,0,0,0.5)"; ctx2.shadowBlur = 20;
-        ctx2.fillStyle = "rgba(0,0,0,0.85)";
-        ctx2.beginPath();
-        ctx2.roundRect(bX, bY, barW, barH, 15);
-        ctx2.fill();
+        // Dibujar en ambos slides
+        [ctx1, ctx2].forEach(ctx => {
+            ctx.save();
+            ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 20;
+            ctx.fillStyle = "rgba(0,0,0,0.9)";
+            ctx.beginPath();
+            ctx.roundRect(bX, bY, barW, barH, 20);
+            ctx.fill();
+            
+            ctx.fillStyle = team.color;
+            ctx.fillRect(bX, bY, 15, barH);
 
-        ctx2.fillStyle = team.color;
-        ctx2.fillRect(bX, bY, 15, barH);
+            if (team.shield) {
+                // Dibujar logo para que aparezca "cortado" orgánicamente en el centro
+                const img = new Image();
+                img.src = team.shield;
+                ctx.drawImage(img, bX + 50, bY - 30, 180, 180);
+            }
 
-        if (team.shield) {
-            const sImg = await loadImg(team.shield);
-            ctx2.drawImage(sImg, bX + 40, bY - 25, 150, 150);
-        }
-
-        ctx2.fillStyle = "white";
-        ctx2.textAlign = "left";
-        ctx2.font = "900 50px Outfit";
-        ctx2.fillText(team.name.toUpperCase(), bX + 210, bY + 78);
-        ctx2.restore();
+            ctx.fillStyle = "white";
+            ctx.textAlign = "left";
+            ctx.font = "900 55px Outfit";
+            ctx.fillText(team.name.toUpperCase(), bX + 250, bY + 90);
+            ctx.restore();
+        });
     }
 
     document.getElementById('carouselPreview').classList.remove('hidden');
