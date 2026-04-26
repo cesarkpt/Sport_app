@@ -1948,6 +1948,7 @@ async function generateMatchPostals() {
     // Controles de usuario
     const gScale = parseFloat(document.getElementById('postalScale').value) || 1;
     const gY = parseInt(document.getElementById('postalY').value) || 0;
+    const gX = parseInt(document.getElementById('postalX').value) || 0;
 
     const teamA = allTeams[selectedMatchTeamA];
     const teamB = allTeams[selectedMatchTeamB];
@@ -1955,33 +1956,41 @@ async function generateMatchPostals() {
     const generateOne = async (canvasId, width, height) => {
         const canvas = document.getElementById(canvasId);
         const ctx = canvas.getContext('2d');
+        
+        // Reset canvas transform and set dimensions
         canvas.width = width;
         canvas.height = height;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-        // 1. Fondo y Jugador
+        // 1. Fondo y Jugador (Usar drawImageProp para asegurar relación de aspecto)
         ctx.fillStyle = "#000";
         ctx.fillRect(0, 0, width, height);
 
         const crop = lastProcessedCropHD;
-        // Ajuste de escala para cubrir el canvas sin distorsión
-        const scaleX = width / crop.w;
-        const scaleY = height / crop.h;
-        const scale = Math.max(scaleX, scaleY);
-        const finalW = crop.w * scale;
-        const finalH = crop.h * scale;
-        const finalX = (width - finalW) / 2;
-        const finalY = (height - finalH) / 2;
+        if (crop && lastProcessedPlayerImg) {
+            // Extraer el área recortada y dibujarla cubriendo el canvas
+            // Creamos un canvas temporal para el recorte y luego lo pasamos por drawImageProp
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = crop.w;
+            tempCanvas.height = crop.h;
+            const tCtx = tempCanvas.getContext('2d');
+            tCtx.drawImage(lastProcessedPlayerImg, crop.x, crop.y, crop.w, crop.h, 0, 0, crop.w, crop.h);
+            
+            // Dibujar el recorte en el canvas final asegurando que cubra (cover)
+            // Para "cover", usamos una versión modificada de drawImageProp o lógica directa
+            const scale = Math.max(width / crop.w, height / crop.h);
+            const w = crop.w * scale;
+            const h = crop.h * scale;
+            ctx.drawImage(tempCanvas, (width - w) / 2, (height - h) / 2, w, h);
+        }
 
-        ctx.save();
-        ctx.drawImage(lastProcessedPlayerImg, crop.x, crop.y, crop.w, crop.h, finalX, finalY, finalW, finalH);
         drawPerimeterShadow(ctx, width, height);
         ctx.fillStyle = "rgba(0,0,0,0.5)"; 
         ctx.fillRect(0, 0, width, height);
-        ctx.restore();
 
         // 2. TEXTO Y ASSETS (CON ESCALA Y OFFSET)
         ctx.save();
-        ctx.translate(0, gY); // Aplicar desplazamiento vertical del grupo
+        ctx.translate(gX, gY); 
         
         ctx.textAlign = "center";
         ctx.shadowColor = "black";
@@ -1989,42 +1998,43 @@ async function generateMatchPostals() {
 
         const centerY = height / 2;
 
-        // A. Palabra Principal (Arriba)
+        // A. Palabra Principal
         ctx.fillStyle = "rgba(255,255,255,0.8)";
         ctx.font = `italic 900 ${120 * gScale}px Outfit`;
         ctx.fillText(word, width / 2, centerY - (280 * gScale));
 
-        // B. ESCUDOS (Grandes y en el centro)
+        // B. ESCUDOS
         if (teamA && teamB) {
             const sSize = 250 * gScale; 
             const totalShieldsW = (sSize * 2) + (100 * gScale);
-            const sX = (width - totalShieldsW) / 2;
+            const startX = (width - totalShieldsW) / 2;
             const sY = centerY - (200 * gScale);
 
             try {
                 const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
-                drawImageProp(ctx, imgA, sX, sY, sSize, sSize);
+                drawImageProp(ctx, imgA, startX, sY, sSize, sSize);
                 const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-                drawImageProp(ctx, imgB, sX + sSize + (100 * gScale), sY, sSize, sSize);
+                drawImageProp(ctx, imgB, startX + sSize + (100 * gScale), sY, sSize, sSize);
             } catch (e) {}
 
-            // C. STAGE Y FECHA (Debajo de los escudos)
+            // C. STAGE Y FECHA
             ctx.fillStyle = "rgba(255,255,255,0.8)";
             ctx.font = `italic 400 ${45 * gScale}px Outfit`;
             ctx.fillText(`${stage} • ${date}`, width / 2, sY + sSize + (80 * gScale));
         }
 
-        // D. MARCADOR (Abajo del todo)
+        // D. MARCADOR
         ctx.fillStyle = "rgba(255,255,255,0.8)";
         ctx.font = `italic 900 ${280 * gScale}px Outfit`;
         ctx.fillText(score, width / 2, centerY + (380 * gScale));
         ctx.restore();
 
-        // E. Logo (Estatico arriba izquierda)
+        // E. Logo
         try {
             const logo = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
             ctx.globalAlpha = 0.6;
-            drawImageProp(ctx, logo, 60, 60, 250, 100);
+            // Aseguramos que el logo no se deforme tampoco
+            drawImageProp(ctx, logo, 60, 60, 250, 100, 0, 0); 
             ctx.globalAlpha = 1.0;
         } catch (e) {}
     };
