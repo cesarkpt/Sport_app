@@ -31,6 +31,9 @@ if (!activeTeamId && Object.keys(allTeams).length > 0) {
     activeTeamId = Object.keys(allTeams)[0];
 }
 let editingTeamId = null;
+let currentPlayerData = null; // Guardar datos para subir a Drive al descargar
+let lastProcessedPlayerImg = null; // Guardar para generar postales después
+let lastProcessedCropHD = null;
 
 function toggleTeamManager() {
     const tm = document.getElementById('teamManager');
@@ -506,12 +509,12 @@ async function processPlayerPhoto(processingImg, originalImg) {
 
         // 3. Composición de Layout
         updateStep(3, "Creando arte HD...");
+        lastProcessedPlayerImg = finalPlayerImg;
+        lastProcessedCropHD = finalData.cropHD;
         await generateLayouts(finalPlayerImg, finalData.data, shouldRemoveBg, finalData.crop, finalData.cropHD);
 
-        // 4. Guardado Automático en Drive
-        updateStep(3, "Subiendo a Drive...");
-        await saveToDrive(elements.outputCanvas.toDataURL('image/png'), finalData.data);
-
+        // --- 4. Guardado en Drive (MOVIDO AL BOTÓN DE DESCARGA) ---
+        currentPlayerData = finalData.data; 
         updateStep(3, "Listo para descargar");
 
         // 5. Mostrar Resultados
@@ -999,13 +1002,25 @@ async function drawCarnetOverlay(ctx, player) {
     ctx.font = `900 ${lastSize}px Outfit`;
     ctx.fillText(lastName.toUpperCase(), finalX, h - 50);
 
-    // 5.1 POSICIÓN (Al lado del nombre, mismo alto)
+    // 5.1 POSICIÓN (Estilo Tarjeta Pro: Cuadro de color con letras negras)
     if (player.position) {
         ctx.save();
-        ctx.fillStyle = "rgba(255,255,255,0.6)";
-        ctx.font = `900 ${firstSize}px Outfit`;
-        const firstNameW = ctx.measureText(firstName).width;
-        ctx.fillText(` [${player.position.toUpperCase()}]`, finalX + firstNameW + 5, h - 100);
+        const badgeW = 70;
+        const badgeH = 35;
+        const bX = finalX;
+        const bY = h - 135;
+
+        // Cuadro de color
+        ctx.fillStyle = player.color;
+        ctx.beginPath();
+        ctx.roundRect(bX, bY, badgeW, badgeH, 5);
+        ctx.fill();
+
+        // Texto negro
+        ctx.fillStyle = "#000";
+        ctx.font = "900 22px Outfit";
+        ctx.textAlign = "center";
+        ctx.fillText(player.position.toUpperCase(), bX + badgeW/2, bY + 26);
         ctx.restore();
     }
 
@@ -1186,16 +1201,22 @@ function downloadImage(canvasId, name) {
     const canvas = document.getElementById(canvasId);
     const link = document.createElement('a');
     link.download = `sportshub_${name}_${Date.now()}.png`;
-
-    // Intentar WebP para mayor compresión si es para web, pero PNG es más compatible para descarga
-    link.href = canvas.toDataURL('image/png');
+    const base64 = canvas.toDataURL('image/png');
+    link.href = base64;
     link.click();
+
+    // SUBIR A DRIVE AL DESCARGAR
+    if (currentPlayerData) {
+        console.log("Subiendo copia a Drive por solicitud de descarga...");
+        saveToDrive(base64, currentPlayerData);
+    }
 }
 
 function resetApp() {
     elements.resultArea.classList.add('hidden');
     elements.processingArea.classList.add('hidden');
     document.getElementById('editPanel').classList.add('hidden');
+    document.getElementById('postalResultArea').classList.add('hidden');
     elements.uploadSection.classList.remove('hidden');
     elements.imageInput.value = '';
     // Recargar para limpiar estados de IA si es necesario
@@ -1910,4 +1931,71 @@ function showResultTab(tabId) {
     if (event && event.currentTarget) {
         event.currentTarget.classList.add('active');
     }
+}
+
+async function generateMatchPostal() {
+    if (!lastProcessedPlayerImg || !currentPlayerData) return alert("Primero procesa a un jugador.");
+
+    const canvas = document.getElementById('postalCanvas');
+    const ctx = canvas.getContext('2d');
+    const size = 1080;
+    canvas.width = size;
+    canvas.height = size;
+
+    // 1. Fondo Negro y Jugador
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, size, size);
+
+    // Dibujar jugador centrado (Usando el mismo recorte HD pero adaptado a 1:1)
+    const crop = lastProcessedCropHD;
+    const targetW = size;
+    const scale = targetW / crop.w;
+    const finalW = targetW;
+    const finalH = crop.h * scale;
+    const finalY = (size - finalH) / 2;
+
+    ctx.save();
+    ctx.drawImage(lastProcessedPlayerImg,
+        crop.x, crop.y, crop.w, crop.h,
+        0, finalY, finalW, finalH
+    );
+    
+    // 2. Viñeta y Oscurecimiento para que el texto resalte
+    drawPerimeterShadow(ctx, size, size);
+    ctx.fillStyle = "rgba(0,0,0,0.3)";
+    ctx.fillRect(0, 0, size, size);
+    ctx.restore();
+
+    // 3. TEXTO (CENTRE)
+    const word = document.getElementById('postalWord').value.toUpperCase();
+    const score = document.getElementById('postalScore').value;
+    const stage = document.getElementById('matchStage').value;
+    const date = document.getElementById('matchDate').value;
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "white";
+    ctx.shadowColor = "black";
+    ctx.shadowBlur = 15;
+
+    // A. Palabra Principal (ENTRETIEMPO, etc)
+    ctx.font = "900 100px Outfit";
+    ctx.fillText(word, size/2, size/2 - 120);
+
+    // B. MATCHDAY (Stage + Date)
+    ctx.font = "400 40px Outfit";
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.fillText(`${stage} • ${date}`, size/2, size/2 - 40);
+
+    // C. MARCADOR
+    ctx.font = "900 180px Outfit";
+    ctx.fillStyle = "white";
+    ctx.fillText(score, size/2, size/2 + 150);
+
+    // D. Branding (Logo abajo)
+    try {
+        const logo = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
+        drawImageProp(ctx, logo, size/2 - 100, size - 150, 200, 80);
+    } catch (e) {}
+
+    document.getElementById('postalResultArea').classList.remove('hidden');
 }

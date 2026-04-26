@@ -296,18 +296,34 @@
                 </div>
 
                 <div id="postalesTab" class="tab-content hidden">
-                    <div class="postales-menu">
+                    <div class="postales-menu" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div class="postal-option">
                             <div class="postal-icon">📱</div>
-                            <h4>Carrusel Instagram</h4>
-                            <p>Genera un post panorámico de equipo.</p>
-                            <button class="btn-primary" onclick="openTeamCarouselModal()">ABRIR HERRAMIENTA</button>
+                            <h4>Carrusel</h4>
+                            <button class="btn-secondary" onclick="openTeamCarouselModal()" style="font-size: 0.6rem; padding: 5px;">ABRIR</button>
+                        </div>
+                        <div class="postal-option" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px; border: 1px solid var(--glass-border);">
+                            <div class="postal-icon">🖼️</div>
+                            <h4 style="font-size: 0.7rem; margin-bottom: 10px;">Postal de Partido</h4>
+                            <input type="text" id="postalWord" placeholder="ENTRETIEMPO" value="FIN DEL PARTIDO" style="width: 100%; background: #000; border: 1px solid #333; color: white; padding: 5px; font-size: 0.6rem; border-radius: 5px; margin-bottom: 5px;">
+                            <input type="text" id="postalScore" placeholder="MARCADOR (Ej: 1-0)" value="0-0" style="width: 100%; background: #000; border: 1px solid #333; color: white; padding: 5px; font-size: 0.6rem; border-radius: 5px; margin-bottom: 10px; text-align: center;">
+                            <button class="btn-primary" onclick="generateMatchPostal()" style="font-size: 0.6rem; padding: 8px;">GENERAR</button>
+                        </div>
+                    </div>
+
+                    <div id="postalResultArea" class="hidden" style="margin-top: 20px;">
+                        <div class="result-card">
+                            <h3>Postal Generada</h3>
+                            <div class="canvas-container main-result">
+                                <canvas id="postalCanvas"></canvas>
+                            </div>
+                            <button class="btn-secondary" onclick="downloadImage('postalCanvas', 'postal')">DESCARGAR POSTAL</button>
                         </div>
                     </div>
                 </div>
                 
                 <div class="final-actions">
-                    <button class="btn-primary" onclick="resetApp()" style="background: #333;">OTRO JUGADOR</button>
+                    <button class="btn-primary" onclick="resetApp()" style="background: #444; color: #ccc; box-shadow: none; border: 1px solid #555;">OTRO JUGADOR</button>
                 </div>
             </section>
         </main>
