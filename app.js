@@ -689,13 +689,11 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
         ctxOut.drawImage(playerCanvas, (CONFIG.outputWidth - w) / 2, (CONFIG.outputHeight - h) / 2, w, h);
     }
     
-    // Jugador (CON CÁLCULO PROPORCIONAL PARA EVITAR DISTORSIÓN)
+    // Jugador (ESCALADO AL ANCHO DE LA BARRA TICKER: 1720px)
     if (manualCropHD) {
-        // Calcular escala para que quepa en el área central (1720x880 aprox) sin estirarse
-        const targetMaxW = CONFIG.outputWidth - 200;
-        const targetMaxH = CONFIG.outputHeight - 200;
-        const scale = Math.min(targetMaxW / manualCropHD.w, targetMaxH / manualCropHD.h);
-        const finalW = manualCropHD.w * scale;
+        const targetW = 1720;
+        const scale = targetW / manualCropHD.w;
+        const finalW = targetW;
         const finalH = manualCropHD.h * scale;
         
         ctxOut.save();
@@ -703,10 +701,10 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
             ctxOut.shadowColor = "rgba(0,0,0,0.6)";
             ctxOut.shadowBlur = 40;
         }
-        // Dibujar centrado en el área
+        // Dibujar centrado horizontalmente, apoyado cerca de la base
         ctxOut.drawImage(playerCanvas, 
             manualCropHD.x, manualCropHD.y, manualCropHD.w, manualCropHD.h, 
-            (CONFIG.outputWidth - finalW) / 2, (CONFIG.outputHeight - finalH) / 2, finalW, finalH
+            (CONFIG.outputWidth - finalW) / 2, (CONFIG.outputHeight - finalH) + 50, finalW, finalH
         );
         ctxOut.restore();
     } else if (shouldRemoveBg) {
@@ -884,12 +882,12 @@ async function drawCarnetOverlay(ctx, player) {
         } catch(e) {}
     }
 
-    // 5. NOMBRE DEL JUGADOR (SOMBRA NARANJA)
+    // 5. NOMBRE DEL JUGADOR (SOMBRA NEGRA 80%)
     const finalX = 130 - 10; 
     ctx.textAlign = "left";
     ctx.save();
     ctx.shadowBlur = 20;
-    ctx.shadowColor = "rgba(255, 152, 0, 0.9)"; // NARANJA AGRESIVO
+    ctx.shadowColor = "rgba(0, 0, 0, 0.8)"; 
     ctx.shadowOffsetX = 3;
     ctx.shadowOffsetY = 3;
     
@@ -918,17 +916,18 @@ async function drawCarnetOverlay(ctx, player) {
     ctx.fillText(player.number, w - 30, h - 50);
     ctx.restore();
 
-    // 7. Icono Capitán (C)
+    // 7. Icono Capitán (C) - Bajado 10px y 5px a la derecha
     if (player.name.includes("(C)")) {
         ctx.save();
         ctx.fillStyle = "#ff9800";
         ctx.beginPath();
-        ctx.arc(w - 60, h - 220, 28, 0, Math.PI * 2);
+        // x original: w-60, y original: h-220
+        ctx.arc(w - 60 + 5, h - 220 + 10, 28, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "black";
         ctx.font = "900 32px Outfit";
         ctx.textAlign = "center";
-        ctx.fillText("C", w - 60, h - 208);
+        ctx.fillText("C", w - 60 + 5, h - 208 + 10);
         ctx.restore();
     }
 }
