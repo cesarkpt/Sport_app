@@ -151,7 +151,7 @@
                 <div id="matchPreview" class="match-preview" onclick="toggleMatchModal()">
                     <span class="preview-text">Sin configurar...</span>
                 </div>
-                <button class="match-btn" onclick="openTeamCarouselModal()" style="background: var(--secondary); color: var(--bg-dark)">CARRUSEL EQUIPO</button>
+                <button class="match-btn" onclick="document.getElementById('resultArea').classList.remove('hidden'); showResultTab('carousel');" style="background: var(--secondary); color: var(--bg-dark)">CARRUSEL EQUIPO</button>
             </section>
 
             <!-- El match-info-strip se movió al modal matchDataModal -->
