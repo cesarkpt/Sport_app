@@ -7,6 +7,8 @@ const CONFIG = {
     carnetHeight: 800
 };
 
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzYBhBQSZzSI5qj9cRgLhjQ-YGonuqnNBTmMRXJH6OllT3XpO0KTXBZP0wOPWv1i4nk/exec";
+
 // --- GESTIÓN DE EQUIPOS ---
 let allTeams = JSON.parse(localStorage.getItem('sportshub_all_teams')) || {};
 
@@ -39,22 +41,32 @@ function toggleTeamManager() {
 }
 
 async function syncWithCloud() {
-    const btn = document.querySelector('button[onclick="syncWithCloud()"]');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = "CARGANDO... ⏳";
-    btn.disabled = true;
+    const btn = document.getElementById('btnSyncCloud') || document.querySelector('button[onclick*="syncWithCloud"]');
+    const originalText = btn ? btn.innerHTML : "NUBE 🔄";
+    
+    if (btn) {
+        btn.innerHTML = "CONECTANDO... ⏳";
+        btn.disabled = true;
+    }
 
     try {
+        console.log("Iniciando sincronización con la nube...");
         let result;
+        
+        // Priorizar entorno Google Apps Script
         if (typeof google !== 'undefined' && google.script && google.script.run) {
             result = await new Promise((resolve, reject) => {
                 google.script.run
-                    .withSuccessHandler(resolve)
-                    .withFailureHandler(reject)
+                    .withSuccessHandler(res => resolve(res))
+                    .withFailureHandler(err => reject(err))
                     .getAllTeamsData();
             });
-        } else {
-            const resp = await fetch(`${GAS_WEB_APP_URL}?action=getAllTeamsData`);
+        } 
+        // Fallback a Fetch API (Web App desplegada)
+        else {
+            const url = `${GAS_WEB_APP_URL}?action=getAllTeamsData`;
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error("Error en respuesta de red");
             result = await resp.json();
         }
 
@@ -63,19 +75,21 @@ async function syncWithCloud() {
                 allTeams = result.data;
                 localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
                 renderTeamsList();
-                alert("¡Equipos sincronizados con éxito! ✅");
+                alert("¡Sincronización Exitosa! ✅\nLos equipos se han actualizado desde la nube.");
             } else {
-                alert("No hay datos guardados en la nube todavía.");
+                alert("La base de datos en la nube está vacía.");
             }
         } else {
-            alert("Error: " + (result ? result.error : "Error de respuesta"));
+            throw new Error(result ? result.error : "Respuesta inválida del servidor");
         }
     } catch (e) {
-        console.error(e);
-        alert("Error de conexión. Verifica tu internet o el despliegue del script.");
+        console.error("Sync error:", e);
+        alert("FALLO DE CONEXIÓN:\n1. Verifica tu internet.\n2. Asegúrate de estar logueado en Google.\n3. El script podría estar saturado.");
     } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
+        if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
     }
 }
 
@@ -1420,7 +1434,6 @@ function downloadCarousel() {
 }
 
 // --- GALERÍA DE ESCUDOS (DRIVE) ---
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzYBhBQSZzSI5qj9cRgLhjQ-YGonuqnNBTmMRXJH6OllT3XpO0KTXBZP0wOPWv1i4nk/exec";
 
 function openShieldGallery(type = 'main') {
     currentShieldType = type;
