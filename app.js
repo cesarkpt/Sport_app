@@ -705,10 +705,10 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
     
     await drawSportsTicker(ctxOut, player);
     
-    // 2.5 LOGO DE LA APP (Arriba Izquierda) - Forzar transparencia con t=0
+    // 2.5 LOGO DE LA APP (Arriba Izquierda)
     try {
         const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
-        ctxOut.drawImage(logoImg, 100, 60, 220, 100);
+        drawImageProp(ctxOut, logoImg, 100, 60, 220, 100, 0, 0);
     } catch(e) {}
 
     // --- 2.6 INFO DE PARTIDO ---
@@ -810,90 +810,105 @@ function drawCarnetOverlay(ctx, player) {
     const h = CONFIG.carnetHeight;
     const w = CONFIG.carnetWidth;
     
-    // 1. MI LOGO EN EL CARNET
+    // 1. MI LOGO EN EL CARNET (Arriba Izquierda)
     try {
         const logoImg = new Image(); logoImg.src = "https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0";
-        ctx.drawImage(logoImg, 15, 20, 80, 40);
+        logoImg.onload = () => {
+             drawImageProp(ctx, logoImg, 15, 20, 100, 50, 0, 0);
+        };
     } catch(e) {}
 
-    // 2. NÚMERO GIGANTE AL FONDO
-    ctx.save();
-    ctx.textAlign = "left";
-    ctx.fillStyle = "rgba(255,255,255,0.08)";
-    ctx.font = "900 350px Outfit";
-    ctx.fillText(player.number, 70, h - 80);
-    ctx.restore();
-
-    // 3. INFO PARTIDO EN CARNET (Top Right)
+    // 2. INFO PARTIDO EN CARNET (Match Shields + Info)
     if (selectedMatchTeamA && selectedMatchTeamB) {
-        ctx.fillStyle = "rgba(255,255,255,0.8)";
-        ctx.font = "900 20px Outfit";
-        ctx.textAlign = "right";
+        const teamA = allTeams[selectedMatchTeamA];
+        const teamB = allTeams[selectedMatchTeamB];
         const stage = document.getElementById('matchStage').value;
         const date = document.getElementById('matchDate').value || "";
-        ctx.fillText(stage, w - 40, 45);
-        ctx.font = "400 16px Outfit";
-        ctx.fillText(date, w - 40, 70);
+        
+        const mx = w - 160, my = 20, ms = 60;
+        const loadAndDrawMatch = async () => {
+            try {
+                const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
+                drawImageProp(ctx, imgA, mx, my, ms, ms);
+                const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
+                drawImageProp(ctx, imgB, mx + ms + 15, my, ms, ms);
+            } catch(e) {}
+        };
+        loadAndDrawMatch();
+        
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
+        ctx.textAlign = "right";
+        ctx.font = "900 16px Outfit";
+        ctx.fillText(stage, w - 20, my + ms + 25);
+        ctx.font = "400 14px Outfit";
+        ctx.fillText(date, w - 20, my + ms + 45);
     }
 
+    // 3. NÚMERO GIGANTE AL FONDO (CURSIVA, 80% OPACIDAD, MÁS GRANDE)
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(255,255,255,0.12)"; // Sutil pero presente
+    ctx.font = "italic 900 500px Outfit";
+    ctx.fillText(player.number, w/2, h/2 + 150);
+    ctx.restore();
+
     // Degradado inferior
-    const grd = ctx.createLinearGradient(0, h-300, 0, h);
+    const grd = ctx.createLinearGradient(0, h-350, 0, h);
     grd.addColorStop(0, "transparent");
     grd.addColorStop(1, "black");
     ctx.fillStyle = grd;
-    ctx.fillRect(0, h-300, w, 300);
+    ctx.fillRect(0, h-350, w, 350);
     
     const cleanName = player.name.replace(" (C)", "");
     const nameParts = cleanName.split(" ");
     const firstName = nameParts[0] || "";
     const lastName = nameParts.slice(1).join(" ") || "";
 
-    // 4. ESCUDO SOLAPANDO LA BARRA LATERAL
-    let textX = 90;
-    if (player.shield) {
-        try {
-            const sImg = new Image(); sImg.src = player.shield;
-            // Solapa barra (x=20)
-            ctx.drawImage(sImg, 20, h - 165, 100, 100);
-            textX = 140; // Nombre más a la izquierda, cerca del escudo
-        } catch(e) {}
-    }
+    // 4. ESCUDO DEL EQUIPO (Bajado 10px respecto al anterior h-165)
+    let textX = 140;
+    const drawTeamShield = async () => {
+        if (player.shield) {
+            try {
+                const sImg = await loadImg(player.shield);
+                ctx.drawImage(sImg, 20, h - 155, 100, 100);
+            } catch(e) {}
+        }
+    };
+    drawTeamShield();
 
+    // 5. NOMBRE DEL JUGADOR (Retrocedido 10px respecto al anterior 140)
+    const finalX = textX - 10;
     ctx.textAlign = "left";
     ctx.save();
-    // Sombras para legibilidad
     ctx.shadowBlur = 15;
     ctx.shadowColor = "black";
     
-    // Nombre (Pequeño)
     ctx.fillStyle = "rgba(255,255,255,0.8)";
     ctx.font = "400 35px Outfit";
-    ctx.fillText(firstName, textX, h - 110);
+    ctx.fillText(firstName, finalX, h - 110);
     
-    // Apellido (Grande)
     ctx.fillStyle = "white";
     ctx.font = "900 65px Outfit";
-    ctx.fillText(lastName.toUpperCase(), textX, h - 50);
+    ctx.fillText(lastName.toUpperCase(), finalX, h - 50);
     ctx.restore();
     
-    // 5. NÚMERO PRINCIPAL (DERECHA)
-    ctx.fillStyle = player.color;
-    ctx.font = "900 130px Outfit";
+    // 6. NÚMERO DE JUGADOR (Detrás del nombre, grande, cursiva, 80% opacidad)
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.font = "italic 900 160px Outfit";
     ctx.textAlign = "right";
-    ctx.fillText(player.number, w - 40, h - 50);
+    ctx.fillText(player.number, w - 30, h - 50);
 
-    // 6. Icono Capitán (C) CENTRADO VERTICAL, RECARGADO A LA DERECHA
+    // 7. Icono Capitán (C)
     if (player.name.includes("(C)")) {
         ctx.save();
         ctx.fillStyle = "#ff9800";
         ctx.beginPath();
-        // Recargado a la derecha, altura media del área de nombre
-        ctx.arc(w - 60, h - 180, 28, 0, Math.PI * 2);
+        ctx.arc(w - 60, h - 220, 28, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "black";
         ctx.font = "900 32px Outfit";
         ctx.textAlign = "center";
-        ctx.fillText("C", w - 60, h - 168);
+        ctx.fillText("C", w - 60, h - 208);
         ctx.restore();
     }
 }
@@ -903,14 +918,18 @@ async function drawBackground(ctx, color) {
     try {
         const bgImg = await loadImg("https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=1920&auto=format&fit=crop");
         ctx.save();
-        ctx.filter = "blur(10px)"; // Efecto desenfoque
-        ctx.globalAlpha = 0.4;     // Opacidad al 40%
+        ctx.filter = "blur(15px)"; // Efecto desenfoque más fuerte
+        ctx.globalAlpha = 0.4;     
         ctx.drawImage(bgImg, 0, 0, 1920, 1080);
         ctx.restore();
     } catch(e) {
         ctx.fillStyle = "#0a0e14";
         ctx.fillRect(0, 0, 1920, 1080);
     }
+    
+    // Overlay oscuro adicional para efecto "ahumado"
+    ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+    ctx.fillRect(0, 0, 1920, 1080);
 
     // 2. Overlay de color del equipo (Vignette)
     const grd = ctx.createRadialGradient(960, 540, 100, 960, 540, 1200);
@@ -981,27 +1000,25 @@ async function drawMatchInfo(ctx, teamA, teamB) {
     const stage = document.getElementById('matchStage').value;
     const date = document.getElementById('matchDate').value || new Date().toLocaleDateString();
     
-    const x = CONFIG.outputWidth - 350; 
+    const x = CONFIG.outputWidth - 450; 
     const y = 80;
-    const sSize = 80;
+    const sSize = 110; // Escudos más grandes
     
     ctx.save();
-    // Efecto Invertido + Luminosidad para escudos
-    ctx.filter = "invert(1)";
-    ctx.globalCompositeOperation = "luminosity";
-    ctx.globalAlpha = 0.9;
+    // Sin ajustes de color, conservando original
+    ctx.globalAlpha = 1.0;
     
     if (teamA.shieldWhite || teamA.shield) {
         try {
             const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
-            ctx.drawImage(imgA, x, y, sSize, sSize);
+            drawImageProp(ctx, imgA, x, y, sSize, sSize);
         } catch(e) {}
     }
     
     if (teamB.shieldWhite || teamB.shield) {
         try {
             const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-            ctx.drawImage(imgB, x + sSize + 20, y, sSize, sSize);
+            drawImageProp(ctx, imgB, x + sSize + 20, y, sSize, sSize);
         } catch(e) {}
     }
     ctx.restore();
@@ -1302,6 +1319,19 @@ function toggleMatchModal() {
     const modal = document.getElementById('matchDataModal');
     modal.classList.toggle('hidden');
 }
+// --- HELPERS GRÁFICOS ---
+function drawImageProp(ctx, img, x, y, w, h, offsetX = 0.5, offsetY = 0.5) {
+    const iw = img.width, ih = img.height;
+    const r = Math.min(w / iw, h / ih);
+    let nw = iw * r, nh = ih * r;
+    let cx, cy, cw, ch, ar = 1;
+
+    // contain
+    cx = (w - nw) * offsetX;
+    cy = (h - nh) * offsetY;
+    ctx.drawImage(img, x + cx, y + cy, nw, nh);
+}
+
 function loadImg(url) {
     return new Promise((resolve, reject) => {
         const img = new Image();
