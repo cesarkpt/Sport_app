@@ -135,7 +135,12 @@ function getShieldsFromDrive() {
 
 function doPost(e) {
   try {
+    if (!e.postData || !e.postData.contents) {
+      return createJsonResponse({ success: false, error: "No data received" });
+    }
+    
     const params = JSON.parse(e.postData.contents);
+    
     if (params.action === 'saveImage') {
       const result = saveProcessedImage(params.image, params.fileName, params.teamName);
       return createJsonResponse(result);
@@ -144,6 +149,8 @@ function doPost(e) {
       const result = saveAllTeamsData(params.data);
       return createJsonResponse(result);
     }
+    
+    return createJsonResponse({ success: false, error: "Invalid action: " + params.action });
   } catch (e) {
     return createJsonResponse({ success: false, error: e.toString() });
   }
@@ -180,6 +187,3 @@ function saveProcessedImage(base64Data, fileName, teamName) {
 function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
-// Force Permissions:
-// SpreadsheetApp.getActive();
-// DriveApp.getFiles();

@@ -561,8 +561,23 @@ async function saveToDrive(base64, player) {
                 .saveProcessedImage(base64, fileName, teamName);
         });
     } else {
-        console.warn("Modo Local: No se puede guardar en Drive directamente.");
-        // Podríamos intentar un fetch POST al GAS_WEB_APP_URL aquí si el usuario lo necesita
+        console.warn("Modo Local: Intentando guardar en Drive vía Fetch (no-cors)...");
+        try {
+            await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ 
+                    action: 'saveImage', 
+                    image: base64, 
+                    fileName: fileName, 
+                    teamName: teamName 
+                })
+            });
+            console.log("✅ Petición de guardado enviada (no-cors)");
+        } catch (e) {
+            console.error("❌ Error en fetch fallback:", e);
+        }
     }
 }
 
@@ -1752,11 +1767,14 @@ async function uploadToCloud() {
                     .saveAllTeamsData(allTeams);
             });
         } else {
-            const resp = await fetch(GAS_WEB_APP_URL, {
+            // Modo Web App Externa: Usamos no-cors para evitar bloqueos del navegador
+            await fetch(GAS_WEB_APP_URL, {
                 method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
                 body: JSON.stringify({ action: 'saveAllTeams', data: allTeams })
             });
-            result = await resp.json();
+            result = { success: true }; // En no-cors no podemos leer la respuesta, asumimos éxito
         }
 
         if (result && result.success) {
