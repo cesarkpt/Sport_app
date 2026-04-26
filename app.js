@@ -1721,6 +1721,20 @@ function loadImg(url) {
 
 initMatchSettings();
 
+// --- VINCULACIÓN DE BOTONES (MODO ROBUSTO) ---
+document.addEventListener('DOMContentLoaded', () => {
+    const btnSync = document.getElementById('btnSyncCloud');
+    if (btnSync) {
+        console.log("✅ Botón de nube detectado y vinculado.");
+        btnSync.addEventListener('click', (e) => {
+            console.log("🖱️ Clic en nube registrado.");
+            syncWithCloud();
+        });
+    } else {
+        console.warn("⚠️ No se encontró el botón btnSyncCloud para vincular.");
+    }
+});
+
 function showResultTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
