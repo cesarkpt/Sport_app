@@ -264,24 +264,44 @@
             </section>
 
             <section class="result-section hidden" id="resultArea">
-                <div class="result-card">
-                    <h3>Tarjeta Pro HD</h3>
-                    <div class="canvas-container main-result">
-                        <canvas id="outputCanvas"></canvas>
-                    </div>
-                    <button class="btn-secondary" onclick="downloadImage('outputCanvas', 'transmision')">DESCARGAR HD</button>
+                <div class="result-nav">
+                    <button class="nav-tab active" onclick="showResultTab('previas')">PREVIAS</button>
+                    <button class="nav-tab" onclick="showResultTab('postales')">POSTALES</button>
                 </div>
 
-                <div class="result-card mini">
-                    <h3>Carnet de Jugador</h3>
-                    <div class="canvas-container carnet-result">
-                        <canvas id="carnetCanvas"></canvas>
+                <div id="previasTab" class="tab-content">
+                    <div class="results-grid">
+                        <div class="result-card">
+                            <h3>Tarjeta Pro HD</h3>
+                            <div class="canvas-container main-result">
+                                <canvas id="outputCanvas"></canvas>
+                            </div>
+                            <button class="btn-secondary" onclick="downloadImage('outputCanvas', 'transmision')">DESCARGAR HD</button>
+                        </div>
+
+                        <div class="result-card mini">
+                            <h3>Carnet de Jugador</h3>
+                            <div class="canvas-container carnet-result">
+                                <canvas id="carnetCanvas"></canvas>
+                            </div>
+                            <button class="btn-secondary" onclick="downloadImage('carnetCanvas', 'carnet')">DESCARGAR CARNET</button>
+                        </div>
                     </div>
-                    <button class="btn-secondary" onclick="downloadImage('carnetCanvas', 'carnet')">DESCARGAR CARNET</button>
+                </div>
+
+                <div id="postalesTab" class="tab-content hidden">
+                    <div class="postales-menu">
+                        <div class="postal-option">
+                            <div class="postal-icon">📱</div>
+                            <h4>Carrusel Instagram</h4>
+                            <p>Genera un post panorámico de equipo.</p>
+                            <button class="btn-primary" onclick="openTeamCarouselModal()">ABRIR HERRAMIENTA</button>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="final-actions">
-                    <button class="btn-primary" onclick="resetApp()">OTRO JUGADOR</button>
+                    <button class="btn-primary" onclick="resetApp()" style="background: #333;">OTRO JUGADOR</button>
                 </div>
             </section>
         </main>
@@ -367,7 +387,7 @@
                         </div>
                         <div style="flex: 1;">
                             <label>ROTACIÓN</label>
-                            <input type="range" id="carouselRotate" min="-180" max="180" step="1" value="0">
+                            <input type="range" id="carouselRotate" min="-30" max="30" step="1" value="0">
                         </div>
                     </div>
                     <button class="btn-primary" onclick="confirmCarouselFraming()" style="margin-top: 10px;">GENERAR VISTA PREVIA</button>

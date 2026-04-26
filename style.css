@@ -1477,3 +1477,51 @@ input:checked + .slider:before {
     display: flex;
     justify-content: flex-end;
 }
+
+/* Tabs de Resultados */
+.result-nav {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 15px;
+}
+.nav-tab {
+    background: transparent;
+    border: none;
+    color: #666;
+    font-weight: 900;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 5px 15px;
+    transition: all 0.3s;
+}
+.nav-tab.active {
+    color: var(--primary);
+    border-bottom: 3px solid var(--primary);
+}
+.results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+@media (max-width: 900px) {
+    .results-grid { grid-template-columns: 1fr; }
+}
+.postales-menu {
+    display: flex;
+    justify-content: center;
+    padding: 40px;
+}
+.postal-option {
+    background: rgba(255,255,255,0.03);
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 300px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.postal-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}

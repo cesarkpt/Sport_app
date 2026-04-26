@@ -1283,57 +1283,69 @@ async function confirmCarouselFraming() {
         drawPerimeterShadow(ctx, size, size);
     });
 
-    // Branding Slide 1
+    // Branding Slide 1: Logo y Match Info (Corregido: Carga asíncrona)
     try {
         const logo = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
-        drawImageProp(ctx1, logo, 60, 60, 300, 140);
+        drawImageProp(ctx1, logo, 80, 80, 300, 140);
     } catch(e) {}
     
     const stage = document.getElementById('matchStage').value;
     const date = document.getElementById('matchDate').value;
     ctx1.save();
-    ctx1.shadowColor = "black"; ctx1.shadowBlur = 15;
+    ctx1.shadowColor = "black"; ctx1.shadowBlur = 20;
     ctx1.fillStyle = "white";
     ctx1.textAlign = "left";
-    ctx1.font = "900 45px Outfit";
-    ctx1.fillText(stage.toUpperCase(), 60, size - 120);
-    ctx1.font = "400 30px Outfit";
-    ctx1.fillText(date, 60, size - 75);
+    ctx1.font = "900 55px Outfit";
+    ctx1.fillText(stage.toUpperCase(), 80, size - 140);
+    ctx1.font = "400 35px Outfit";
+    ctx1.fillText(date, 80, size - 85);
     ctx1.restore();
 
-    // Branding Slide 2: Ticker de Equipo
+    // Branding Slide 2: Ticker de Equipo (ÚNICA BARRA CENTRADA EN EL CORTE)
     if (selectedMatchTeamA) {
         const team = allTeams[selectedMatchTeamA];
-        const barW = 1000;
-        const barH = 140;
-        const bX = (size - barW) / 2; // Centrado en cada slide
-        const bY = size - 220;
+        const barW = 1200; // Barra larga
+        const barH = 150;
+        const totalW = size * 2;
+        const centerX = totalW / 2;
+        const bX_total = centerX - (barW / 2); // 1080 - 600 = 480
+        const bY = size - 240;
 
-        // Dibujar en ambos slides
-        [ctx1, ctx2].forEach(ctx => {
+        // Función para dibujar la barra en un contexto con offset
+        const drawTickerOn = async (ctx, offsetX) => {
             ctx.save();
-            ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 20;
-            ctx.fillStyle = "rgba(0,0,0,0.9)";
-            ctx.beginPath();
-            ctx.roundRect(bX, bY, barW, barH, 20);
-            ctx.fill();
+            ctx.shadowColor = "rgba(0,0,0,0.6)"; ctx.shadowBlur = 25;
+            ctx.fillStyle = "rgba(0,0,0,0.92)";
             
-            ctx.fillStyle = team.color;
-            ctx.fillRect(bX, bY, 15, barH);
+            const relX = bX_total - offsetX;
+            
+            // Dibujar fondo
+            ctx.beginPath();
+            ctx.roundRect(relX, bY, barW, barH, 25);
+            ctx.fill();
 
+            // Color del equipo
+            ctx.fillStyle = team.color;
+            ctx.fillRect(relX, bY, 15, barH);
+
+            // Escudo
             if (team.shield) {
-                // Dibujar logo para que aparezca "cortado" orgánicamente en el centro
-                const img = new Image();
-                img.src = team.shield;
-                ctx.drawImage(img, bX + 50, bY - 30, 180, 180);
+                try {
+                    const sImg = await loadImg(team.shield);
+                    ctx.drawImage(sImg, relX + 60, bY - 35, 200, 200);
+                } catch(e) {}
             }
 
+            // Nombre
             ctx.fillStyle = "white";
             ctx.textAlign = "left";
-            ctx.font = "900 55px Outfit";
-            ctx.fillText(team.name.toUpperCase(), bX + 250, bY + 90);
+            ctx.font = "900 60px Outfit";
+            ctx.fillText(team.name.toUpperCase(), relX + 280, bY + 95);
             ctx.restore();
-        });
+        };
+
+        await drawTickerOn(ctx1, 0);
+        await drawTickerOn(ctx2, size);
     }
 
     document.getElementById('carouselPreview').classList.remove('hidden');
@@ -1620,3 +1632,11 @@ function loadImg(url) {
 }
 
 initMatchSettings();
+
+function showResultTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    
+    document.getElementById(tabId + 'Tab').classList.remove('hidden');
+    event.currentTarget.classList.add('active');
+}
