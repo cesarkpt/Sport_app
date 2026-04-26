@@ -430,6 +430,10 @@ async function processPlayerPhoto(processingImg, originalImg) {
         const fallbackData = { name: "ERROR IA", team: "DESCONOCIDO", number: "??", position: "DEL", teamCode: "DFT", color: "#777", color2: "#777" };
         const corrected = await waitForManualCorrection(fallbackData, "??", originalImg);
         await generateLayouts(originalImg, corrected.data, false, corrected.crop);
+        
+        // También guardar en Drive en modo manual/emergencia
+        await saveToDrive(elements.outputCanvas.toDataURL('image/png'), corrected.data);
+
         elements.processingArea.classList.add('hidden');
         elements.resultArea.classList.remove('hidden');
     }
@@ -445,12 +449,18 @@ async function saveToDrive(base64, player) {
     const fileName = `${teamCode}_${player.number}_${player.name.replace(/\s+/g, '_')}.png`;
     const teamName = player.team || "SIN_EQUIPO";
 
+    console.log("Intentando guardar en Drive:", fileName, "para equipo:", teamName);
+
     if (typeof google !== 'undefined' && google.script && google.script.run) {
         return new Promise((resolve) => {
             google.script.run
                 .withSuccessHandler((res) => {
-                    console.log("Guardado en Drive:", res.url);
+                    console.log("✅ Éxito Drive:", res);
                     resolve(res);
+                })
+                .withFailureHandler((err) => {
+                    console.error("❌ Error GAS Drive:", err);
+                    resolve(null);
                 })
                 .saveProcessedImage(base64, fileName, teamName);
         });
@@ -685,9 +695,15 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
         ctxCarnet.fillRect(0, 0, cw, ch);
     }
     
-    // Jugador con Zoom (Smart Crop)
-    const cScale = cw / carnetCrop.width;
-    ctxCarnet.drawImage(carnetCrop, 0, 0, carnetCrop.width, carnetCrop.height, 0, 0, cw, carnetCrop.height * cScale);
+    // Jugador con Zoom (Smart Crop o Manual)
+    if (manualCrop) {
+        // Usar coordenadas manuales directamente sobre el canvas original
+        ctxCarnet.drawImage(playerCanvas, manualCrop.x, manualCrop.y, manualCrop.w, manualCrop.h, 0, 0, cw, ch);
+    } else {
+        // Usar el canvas temporal generado por smart crop
+        const cScale = cw / carnetCrop.width;
+        ctxCarnet.drawImage(carnetCrop, 0, 0, carnetCrop.width, carnetCrop.height, 0, 0, cw, carnetCrop.height * cScale);
+    }
     
     // Barra lateral con degradado
     const grdSide = ctxCarnet.createLinearGradient(0, 0, 0, ch);
@@ -733,14 +749,16 @@ function createSmartCrop(playerCanvas, isTransparent = true) {
 }
 
 async function drawShield(ctx, shieldUrl) {
-    const shieldImg = new Image();
-    shieldImg.src = shieldUrl;
-    await new Promise(r => shieldImg.onload = r);
-    ctx.save();
-    ctx.shadowColor = "rgba(0,0,0,0.3)";
-    ctx.shadowBlur = 20;
-    ctx.drawImage(shieldImg, 80, 80, 180, 180); // Lado Izquierdo
-    ctx.restore();
+    try {
+        const shieldImg = await loadImg(shieldUrl);
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,0.3)";
+        ctx.shadowBlur = 20;
+        ctx.drawImage(shieldImg, 80, 80, 180, 180); // Lado Izquierdo
+        ctx.restore();
+    } catch (e) {
+        console.warn("No se pudo cargar el escudo:", shieldUrl);
+    }
 }
 
 function drawCarnetOverlay(ctx, player) {
@@ -851,19 +869,17 @@ async function drawMatchInfo(ctx, teamA, teamB) {
     ctx.filter = "brightness(0) invert(1)";
     
     if (teamA.shield) {
-        const imgA = new Image();
-        imgA.src = teamA.shield;
-        imgA.crossOrigin = "anonymous";
-        await new Promise(r => imgA.onload = r);
-        ctx.drawImage(imgA, x, y, sSize, sSize);
+        try {
+            const imgA = await loadImg(teamA.shield);
+            ctx.drawImage(imgA, x, y, sSize, sSize);
+        } catch(e) {}
     }
     
     if (teamB.shield) {
-        const imgB = new Image();
-        imgB.src = teamB.shield;
-        imgB.crossOrigin = "anonymous";
-        await new Promise(r => imgB.onload = r);
-        ctx.drawImage(imgB, x + sSize + 15, y, sSize, sSize);
+        try {
+            const imgB = await loadImg(teamB.shield);
+            ctx.drawImage(imgB, x + sSize + 15, y, sSize, sSize);
+        } catch(e) {}
     }
     ctx.restore();
     
@@ -1081,4 +1097,13 @@ function selectMatchTeam(id) {
 function toggleMatchModal() {
     const modal = document.getElementById('matchDataModal');
     modal.classList.toggle('hidden');
+}
+function loadImg(url) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("Error loading image: " + url));
+        img.src = url;
+    });
 }
