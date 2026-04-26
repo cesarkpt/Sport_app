@@ -1823,9 +1823,14 @@ function processBulkImport() {
         alert("No se reconoció el formato. Usa 'Equipo: Jugador 1, Jugador 2'");
     }
 }
+function showResultTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
 
-    document.getElementById(tabId + 'Tab').classList.remove('hidden');
-    event.currentTarget.classList.add('active');
+    const tab = document.getElementById(tabId + 'Tab');
+    if (tab) tab.classList.remove('hidden');
+    
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+    }
 }
