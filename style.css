@@ -1156,6 +1156,26 @@ input:checked + .slider:before {
     box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
 }
 
+.zoom-control {
+    width: 100%;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.zoom-control label {
+    font-size: 0.6rem;
+    font-weight: 900;
+    color: var(--primary);
+}
+
+.zoom-control input[type="range"] {
+    width: 80%;
+    accent-color: var(--primary);
+}
+
 .help-text {
     font-size: 0.6rem;
     color: var(--secondary);

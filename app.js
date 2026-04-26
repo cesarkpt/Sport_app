@@ -472,19 +472,28 @@ async function waitForManualCorrection(initialData, detectedNumber, playerImg) {
     const cropperImg = document.getElementById('cropperImg');
     const cropperBox = document.getElementById('cropperBox');
     const container = document.getElementById('cropperContainer');
+    const zoomSlider = document.getElementById('cropperZoom');
     
     cropperImg.src = playerImg.src || playerImg.toDataURL();
     
     let isDragging = false;
     let startY, startX;
-    let currentY = -50, currentX = -50; // Posición inicial sugerida
+    let currentY = -50, currentX = -50; 
+    let currentZoom = 1;
 
-    // Aplicar posición inicial
-    cropperBox.style.top = currentY + "px";
-    cropperBox.style.left = currentX + "px";
+    const updateCropperUI = () => {
+        cropperBox.style.top = currentY + "px";
+        cropperBox.style.left = currentX + "px";
+        cropperImg.style.width = (400 * currentZoom) + "px";
+    };
 
-    // Ajustar tamaño inicial de la imagen en el cropper (para que sea manejable)
-    cropperImg.style.width = "400px"; // Zoom base
+    // Aplicar estado inicial
+    updateCropperUI();
+
+    zoomSlider.oninput = () => {
+        currentZoom = parseFloat(zoomSlider.value);
+        updateCropperUI();
+    };
     
     const startDrag = (e) => {
         isDragging = true;
@@ -498,8 +507,7 @@ async function waitForManualCorrection(initialData, detectedNumber, playerImg) {
         const event = e.touches ? e.touches[0] : e;
         currentY = event.clientY - startY;
         currentX = event.clientX - startX;
-        cropperBox.style.top = currentY + "px";
-        cropperBox.style.left = currentX + "px";
+        updateCropperUI();
     };
 
     const stopDrag = () => isDragging = false;
@@ -556,8 +564,10 @@ async function waitForManualCorrection(initialData, detectedNumber, playerImg) {
             const finalPos = activePosBtn ? activePosBtn.innerText : "DEL";
             const finalCap = editCapBtn.classList.contains('active');
 
-            // Calcular geometría del crop manual
-            const scale = playerImg.width / 400; // Relación entre original y cropper
+            // Calcular geometría del crop manual con ZOOM
+            const finalImgWidthInCropper = 400 * currentZoom;
+            const scale = playerImg.width / finalImgWidthInCropper; 
+            
             const cropData = {
                 x: -currentX * scale,
                 y: -currentY * scale,
