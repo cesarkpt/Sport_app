@@ -284,16 +284,6 @@
     </div>
 
     <script src="app.js"></script>
-    <!-- Selector de Escudos para Match Day -->
-    <div id="matchShieldPickerModal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>SELECCIONAR EQUIPO</h3>
-                <button class="close-btn" onclick="closeMatchShieldPicker()">×</button>
-            </div>
-            <div id="matchShieldGrid" class="shield-grid-mini"></div>
-        </div>
-    </div>
     <!-- Modal de Configuración de Partido -->
     <div id="matchDataModal" class="modal hidden">
         <div class="modal-content" style="max-width: 450px;">
@@ -324,6 +314,17 @@
                 </div>
                 <button class="btn-primary" onclick="toggleMatchModal()" style="margin-top:20px">LISTO</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Selector de Escudos para Match Day -->
+    <div id="matchShieldPickerModal" class="modal hidden" style="z-index: 1200;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>SELECCIONAR EQUIPO</h3>
+                <button class="close-btn" onclick="closeMatchShieldPicker()">×</button>
+            </div>
+            <div id="matchShieldGrid" class="shield-grid-mini"></div>
         </div>
     </div>
 </body>
