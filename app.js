@@ -719,6 +719,13 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
         ctxOut.restore();
     }
     
+    // --- NUEVA SOMBRA INFERIOR (Estilo Carnet) ---
+    const grdShadow = ctxOut.createLinearGradient(0, CONFIG.outputHeight - 300, 0, CONFIG.outputHeight);
+    grdShadow.addColorStop(0, "transparent");
+    grdShadow.addColorStop(1, "rgba(0,0,0,0.8)");
+    ctxOut.fillStyle = grdShadow;
+    ctxOut.fillRect(0, CONFIG.outputHeight - 300, CONFIG.outputWidth, 300);
+    
     await drawSportsTicker(ctxOut, player);
     
     // 2.5 LOGO DE LA APP (Arriba Izquierda - Bajado otros 15px de 75 a 90)
@@ -883,8 +890,21 @@ async function drawCarnetOverlay(ctx, player) {
         } catch(e) {}
     }
 
-    // 5. NOMBRE DEL JUGADOR (SOMBRA TENUE 30%)
+    // 5. NOMBRE DEL JUGADOR (Dinamismo para evitar solapamiento)
     const finalX = 130 - 10; 
+    let firstSize = 28;
+    let lastSize = 50;
+    
+    // Medir ancho para ajuste dinámico
+    ctx.font = `900 ${lastSize}px Outfit`;
+    const nameWidth = ctx.measureText(lastName.toUpperCase()).width;
+    const limitX = w - 180; // Margen antes del número
+    
+    if (finalX + nameWidth > limitX) {
+        firstSize *= 0.8;
+        lastSize *= 0.8;
+    }
+
     ctx.textAlign = "left";
     ctx.save();
     ctx.shadowBlur = 15;
@@ -893,15 +913,15 @@ async function drawCarnetOverlay(ctx, player) {
     ctx.shadowOffsetY = 2;
     
     ctx.fillStyle = "rgba(255,255,255,0.8)";
-    ctx.font = "400 35px Outfit";
-    ctx.fillText(firstName, finalX, h - 110);
+    ctx.font = `400 ${firstSize}px Outfit`;
+    ctx.fillText(firstName, finalX, h - 100);
     
     ctx.fillStyle = "white";
-    ctx.font = "900 65px Outfit";
+    ctx.font = `900 ${lastSize}px Outfit`;
     ctx.fillText(lastName.toUpperCase(), finalX, h - 50);
     ctx.restore();
 
-    // 6. NÚMERO CON DEGRADADO (60% OPACIDAD)
+    // 6. NÚMERO CON DEGRADADO (Reducido a 140px)
     ctx.save();
     const grdNum = ctx.createLinearGradient(w - 150, h - 150, w, h - 50);
     const hexToRgba = (hex, alpha) => {
@@ -912,7 +932,7 @@ async function drawCarnetOverlay(ctx, player) {
     grdNum.addColorStop(1, hexToRgba(player.color2 || player.color, 0.6));
     
     ctx.fillStyle = grdNum;
-    ctx.font = "italic 900 160px Outfit";
+    ctx.font = "italic 900 140px Outfit";
     ctx.textAlign = "right";
     ctx.fillText(player.number, w - 30, h - 50);
     ctx.restore();
@@ -1019,10 +1039,10 @@ async function drawSportsTicker(ctx, player) {
     ctx.fillText(`${player.number} | ${displayName}`, currentX, bY + 82);
     ctx.restore();
     
-    // 5.5 ICONO CAPITÁN (Estilo Carnet - Asegurar visibilidad)
+    // 5.5 ICONO CAPITÁN (Estilo Carnet - Corregido solapamiento)
     if (player.name.includes("(C)")) {
         const nameW = ctx.measureText(`${player.number} | ${displayName}`).width;
-        const capX = currentX + nameW + 25; 
+        const capX = currentX + nameW + 65; // Aumentado margen para evitar solape
         ctx.save();
         // Sombra propia para el icono
         ctx.shadowColor = "rgba(0,0,0,0.5)";
