@@ -89,22 +89,24 @@
                             <div class="shields-section-grid" style="margin-top: 20px;">
                                 <div class="shield-upload">
                                     <label>Escudo Principal</label>
-                                    <div class="shield-preview-container">
-                                        <img id="shieldPreview" src="https://cdn-icons-png.flaticon.com/512/5351/5351333.png" alt="Preview">
-                                    </div>
-                                    <div class="shield-actions">
-                                        <input type="file" id="shieldInput" accept="image/*" onchange="previewLocalShield(this, 'main')">
-                                        <button class="browse-btn" onclick="openShieldGallery('main')">DRIVE</button>
+                                    <div class="shield-wrapper">
+                                        <div class="shield-preview-container" onclick="document.getElementById('shieldInput').click()">
+                                            <img id="shieldPreview" src="https://cdn-icons-png.flaticon.com/512/5351/5351333.png" alt="Preview">
+                                            <div class="upload-overlay"><span>CLICK PARA SUBIR</span></div>
+                                        </div>
+                                        <input type="file" id="shieldInput" accept="image/*" style="display:none" onchange="previewLocalShield(this, 'main')">
+                                        <button class="browse-btn" onclick="openShieldGallery('main')">DRIVE ☁️</button>
                                     </div>
                                 </div>
                                 <div class="shield-upload">
                                     <label>Escudo Blanco</label>
-                                    <div class="shield-preview-container">
-                                        <img id="shieldWhitePreview" src="https://cdn-icons-png.flaticon.com/512/5351/5351333.png" alt="Preview" style="filter: brightness(0) invert(1); background: #333;">
-                                    </div>
-                                    <div class="shield-actions">
-                                        <input type="file" id="shieldWhiteInput" accept="image/*" onchange="previewLocalShield(this, 'white')">
-                                        <button class="browse-btn" onclick="openShieldGallery('white')">DRIVE</button>
+                                    <div class="shield-wrapper">
+                                        <div class="shield-preview-container" onclick="document.getElementById('shieldWhiteInput').click()" style="background: #222;">
+                                            <img id="shieldWhitePreview" src="https://cdn-icons-png.flaticon.com/512/5351/5351333.png" alt="Preview" style="filter: brightness(0) invert(1);">
+                                            <div class="upload-overlay"><span>CLICK PARA SUBIR</span></div>
+                                        </div>
+                                        <input type="file" id="shieldWhiteInput" accept="image/*" style="display:none" onchange="previewLocalShield(this, 'white')">
+                                        <button class="browse-btn" onclick="openShieldGallery('white')">DRIVE ☁️</button>
                                     </div>
                                 </div>
                             </div>
