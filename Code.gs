@@ -180,3 +180,6 @@ function saveProcessedImage(base64Data, fileName, teamName) {
 function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
+// Force Permissions:
+// SpreadsheetApp.getActive();
+// DriveApp.getFiles();
