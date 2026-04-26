@@ -701,8 +701,8 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
             ctxOut.shadowColor = "rgba(0,0,0,0.6)";
             ctxOut.shadowBlur = 40;
         }
-        // Dibujar centrado horizontalmente, apoyado en el borde inferior de la barra ticker (Y=1020)
-        const finalY = 1020 - finalH;
+        // Dibujar alineado con la parte superior del logo (Y=90)
+        const finalY = 90;
         ctxOut.drawImage(playerCanvas, 
             manualCropHD.x, manualCropHD.y, manualCropHD.w, manualCropHD.h, 
             (CONFIG.outputWidth - finalW) / 2, finalY, finalW, finalH
@@ -937,51 +937,26 @@ async function drawCarnetOverlay(ctx, player) {
     ctx.fillText(player.number, w - 30, h - 50);
     ctx.restore();
 
-    // 7. Icono Capitán (C) - Bajado otros 10px (total +20)
+    // 7. Icono Capitán (C) - Bajado otros 15px y 5px a la derecha
     if (player.name.includes("(C)")) {
         ctx.save();
         ctx.fillStyle = "#ff9800";
         ctx.beginPath();
-        // y original: h-220
-        ctx.arc(w - 60 + 5, h - 220 + 20, 28, 0, Math.PI * 2);
+        // x previo: w-60+5, y previo: h-220+20
+        ctx.arc(w - 60 + 10, h - 220 + 35, 28, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "black";
         ctx.font = "900 32px Outfit";
         ctx.textAlign = "center";
-        ctx.fillText("C", w - 60 + 5, h - 208 + 20);
+        ctx.fillText("C", w - 60 + 10, h - 208 + 35);
         ctx.restore();
     }
 }
 
 
 async function drawBackground(ctx, color, color2) {
-    // 0. Fondo Negro Base
-    ctx.fillStyle = "#0a0e14";
-    ctx.fillRect(0, 0, 1920, 1080);
-
-    // 1. Imagen de Estadio (AL FONDO con opacidad)
-    try {
-        const bgImg = await loadImg("https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=1920&auto=format&fit=crop");
-        ctx.save();
-        ctx.globalAlpha = 0.4; // Imagen al 40%
-        ctx.drawImage(bgImg, 0, 0, 1920, 1080);
-        ctx.restore();
-    } catch(e) {}
-    
-    // 2. EFECTO CRISTAL AHUMADO (ENCIMA DE LA IMAGEN)
-    ctx.save();
-    // Simular el esmerilado aplicando un overlay con blur (el blur de Canvas afecta a lo que se dibuja)
-    // Dibujamos una capa semi-transparente y le aplicamos desenfoque
-    ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
-    ctx.filter = "blur(25px)"; 
-    ctx.fillRect(-50, -50, 2020, 1180); // Un poco más grande por el blur
-    ctx.restore();
-
-    // 3. Overlay de color del equipo (Vignette suave)
-    const grd = ctx.createRadialGradient(960, 540, 100, 960, 540, 1200);
-    grd.addColorStop(0, "rgba(0, 0, 0, 0)");
-    grd.addColorStop(1, (color2 || color) + "33"); 
-    ctx.fillStyle = grd;
+    // Eliminada imagen de fondo y overlays por petición del usuario
+    ctx.fillStyle = "#0a0e14"; // Fondo sólido oscuro
     ctx.fillRect(0, 0, 1920, 1080);
 }
 
@@ -1039,10 +1014,10 @@ async function drawSportsTicker(ctx, player) {
     ctx.fillText(`${player.number} | ${displayName}`, currentX, bY + 82);
     ctx.restore();
     
-    // 5.5 ICONO CAPITÁN (Estilo Carnet - Corregido solapamiento)
+    // 5.5 ICONO CAPITÁN (Estilo Carnet - Alejado del apellido)
     if (player.name.includes("(C)")) {
         const nameW = ctx.measureText(`${player.number} | ${displayName}`).width;
-        const capX = currentX + nameW + 65; // Aumentado margen para evitar solape
+        const capX = currentX + nameW + 100; // Alejado 100px
         ctx.save();
         // Sombra propia para el icono
         ctx.shadowColor = "rgba(0,0,0,0.5)";
