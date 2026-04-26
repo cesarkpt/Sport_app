@@ -109,15 +109,43 @@ function closeTeamEditor() {
 function renderRosterList(roster) {
     const list = document.getElementById('rosterList');
     list.innerHTML = '';
+    
+    // Guardar referencia al roster actual en el DOM
+    document.getElementById('teamEditor')._tempRoster = roster;
+
     Object.entries(roster).forEach(([num, player]) => {
         const name = typeof player === 'string' ? player : player.name;
-        const pos = player.position ? `<span class="pos-badge">${player.position}</span>` : '';
-        const isCap = player.isCaptain ? ' <b title="Capitán">(C)</b>' : '';
+        const pos = player.position || "DEL";
+        
         const item = document.createElement('div');
-        item.className = 'roster-item';
-        item.innerHTML = `<span>${pos}<b>#${num}</b> ${name}${isCap}</span> <button onclick="removePlayer('${num}')">X</button>`;
+        item.className = 'roster-item-editable';
+        item.innerHTML = `
+            <input type="number" value="${num}" class="edit-num" onchange="updatePlayerInRoster('${num}', 'number', this.value)">
+            <input type="text" value="${name}" class="edit-name" onchange="updatePlayerInRoster('${num}', 'name', this.value)">
+            <select class="edit-pos" onchange="updatePlayerInRoster('${num}', 'position', this.value)">
+                <option value="POR" ${pos==='POR'?'selected':''}>POR</option>
+                <option value="DEF" ${pos==='DEF'?'selected':''}>DEF</option>
+                <option value="VOL" ${pos==='VOL'?'selected':''}>VOL</option>
+                <option value="DEL" ${pos==='DEL'?'selected':''}>DEL</option>
+            </select>
+            <button class="delete-btn" onclick="removePlayer('${num}')">×</button>
+        `;
         list.appendChild(item);
     });
+}
+
+function updatePlayerInRoster(num, field, value) {
+    const roster = document.getElementById('teamEditor')._tempRoster;
+    if (!roster[num]) return;
+
+    if (field === 'number') {
+        const playerData = roster[num];
+        delete roster[num];
+        roster[value] = playerData;
+        renderRosterList(roster); // Re-render para actualizar referencias
+    } else {
+        roster[num][field] = value.toUpperCase();
+    }
 }
 
 function setPos(btn, pos) {

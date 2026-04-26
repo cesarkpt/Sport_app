@@ -636,15 +636,17 @@ main {
 }
 
 .shields-section-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 .shield-upload {
+    flex: 1;
+    min-width: 140px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 .shield-upload label {
@@ -1304,4 +1306,40 @@ input:checked + .slider:before {
     height: 22px;
     object-fit: contain;
     filter: brightness(1.2);
+}
+
+/* EDITABLE ROSTER */
+.roster-item-editable {
+    display: grid;
+    grid-template-columns: 50px 1fr 70px 30px;
+    gap: 10px;
+    background: rgba(255,255,255,0.05);
+    padding: 8px 12px;
+    border-radius: 12px;
+    align-items: center;
+    border: 1px solid rgba(255,255,255,0.05);
+    margin-bottom: 5px;
+}
+
+.roster-item-editable input, 
+.roster-item-editable select {
+    background: rgba(0,0,0,0.3) !important;
+    border: 1px solid var(--glass-border) !important;
+    color: white !important;
+    padding: 8px !important;
+    border-radius: 8px !important;
+    font-size: 0.8rem !important;
+    margin-bottom: 0 !important;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: #ff4444;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
