@@ -701,10 +701,11 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
             ctxOut.shadowColor = "rgba(0,0,0,0.6)";
             ctxOut.shadowBlur = 40;
         }
-        // Dibujar centrado horizontalmente, apoyado cerca de la base
+        // Dibujar centrado horizontalmente, apoyado en el borde inferior de la barra ticker (Y=1020)
+        const finalY = 1020 - finalH;
         ctxOut.drawImage(playerCanvas, 
             manualCropHD.x, manualCropHD.y, manualCropHD.w, manualCropHD.h, 
-            (CONFIG.outputWidth - finalW) / 2, (CONFIG.outputHeight - finalH) + 50, finalW, finalH
+            (CONFIG.outputWidth - finalW) / 2, finalY, finalW, finalH
         );
         ctxOut.restore();
     } else if (shouldRemoveBg) {
@@ -825,10 +826,10 @@ async function drawCarnetOverlay(ctx, player) {
     const h = CONFIG.carnetHeight;
     const w = CONFIG.carnetWidth;
     
-    // 1. MI LOGO EN EL CARNET (Arriba Izquierda)
+    // 1. MI LOGO EN EL CARNET (Arriba Izquierda - Más grande)
     try {
         const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
-        drawImageProp(ctx, logoImg, 15, 20, 100, 50, 0, 0);
+        drawImageProp(ctx, logoImg, 15, 20, 140, 70, 0, 0);
     } catch(e) {}
 
     // 2. INFO PARTIDO EN CARNET (Match Day REDUCIDO 70%)
@@ -882,14 +883,14 @@ async function drawCarnetOverlay(ctx, player) {
         } catch(e) {}
     }
 
-    // 5. NOMBRE DEL JUGADOR (SOMBRA NEGRA 80%)
+    // 5. NOMBRE DEL JUGADOR (SOMBRA TENUE 30%)
     const finalX = 130 - 10; 
     ctx.textAlign = "left";
     ctx.save();
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = "rgba(0, 0, 0, 0.8)"; 
-    ctx.shadowOffsetX = 3;
-    ctx.shadowOffsetY = 3;
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = "rgba(0, 0, 0, 0.3)"; 
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
     
     ctx.fillStyle = "rgba(255,255,255,0.8)";
     ctx.font = "400 35px Outfit";
@@ -916,18 +917,18 @@ async function drawCarnetOverlay(ctx, player) {
     ctx.fillText(player.number, w - 30, h - 50);
     ctx.restore();
 
-    // 7. Icono Capitán (C) - Bajado 10px y 5px a la derecha
+    // 7. Icono Capitán (C) - Bajado otros 10px (total +20)
     if (player.name.includes("(C)")) {
         ctx.save();
         ctx.fillStyle = "#ff9800";
         ctx.beginPath();
-        // x original: w-60, y original: h-220
-        ctx.arc(w - 60 + 5, h - 220 + 10, 28, 0, Math.PI * 2);
+        // y original: h-220
+        ctx.arc(w - 60 + 5, h - 220 + 20, 28, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "black";
         ctx.font = "900 32px Outfit";
         ctx.textAlign = "center";
-        ctx.fillText("C", w - 60 + 5, h - 208 + 10);
+        ctx.fillText("C", w - 60 + 5, h - 208 + 20);
         ctx.restore();
     }
 }
