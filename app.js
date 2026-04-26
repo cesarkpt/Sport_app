@@ -1937,69 +1937,89 @@ function showResultTab(tabId) {
     }
 }
 
-async function generateMatchPostal() {
+async function generateMatchPostals() {
     if (!lastProcessedPlayerImg || !currentPlayerData) return alert("Primero procesa a un jugador.");
 
-    const canvas = document.getElementById('postalCanvas');
-    const ctx = canvas.getContext('2d');
-    const size = 1080;
-    canvas.width = size;
-    canvas.height = size;
-
-    // 1. Fondo Negro y Jugador
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, size, size);
-
-    // Dibujar jugador centrado (Usando el mismo recorte HD pero adaptado a 1:1)
-    const crop = lastProcessedCropHD;
-    const targetW = size;
-    const scale = targetW / crop.w;
-    const finalW = targetW;
-    const finalH = crop.h * scale;
-    const finalY = (size - finalH) / 2;
-
-    ctx.save();
-    ctx.drawImage(lastProcessedPlayerImg,
-        crop.x, crop.y, crop.w, crop.h,
-        0, finalY, finalW, finalH
-    );
-    
-    // 2. Viñeta y Oscurecimiento para que el texto resalte
-    drawPerimeterShadow(ctx, size, size);
-    ctx.fillStyle = "rgba(0,0,0,0.3)";
-    ctx.fillRect(0, 0, size, size);
-    ctx.restore();
-
-    // 3. TEXTO (CENTRE)
     const word = document.getElementById('postalWord').value.toUpperCase();
     const score = document.getElementById('postalScore').value;
     const stage = document.getElementById('matchStage').value;
     const date = document.getElementById('matchDate').value;
+    
+    const teamA = allTeams[selectedMatchTeamA];
+    const teamB = allTeams[selectedMatchTeamB];
 
-    ctx.textAlign = "center";
-    ctx.fillStyle = "white";
-    ctx.shadowColor = "black";
-    ctx.shadowBlur = 15;
+    const generateOne = async (canvasId, width, height) => {
+        const canvas = document.getElementById(canvasId);
+        const ctx = canvas.getContext('2d');
+        canvas.width = width;
+        canvas.height = height;
 
-    // A. Palabra Principal (ENTRETIEMPO, etc)
-    ctx.font = "900 100px Outfit";
-    ctx.fillText(word, size/2, size/2 - 120);
+        // 1. Fondo y Jugador
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, width, height);
 
-    // B. MATCHDAY (Stage + Date)
-    ctx.font = "400 40px Outfit";
-    ctx.fillStyle = "rgba(255,255,255,0.8)";
-    ctx.fillText(`${stage} • ${date}`, size/2, size/2 - 40);
+        const crop = lastProcessedCropHD;
+        const scale = Math.max(width / crop.w, height / crop.h);
+        const finalW = crop.w * scale;
+        const finalH = crop.h * scale;
+        const finalX = (width - finalW) / 2;
+        const finalY = (height - finalH) / 2;
 
-    // C. MARCADOR
-    ctx.font = "900 180px Outfit";
-    ctx.fillStyle = "white";
-    ctx.fillText(score, size/2, size/2 + 150);
+        ctx.save();
+        ctx.drawImage(lastProcessedPlayerImg, crop.x, crop.y, crop.w, crop.h, finalX, finalY, finalW, finalH);
+        drawPerimeterShadow(ctx, width, height);
+        ctx.fillStyle = "rgba(0,0,0,0.4)"; // Oscurecer un poco más
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
 
-    // D. Branding (Logo abajo)
-    try {
-        const logo = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
-        drawImageProp(ctx, logo, size/2 - 100, size - 150, 200, 80);
-    } catch (e) {}
+        // 2. TEXTO
+        ctx.textAlign = "center";
+        ctx.fillStyle = "white";
+        ctx.shadowColor = "black";
+        ctx.shadowBlur = 20;
+
+        const centerY = height / 2;
+
+        // A. Palabra Principal
+        ctx.font = "900 110px Outfit";
+        ctx.fillText(word, width / 2, centerY - 150);
+
+        // B. MATCHDAY (Con Escudos)
+        if (teamA && teamB) {
+            const sSize = 80;
+            const text = `${stage} • ${date}`;
+            ctx.font = "400 35px Outfit";
+            const textW = ctx.measureText(text).width;
+            const totalW = textW + (sSize * 2) + 60;
+            const startX = (width - totalW) / 2;
+            const itemY = centerY - 60;
+
+            try {
+                const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
+                drawImageProp(ctx, imgA, startX, itemY - sSize/2, sSize, sSize);
+                const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
+                drawImageProp(ctx, imgB, startX + totalW - sSize, itemY - sSize/2, sSize, sSize);
+            } catch (e) {}
+
+            ctx.fillStyle = "rgba(255,255,255,0.9)";
+            ctx.fillText(text, width / 2, itemY + 12);
+        }
+
+        // C. MARCADOR
+        ctx.font = "900 220px Outfit";
+        ctx.fillStyle = "white";
+        ctx.fillText(score, width / 2, centerY + 180);
+
+        // D. Logo (Inferior)
+        try {
+            const logo = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
+            drawImageProp(ctx, logo, width / 2 - 100, height - 120, 200, 80);
+        } catch (e) {}
+    };
+
+    // Generar ambos formatos
+    await generateOne('postalCanvasH', 1920, 1080); // 16:9
+    await generateOne('postalCanvasV', 1080, 1920); // 9:16
 
     document.getElementById('postalResultArea').classList.remove('hidden');
 }
