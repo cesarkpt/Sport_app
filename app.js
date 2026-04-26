@@ -670,7 +670,7 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
     
     // 2.5 LOGO DE LA APP (Arriba Izquierda) - Forzar transparencia con t=0
     try {
-        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/12JwoN7xaFr9r_2UM_GUg5shi34pXSizn?t=0");
+        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
         ctxOut.drawImage(logoImg, 100, 60, 220, 100);
     } catch(e) {}
 
@@ -775,7 +775,7 @@ function drawCarnetOverlay(ctx, player) {
     
     // 1. MI LOGO EN EL CARNET
     try {
-        const logoImg = new Image(); logoImg.src = "https://lh3.googleusercontent.com/d/12JwoN7xaFr9r_2UM_GUg5shi34pXSizn?t=0";
+        const logoImg = new Image(); logoImg.src = "https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0";
         ctx.drawImage(logoImg, 15, 20, 80, 40);
     } catch(e) {}
 
@@ -945,8 +945,10 @@ async function drawMatchInfo(ctx, teamA, teamB) {
     const sSize = 80;
     
     ctx.save();
-    // Efecto Glass para escudos (Preservando detalle)
-    ctx.globalAlpha = 0.8;
+    // Efecto Invertido + Luminosidad para escudos
+    ctx.filter = "invert(1)";
+    ctx.globalCompositeOperation = "luminosity";
+    ctx.globalAlpha = 0.9;
     
     if (teamA.shield) {
         try {
@@ -962,6 +964,7 @@ async function drawMatchInfo(ctx, teamA, teamB) {
         } catch(e) {}
     }
     ctx.restore();
+    ctx.globalCompositeOperation = "source-over"; // Reset
     
     // Texto Info CENTRADO respecto a los escudos
     ctx.fillStyle = "white";
