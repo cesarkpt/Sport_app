@@ -420,26 +420,28 @@
                                 <button class="btn-secondary" onclick="downloadImage('tabCarouselCanvas1', 'carrusel_p1')" style="flex: 1;">DESCARGAR P1</button>
                                 <button class="btn-secondary" onclick="downloadImage('tabCarouselCanvas2', 'carrusel_p2')" style="flex: 1;">DESCARGAR P2</button>
                             </div>
+                        </div>
+                    </div>
+                </div> <!-- /carouselTab -->
+
                 <div id="arteTab" class="tab-content hidden">
                     <div class="result-grid" style="display: flex; flex-direction: column; gap: 20px;">
                         <div class="result-card">
-                            <h3>Fondo Cuadrado (1:1)</h3>
+                            <h3>Arte Cuadrado (1:1)</h3>
                             <div class="canvas-container" style="max-width: 500px; margin: 0 auto;">
                                 <canvas id="arteCanvasSquare"></canvas>
                             </div>
                             <button class="btn-secondary" onclick="downloadImage('arteCanvasSquare', 'arte_1x1')" style="width: 100%; margin-top: 10px;">DESCARGAR 1:1</button>
                         </div>
                         <div class="result-card">
-                            <h3>Fondo Vertical (Story)</h3>
+                            <h3>Arte Story (9:16)</h3>
                             <div class="canvas-container carnet-result" style="max-width: 400px; margin: 0 auto;">
                                 <canvas id="arteCanvasVertical"></canvas>
                             </div>
                             <button class="btn-secondary" onclick="downloadImage('arteCanvasVertical', 'arte_vertical')" style="width: 100%; margin-top: 10px;">DESCARGAR STORY</button>
                         </div>
                     </div>
-                </div>
-
-                <div class="final-actions">
+                </div> <!-- /arteTab -->
                     <button class="btn-primary" onclick="resetApp()" style="background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); border: none; font-weight: 900;">OTRO JUGADOR 🔄</button>
                 </div>
             </section>

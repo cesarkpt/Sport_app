@@ -1485,8 +1485,8 @@ async function confirmCarouselFraming() {
         ctx2.restore();
     }
 
-    // Ticker con el equipo del jugador actual (currentPlayerData)
-    const tickerTeamId = currentPlayerData ? currentPlayerData.teamId : selectedMatchTeamA;
+    // Ticker: use activeTeamId (player's team) with fallback to match team
+    const tickerTeamId = activeTeamId || selectedMatchTeamA;
     const tickerTeam = tickerTeamId ? allTeams[tickerTeamId] : null;
     if (tickerTeam) {
         const barW = 1200;
@@ -2119,26 +2119,50 @@ async function generateArteLayouts(playerImg, data, crop) {
         const canvas = document.getElementById(canvasId);
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
-        canvas.width  = width;
-        canvas.height = height;
 
-        const polaroidH = Math.round(height * 0.20); // 20% = franja blanca inferior
+        // Random tilt: -6 to +6 degrees
+        const tiltDeg  = (Math.random() * 12) - 6;
+        const tiltRad  = tiltDeg * Math.PI / 180;
+        const absTilt  = Math.abs(tiltRad);
+        // Expand canvas to fit rotated image without clipping
+        const extraW   = Math.ceil(height * Math.sin(absTilt));
+        const extraH   = Math.ceil(width  * Math.sin(absTilt));
+        canvas.width   = width  + extraW * 2;
+        canvas.height  = height + extraH * 2;
+
+        // Paint dark background behind the polaroid
+        ctx.fillStyle  = "#111111";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Apply rotation around center
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(tiltRad);
+        ctx.translate(-width / 2, -height / 2);
+
+        // Drop shadow for the polaroid card
+        ctx.shadowColor  = "rgba(0,0,0,0.6)";
+        ctx.shadowBlur   = 40;
+        ctx.shadowOffsetX = 8;
+        ctx.shadowOffsetY = 12;
+
+        const polaroidH = Math.round(height * 0.20);
         const photoH    = height - polaroidH;
 
-        // ── 1. FONDO FOTO (degradado equipo) ──────────────────────────
+        // ── 1. FONDO FOTO ─────────────────────────────────────────────
         const grd = ctx.createLinearGradient(0, 0, width, photoH);
         grd.addColorStop(0, color1);
         grd.addColorStop(1, color2);
         ctx.fillStyle = grd;
         ctx.fillRect(0, 0, width, photoH);
-
-        // ── 2. JUGADOR ────────────────────────────────────────────────
+        ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; // reset shadow after card base
+        // ── 2. JUGADOR ─────────────────────────────────────────────────
         if (crop) {
             const scale = Math.max(width / crop.w, photoH / crop.h) * 1.05;
             const pw = crop.w * scale;
             const ph = crop.h * scale;
             const px = (width - pw) / 2;
-            const py = photoH - ph + (ph * 0.05); // Pies pegados a la franja
+            const py = photoH - ph + (ph * 0.05);
             ctx.save();
             ctx.shadowColor = "rgba(0,0,0,0.5)";
             ctx.shadowBlur  = 40;
@@ -2205,6 +2229,7 @@ async function generateArteLayouts(playerImg, data, crop) {
                 drawImageProp(ctx, logo, pad, shieldY, shieldSz * 2.2, shieldSz);
             } catch(e) {}
         }
+        ctx.restore(); // close rotation transform
     };
 
     await generateArte('arteCanvasSquare',   1080, 1080);
