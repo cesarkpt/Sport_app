@@ -327,8 +327,12 @@
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                             <div class="input-group">
-                                <label style="font-size: 0.6rem; opacity: 0.7;">ESTADO / PALABRA</label>
-                                <input type="text" id="postalWord" placeholder="ENTRETIEMPO" value="FIN DEL PARTIDO" style="width: 100%; background: #000; border: 1px solid #333; color: white; padding: 10px; font-size: 0.8rem; border-radius: 8px;">
+                                <label style="font-size: 0.6rem; opacity: 0.7;">ESTADO</label>
+                                <select id="postalWord" style="width: 100%; background: #000; border: 1px solid #333; color: white; padding: 10px; font-size: 0.8rem; border-radius: 8px; font-family: Outfit, sans-serif;">
+                                    <option value="PROXIMO PARTIDO">PRÓXIMO PARTIDO</option>
+                                    <option value="ENTRETIEMPO">ENTRETIEMPO</option>
+                                    <option value="FIN DEL PARTIDO" selected>FIN DEL PARTIDO</option>
+                                </select>
                             </div>
                             <div class="input-group">
                                 <label style="font-size: 0.6rem; opacity: 0.7;">MARCADOR</label>

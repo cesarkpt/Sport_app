@@ -596,6 +596,13 @@ async function runGenArte() {
 function runGenCarrusel() {
     document.getElementById('resultArea').classList.remove('hidden');
     showResultTab('carousel');
+    // Re-calcular posición ahora que el contenedor es visible
+    setTimeout(() => {
+        if (carouselState.img) {
+            resetCarouselPosition();
+            setupCarouselEvents();
+        }
+    }, 100);
 }
 
 async function recognizeText(img) {
@@ -1323,15 +1330,29 @@ let carouselState = { img: null, x: 0, y: 0, scale: 1, rotate: 0, isDragging: fa
 // carouselState.baseScale: the "fill container" scale (zoom multiplier = 1.0)
 async function initCarouselWithPhoto(img) {
     if (!img) return;
-    carouselState.img = img;
+
+    // Convertir canvas a Image si hace falta (removeBackground retorna un canvas)
+    let imgEl;
+    if (img instanceof HTMLCanvasElement) {
+        imgEl = new Image();
+        imgEl.src = img.toDataURL('image/png');
+        await new Promise(r => imgEl.onload = r);
+    } else {
+        imgEl = img;
+    }
+    carouselState.img = imgEl;
+
     const viewImg = document.getElementById('tabCarouselImg');
-    if (viewImg) viewImg.src = img.src;
+    if (viewImg) viewImg.src = imgEl.src;
+
     const preview = document.getElementById('tabCarouselPreview');
     if (preview) preview.classList.add('hidden');
+
+    // Esperar hasta que el tab sea visible para calcular dimensiones correctas
     setTimeout(() => {
         resetCarouselPosition();
         setupCarouselEvents();
-    }, 100);
+    }, 200);
 }
 
 function setupCarouselEvents() {
@@ -2081,49 +2102,111 @@ async function generateMatchPostals() {
 }
 
 async function generateArteLayouts(playerImg, data, crop) {
-    const team = allTeams[data.teamId];
-    if (!team || !playerImg) return;
+    if (!playerImg) return;
+
+    // Use player team colors; fallback to defaults
+    const playerTeam = Object.values(allTeams).find(t => t.name === data.team) || {};
+    const color1 = playerTeam.color1 || data.color || "#00ff88";
+    const color2 = playerTeam.color2 || data.color2 || "#00d4ff";
+
+    // Match data
+    const teamA = selectedMatchTeamA ? allTeams[selectedMatchTeamA] : null;
+    const teamB = selectedMatchTeamB ? allTeams[selectedMatchTeamB] : null;
+    const stage = (document.getElementById('matchStage') || {}).value || 'PARTIDO';
+    const date  = (document.getElementById('matchDate')  || {}).value || '';
 
     const generateArte = async (canvasId, width, height) => {
         const canvas = document.getElementById(canvasId);
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
-        canvas.width = width;
+        canvas.width  = width;
         canvas.height = height;
 
-        // 1. Fondo Degradado Pro
-        const grd = ctx.createLinearGradient(0, 0, width, height);
-        grd.addColorStop(0, team.color1 || "#00ff88");
-        grd.addColorStop(1, team.color2 || "#00d4ff");
+        const polaroidH = Math.round(height * 0.20); // 20% = franja blanca inferior
+        const photoH    = height - polaroidH;
+
+        // ── 1. FONDO FOTO (degradado equipo) ──────────────────────────
+        const grd = ctx.createLinearGradient(0, 0, width, photoH);
+        grd.addColorStop(0, color1);
+        grd.addColorStop(1, color2);
         ctx.fillStyle = grd;
-        ctx.fillRect(0, 0, width, height);
+        ctx.fillRect(0, 0, width, photoH);
 
-        // 2. Jugador
-        const scale = Math.max(width / crop.w, height / crop.h) * 1.1;
-        const w = crop.w * scale;
-        const h = crop.h * scale;
-        const x = (width - w) / 2;
-        const y = (height - h) / 1.5; // Un poco bajado para dar aire arriba
-
-        ctx.save();
-        ctx.shadowColor = "rgba(0,0,0,0.5)";
-        ctx.shadowBlur = 50;
-        ctx.drawImage(playerImg, crop.x, crop.y, crop.w, crop.h, x, y, w, h);
-        ctx.restore();
-
-        // 3. Escudo Grande y Sutil al fondo (opcional, pero da estilo)
-        try {
-            const shield = await loadImg(team.shieldWhite || team.shield);
+        // ── 2. JUGADOR ────────────────────────────────────────────────
+        if (crop) {
+            const scale = Math.max(width / crop.w, photoH / crop.h) * 1.05;
+            const pw = crop.w * scale;
+            const ph = crop.h * scale;
+            const px = (width - pw) / 2;
+            const py = photoH - ph + (ph * 0.05); // Pies pegados a la franja
             ctx.save();
-            ctx.globalAlpha = 0.15;
-            drawImageProp(ctx, shield, width * 0.1, height * 0.1, width * 0.8, width * 0.8);
+            ctx.shadowColor = "rgba(0,0,0,0.5)";
+            ctx.shadowBlur  = 40;
+            ctx.drawImage(playerImg, crop.x, crop.y, crop.w, crop.h, px, py, pw, ph);
             ctx.restore();
-        } catch(e) {}
+        }
 
-        // 4. Viñetas
-        drawPerimeterShadow(ctx, width, height);
+        // ── 3. VIÑETA ─────────────────────────────────────────────────
+        drawPerimeterShadow(ctx, width, photoH);
+
+        // ── 4. FRANJA POLAROID (blanca) ───────────────────────────────
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, photoH, width, polaroidH);
+
+        // ── 5. MATCHDAY EN LA FRANJA ──────────────────────────────────
+        const pad      = Math.round(width * 0.04);
+        const shieldSz = Math.round(polaroidH * 0.60);
+        const shieldY  = photoH + (polaroidH - shieldSz) / 2;
+
+        // Left: escudo A
+        if (teamA) {
+            try {
+                const sA = await loadImg(teamA.shield || teamA.shieldWhite);
+                ctx.drawImage(sA, pad, shieldY, shieldSz, shieldSz);
+            } catch(e) {}
+        }
+
+        // Left: separador "VS" entre escudos
+        if (teamA && teamB) {
+            ctx.fillStyle = "#aaaaaa";
+            ctx.font = `700 ${Math.round(polaroidH * 0.14)}px Outfit`;
+            ctx.textAlign = "center";
+            ctx.fillText("VS", pad + shieldSz + Math.round(width * 0.04), photoH + polaroidH / 2 + 5);
+        }
+
+        // Left: escudo B
+        if (teamB) {
+            const bX = pad + shieldSz + Math.round(width * 0.10);
+            try {
+                const sB = await loadImg(teamB.shield || teamB.shieldWhite);
+                ctx.drawImage(sB, bX, shieldY, shieldSz, shieldSz);
+            } catch(e) {}
+        }
+
+        // Right: textos del partido
+        const textX   = width - pad;
+        const midY    = photoH + polaroidH / 2;
+        const fontSize1 = Math.round(polaroidH * 0.20);
+        const fontSize2 = Math.round(polaroidH * 0.14);
+
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#111111";
+        ctx.font = `900 ${fontSize1}px Outfit`;
+        ctx.fillText(stage.toUpperCase(), textX, midY - fontSize2 * 0.4);
+
+        ctx.fillStyle = "#666666";
+        ctx.font = `400 ${fontSize2}px Outfit`;
+        ctx.fillText(date, textX, midY + fontSize1 * 0.6);
+
+        // Logo pequeño (si no hay match configurado, ocupa el espacio izquierdo)
+        if (!teamA && !teamB) {
+            try {
+                const logo = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
+                drawImageProp(ctx, logo, pad, shieldY, shieldSz * 2.2, shieldSz);
+            } catch(e) {}
+        }
     };
 
-    await generateArte('arteCanvasSquare', 1080, 1080);
+    await generateArte('arteCanvasSquare',   1080, 1080);
     await generateArte('arteCanvasVertical', 1080, 1920);
 }
