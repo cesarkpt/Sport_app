@@ -2242,61 +2242,100 @@ async function updateArtePreview(type) {
     tCtx.fillStyle = "#ffffff";
     tCtx.fillRect(0, photoH, width, polaroidH);
 
-    // Contenido Matchday
+    // 1.5 Logo en la Foto (Arriba a la Izquierda)
+    try {
+        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
+        const padLogo = Math.round(width * 0.04);
+        const logoMaxW = width * 0.25;
+        const logoMaxH = photoH * 0.15;
+        const scaleL = Math.min(logoMaxW / logoImg.width, logoMaxH / logoImg.height);
+        tCtx.globalAlpha = 0.9;
+        tCtx.drawImage(logoImg, padLogo, padLogo, logoImg.width * scaleL, logoImg.height * scaleL);
+        tCtx.globalAlpha = 1.0;
+    } catch(e) {}
+
+    // Contenido inferior
     const teamA = selectedMatchTeamA ? allTeams[selectedMatchTeamA] : null;
     const teamB = selectedMatchTeamB ? allTeams[selectedMatchTeamB] : null;
     const isBW = document.getElementById('polaroidShieldBWToggle')?.checked;
-    const msg = document.getElementById('polaroidMessage')?.value;
+    
+    // Mensaje Manuscrito (Izquierda)
+    const rawMsg = document.getElementById('polaroidMessage')?.value;
+    const msg = rawMsg && rawMsg.trim() !== '' ? rawMsg : 'Memorias.....';
+    const pad = Math.round(width * 0.04);
+    
+    tCtx.save();
+    tCtx.textAlign = "left";
+    tCtx.fillStyle = "#222";
+    tCtx.font = `${Math.round(polaroidH * 0.30)}px Caveat`;
+    // Centrado verticalmente con el bloque de escudos y textos de la derecha
+    tCtx.fillText(msg, pad, photoH + (polaroidH * 0.55));
+    tCtx.restore();
 
+    // Matchday (Derecha: Escudos -> Etapa -> Fecha)
     const stage = (document.getElementById('matchStage') || {}).value || 'PARTIDO';
     const date = (document.getElementById('matchDate') || {}).value || '';
-    const pad = Math.round(width * 0.04);
-    const sSz = Math.round(polaroidH * 0.60);
-    const sY = photoH + (polaroidH - sSz) / 2;
+    
+    const sSz = Math.round(polaroidH * 0.38); // Escudos más pequeños para que quepa el texto
+    const spacing = Math.round(width * 0.015);
+    const vsW = Math.round(width * 0.06);
+    
+    // 1. Calcular ancho total de los escudos
+    let shieldsW = 0;
+    if (teamA) shieldsW += sSz;
+    if (teamA && teamB) shieldsW += spacing + vsW + spacing;
+    if (teamB) shieldsW += sSz;
+    
+    let nextX = width - pad - shieldsW;
+    const sY = photoH + (polaroidH * 0.15); // Empezar más arriba
 
+    // Dibujar Escudo A
     if (teamA) { 
         try { 
             const sImg = await loadImg(teamA.shieldWhite || teamA.shield);
+            const sScale = Math.min(sSz / sImg.width, sSz / sImg.height);
+            const sW = sImg.width * sScale;
+            const sH = sImg.height * sScale;
             if (isBW) tCtx.filter = 'grayscale(1) invert(1)';
-            tCtx.drawImage(sImg, pad, sY, sSz, sSz);
+            tCtx.drawImage(sImg, nextX + (sSz - sW)/2, sY + (sSz - sH)/2, sW, sH);
             tCtx.filter = 'none';
         } catch(e){} 
+        nextX += sSz;
     }
+
+    // Dibujar VS
     if (teamA && teamB) {
+        nextX += spacing;
         tCtx.fillStyle = isBW ? "#444" : "#aaa";
-        tCtx.font = `700 ${Math.round(polaroidH * 0.14)}px Outfit`;
+        tCtx.font = `700 ${Math.round(polaroidH * 0.15)}px Outfit`;
         tCtx.textAlign = "center";
-        tCtx.fillText("VS", pad + sSz + Math.round(width * 0.04), photoH + polaroidH/2 + 5);
+        tCtx.fillText("VS", nextX + (vsW/2), sY + (sSz/2) + (polaroidH*0.05));
+        nextX += vsW + spacing;
     }
+
+    // Dibujar Escudo B
     if (teamB) { 
         try { 
             const sImg = await loadImg(teamB.shieldWhite || teamB.shield);
+            const sScale = Math.min(sSz / sImg.width, sSz / sImg.height);
+            const sW = sImg.width * sScale;
+            const sH = sImg.height * sScale;
             if (isBW) tCtx.filter = 'grayscale(1) invert(1)';
-            tCtx.drawImage(sImg, pad + sSz + Math.round(width * 0.1), sY, sSz, sSz);
+            tCtx.drawImage(sImg, nextX + (sSz - sW)/2, sY + (sSz - sH)/2, sW, sH);
             tCtx.filter = 'none';
         } catch(e){} 
     }
 
-    const textX = width - pad;
-    const midY = photoH + polaroidH / 2;
+    // Textos debajo de los escudos (Alineados a la derecha)
+    const textY = sY + sSz + (polaroidH * 0.15);
     tCtx.textAlign = "right";
     tCtx.fillStyle = "#111";
-    tCtx.font = `900 ${Math.round(polaroidH * 0.2)}px Outfit`;
-    tCtx.fillText(stage.toUpperCase(), textX, midY - (polaroidH*0.07));
+    tCtx.font = `900 ${Math.round(polaroidH * 0.14)}px Outfit`;
+    tCtx.fillText(stage.toUpperCase(), width - pad, textY);
+    
     tCtx.fillStyle = "#666";
-    tCtx.font = `400 ${Math.round(polaroidH * 0.14)}px Outfit`;
-    tCtx.fillText(date, textX, midY + (polaroidH*0.09));
-
-    // Mensaje Manuscrito
-    if (msg) {
-        tCtx.save();
-        tCtx.textAlign = "center";
-        tCtx.fillStyle = "#222";
-        tCtx.font = `${Math.round(polaroidH * 0.35)}px Caveat`;
-        // Colocar centrado en la parte inferior si hay espacio
-        tCtx.fillText(msg, width / 2, photoH + polaroidH - (polaroidH * 0.1));
-        tCtx.restore();
-    }
+    tCtx.font = `400 ${Math.round(polaroidH * 0.12)}px Outfit`;
+    tCtx.fillText(date, width - pad, textY + (polaroidH * 0.12));
 
     addPaniniBorder(tCtx, width, height);
 
