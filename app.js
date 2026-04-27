@@ -564,7 +564,7 @@ async function runGenTarjetaHD() {
     if (btn) { btn.innerHTML = '⏳ Generando...'; btn.disabled = true; }
     await generateLayouts(lastProcessedPlayerImg, lastPlayerData, lastShouldRemoveBg, lastProcessedCrop, lastProcessedCropHD);
     showResultTab('previas');
-    if (btn) { btn.innerHTML = '🃏 TARJETA HD'; btn.disabled = false; }
+    if (btn) { btn.innerHTML = '📺 PLANO TV'; btn.disabled = false; }
 }
 
 async function runGenCarnet() {
@@ -574,7 +574,7 @@ async function runGenCarnet() {
     await generateLayouts(lastProcessedPlayerImg, lastPlayerData, lastShouldRemoveBg, lastProcessedCrop, lastProcessedCropHD);
     showResultTab('previas');
     document.getElementById('carnetCanvas').scrollIntoView({ behavior: 'smooth' });
-    if (btn) { btn.innerHTML = '🪪 CARNET'; btn.disabled = false; }
+    if (btn) { btn.innerHTML = '🃏 CROMO'; btn.disabled = false; }
 }
 
 async function runGenPostales() {
@@ -583,7 +583,7 @@ async function runGenPostales() {
     if (btn) { btn.innerHTML = '⏳ Generando...'; btn.disabled = true; }
     await generateMatchPostals();
     showResultTab('postales');
-    if (btn) { btn.innerHTML = '📸 POSTALES'; btn.disabled = false; }
+    if (btn) { btn.innerHTML = 'ℹ️ INFO RS'; btn.disabled = false; }
 }
 
 async function runGenArte() {
@@ -592,7 +592,7 @@ async function runGenArte() {
     if (btn) { btn.innerHTML = '⏳ Generando...'; btn.disabled = true; }
     await generateArteLayouts(lastProcessedPlayerImg, lastPlayerData, lastProcessedCropHD);
     showResultTab('arte');
-    if (btn) { btn.innerHTML = '🎨 ARTE'; btn.disabled = false; }
+    if (btn) { btn.innerHTML = '📸 POLAROID'; btn.disabled = false; }
 }
 
 function runGenCarrusel() {
@@ -2258,7 +2258,8 @@ async function updateArtePreview(type) {
     addPaniniBorder(tCtx, width, height);
 
     // 2. Renderizar en Canvas Final con Madera y Rotación
-    const tilt = state.tilt || 0;
+    const applyTilt = document.getElementById('polaroidTiltToggle')?.checked;
+    const tilt = applyTilt ? (state.tilt || 0) : 0;
     const absTilt = Math.abs(tilt);
     const finalW = width + (height * Math.sin(absTilt)) + 150;
     const finalH = height + (width * Math.sin(absTilt)) + 150;

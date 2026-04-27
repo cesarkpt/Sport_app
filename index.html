@@ -275,34 +275,34 @@
                     <p style="font-size: 0.6rem; opacity: 0.5; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px;">¿Qué deseas generar?</p>
                     <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
                         <button id="btnGenTarjeta" class="btn-primary" onclick="runGenTarjetaHD()" style="font-size: 0.65rem; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 14px;">
-                            <span style="font-size: 1.4rem;">🃏</span>TARJETA HD
+                            <span style="font-size: 1.4rem;">📺</span>PLANO TV
                         </button>
                         <button id="btnGenCarnet" class="btn-primary" onclick="runGenCarnet()" style="font-size: 0.65rem; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 14px;">
-                            <span style="font-size: 1.4rem;">🪪</span>CARNET
+                            <span style="font-size: 1.4rem;">🃏</span>CROMO
                         </button>
                         <button id="btnGenPostales" class="btn-primary" onclick="runGenPostales()" style="font-size: 0.65rem; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 14px;">
-                            <span style="font-size: 1.4rem;">📸</span>POSTALES
+                            <span style="font-size: 1.4rem;">ℹ️</span>INFO RS
                         </button>
                         <button id="btnGenArte" class="btn-primary" onclick="runGenArte()" style="font-size: 0.65rem; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 14px;">
-                            <span style="font-size: 1.4rem;">🎨</span>ARTE
+                            <span style="font-size: 1.4rem;">📸</span>POLAROID
                         </button>
                         <button id="btnGenCarrusel" class="btn-secondary" onclick="runGenCarrusel()" style="font-size: 0.65rem; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 14px;">
-                            <span style="font-size: 1.4rem;">🎠</span>CARRUSEL
+                            <span style="font-size: 1.4rem;">👥</span>TEAM
                         </button>
                     </div>
                 </div>
 
                 <div class="result-nav" style="display: flex; gap: 6px; margin-bottom: 15px; flex-wrap: nowrap;">
                     <button class="nav-tab active" onclick="showResultTab('previas')" style="font-size: 0.55rem; padding: 6px 8px; flex: 1;">PREVIAS</button>
-                    <button class="nav-tab" onclick="showResultTab('postales')" style="font-size: 0.55rem; padding: 6px 8px; flex: 1;">POSTALES</button>
-                    <button class="nav-tab" onclick="showResultTab('carousel')" style="font-size: 0.55rem; padding: 6px 8px; flex: 1;">CARRUSEL</button>
-                    <button class="nav-tab" onclick="showResultTab('arte')" style="font-size: 0.55rem; padding: 6px 8px; flex: 1;">ARTE</button>
+                    <button class="nav-tab" onclick="showResultTab('postales')" style="font-size: 0.55rem; padding: 6px 8px; flex: 1;">INFO RS</button>
+                    <button class="nav-tab" onclick="showResultTab('carousel')" style="font-size: 0.55rem; padding: 6px 8px; flex: 1;">TEAM</button>
+                    <button class="nav-tab" onclick="showResultTab('arte')" style="font-size: 0.55rem; padding: 6px 8px; flex: 1;">POLAROID</button>
                 </div>
 
                 <div id="previasTab" class="tab-content">
                     <div class="results-grid">
                         <div class="result-card">
-                            <h3>Tarjeta Pro HD</h3>
+                            <h3>Plano TV</h3>
                             <div class="canvas-container main-result">
                                 <canvas id="outputCanvas"></canvas>
                             </div>
@@ -310,7 +310,7 @@
                         </div>
 
                         <div class="result-card mini">
-                            <h3>Carnet de Jugador</h3>
+                            <h3>Cromo</h3>
                             <div class="canvas-container carnet-result">
                                 <canvas id="carnetCanvas"></canvas>
                             </div>
@@ -323,7 +323,7 @@
                     <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 20px; border: 1px solid var(--glass-border); margin-bottom: 20px;">
                         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
                             <span style="font-size: 1.5rem;">🖼️</span>
-                            <h4 style="margin: 0;">Configurar Postal de Partido</h4>
+                            <h4 style="margin: 0;">Configurar Info RS</h4>
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                             <div class="input-group">
@@ -380,7 +380,7 @@
 
                 <div id="carouselTab" class="tab-content hidden">
                     <div class="result-card">
-                        <h3>Editor de Carrusel (Instagram)</h3>
+                        <h3>Editor Team</h3>
                         
                         <div id="tabCarouselEditor" class="carousel-editor-area">
                             <div class="carousel-cropper-wrapper">
@@ -426,20 +426,46 @@
 
                 <div id="arteTab" class="tab-content hidden">
                     <div class="result-grid" style="display: flex; flex-direction: column; gap: 20px;">
+                        
+                        <!-- Editor Cuadrado -->
                         <div class="result-card">
-                            <h3>Arte Cuadrado (1:1)</h3>
-                            <div class="canvas-container" style="max-width: 500px; margin: 0 auto;">
-                                <canvas id="arteCanvasSquare"></canvas>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <h3 style="font-size: 0.8rem; color: var(--secondary); margin: 0;">POLAROID 1:1</h3>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 0.6rem; opacity: 0.6;">GIRO</span>
+                                    <label class="switch" style="transform: scale(0.7);">
+                                        <input type="checkbox" id="polaroidTiltToggle" checked onchange="updateArtePreview('Sq'); updateArtePreview('Ver');">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
                             </div>
-                            <button class="btn-secondary" onclick="downloadImage('arteCanvasSquare', 'arte_1x1')" style="width: 100%; margin-top: 10px;">DESCARGAR 1:1</button>
+                            <div id="arteContainerSq" class="carousel-container" style="height: 300px; background: #111; overflow: hidden; position: relative; border-radius: 15px; margin-bottom: 15px;">
+                                <canvas id="arteCanvasSquare" style="width: 100%; height: 100%; object-fit: contain; cursor: move;"></canvas>
+                            </div>
+                            <div class="zoom-control" style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                                <label style="font-size: 0.55rem; opacity: 0.7;">ZOOM</label>
+                                <input type="range" id="arteZoomSq" min="0.25" max="2.0" step="0.01" value="1" style="flex: 1;" oninput="updateArtePreview('Sq')">
+                                <label style="font-size: 0.55rem; opacity: 0.7;">ROT</label>
+                                <input type="range" id="arteRotateSq" min="-30" max="30" step="1" value="0" style="flex: 1;" oninput="updateArtePreview('Sq')">
+                            </div>
+                            <button class="btn-secondary" onclick="downloadImage('arteCanvasSquare', 'arte_1x1')" style="width: 100%; font-size: 0.7rem;">DESCARGAR 1:1</button>
                         </div>
+
+                        <!-- Editor Story -->
                         <div class="result-card">
-                            <h3>Arte Story (9:16)</h3>
-                            <div class="canvas-container carnet-result" style="max-width: 400px; margin: 0 auto;">
-                                <canvas id="arteCanvasVertical"></canvas>
+                            <h3 style="font-size: 0.8rem; color: var(--secondary);">POLAROID STORY</h3>
+                            <div id="arteContainerVer" class="carousel-container" style="height: 400px; background: #111; overflow: hidden; position: relative; border-radius: 15px; margin-bottom: 15px;">
+                                <canvas id="arteCanvasVertical" style="width: 100%; height: 100%; object-fit: contain; cursor: move;"></canvas>
                             </div>
-                            <button class="btn-secondary" onclick="downloadImage('arteCanvasVertical', 'arte_vertical')" style="width: 100%; margin-top: 10px;">DESCARGAR STORY</button>
+                            <div class="zoom-control" style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                                <label style="font-size: 0.55rem; opacity: 0.7;">ZOOM</label>
+                                <input type="range" id="arteZoomVer" min="0.25" max="2.0" step="0.01" value="1" style="flex: 1;" oninput="updateArtePreview('Ver')">
+                                <label style="font-size: 0.55rem; opacity: 0.7;">ROT</label>
+                                <input type="range" id="arteRotateVer" min="-30" max="30" step="1" value="0" style="flex: 1;" oninput="updateArtePreview('Ver')">
+                            </div>
+                            <button class="btn-secondary" onclick="downloadImage('arteCanvasVertical', 'arte_vertical')" style="width: 100%; font-size: 0.7rem;">DESCARGAR STORY</button>
                         </div>
+
                     </div>
                 </div> <!-- /arteTab -->
                     <button class="btn-primary" onclick="resetApp()" style="background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); border: none; font-weight: 900;">OTRO JUGADOR 🔄</button>
