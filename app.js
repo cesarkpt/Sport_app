@@ -31,12 +31,14 @@ if (!activeTeamId && Object.keys(allTeams).length > 0) {
     activeTeamId = Object.keys(allTeams)[0];
 }
 let editingTeamId = null;
-let currentPlayerData = null; // Guardar datos para subir a Drive al descargar
 let lastProcessedPlayerImg = null;
 let lastProcessedCropHD = null;
 let lastProcessedCrop = null;
 let lastShouldRemoveBg = false;
 let lastPlayerData = null;
+
+let arteStateSq = { img: null, x: 0, y: 0, scale: 1, rotate: 0, isDragging: false, startX: 0, startY: 0, woodImg: null, data: null };
+let arteStateVer = { img: null, x: 0, y: 0, scale: 1, rotate: 0, isDragging: false, startX: 0, startY: 0, woodImg: null, data: null };
 
 function toggleTeamManager() {
     const tm = document.getElementById('teamManager');
@@ -2126,131 +2128,198 @@ async function generateMatchPostals() {
 
 async function generateArteLayouts(playerImg, data, crop) {
     if (!playerImg) return;
+    
+    // Convertir a elemento Image si es canvas
+    let imgEl = playerImg;
+    if (playerImg instanceof HTMLCanvasElement) {
+        imgEl = new Image();
+        imgEl.src = playerImg.toDataURL('image/png');
+        await new Promise(r => imgEl.onload = r);
+    }
 
-    // 1. Textura de Madera (Fondo base)
+    // Cargar madera si no está
     const woodUrl = "https://images.unsplash.com/photo-1541123439599-431bb538283e?auto=format&fit=crop&q=80&w=1920";
-    let woodImg;
-    try { woodImg = await loadImg(woodUrl); } catch(e) { console.warn("Madera no cargada"); }
+    let wood;
+    try { wood = await loadImg(woodUrl); } catch(e) {}
 
-    const playerTeam = Object.values(allTeams).find(t => t.name === data.team) || {};
-    const color1 = playerTeam.color1 || data.color || "#00ff88";
-    const color2 = playerTeam.color2 || data.color2 || "#00d4ff";
+    // Inicializar estados
+    arteStateSq = { ...arteStateSq, img: imgEl, woodImg: wood, data: data, tilt: (Math.random() * 10 - 5) * Math.PI / 180 };
+    arteStateVer = { ...arteStateVer, img: imgEl, woodImg: wood, data: data, tilt: (Math.random() * 10 - 5) * Math.PI / 180 };
+
+    resetArtePosition('Sq');
+    resetArtePosition('Ver');
+    
+    setupArteEvents();
+    
+    updateArtePreview('Sq');
+    updateArtePreview('Ver');
+}
+
+function resetArtePosition(type) {
+    const state = type === 'Sq' ? arteStateSq : arteStateVer;
+    if (!state.img) return;
+    
+    const width = 1080;
+    const height = type === 'Sq' ? 1080 : 1920;
+    const photoH = height * 0.8;
+    
+    // Escala inicial para cubrir el área de la foto
+    state.scale = Math.max(width / state.img.width, photoH / state.img.height) * 1.1;
+    state.x = 0;
+    state.y = 0;
+    state.rotate = 0;
+
+    // Reset sliders
+    const zoomSl = document.getElementById('arteZoom' + type);
+    const rotSl = document.getElementById('arteRotate' + type);
+    if (zoomSl) zoomSl.value = 1;
+    if (rotSl) rotSl.value = 0;
+}
+
+async function updateArtePreview(type) {
+    const state = type === 'Sq' ? arteStateSq : arteStateVer;
+    const canvas = document.getElementById(type === 'Sq' ? 'arteCanvasSquare' : 'arteCanvasVertical');
+    if (!canvas || !state.img) return;
+
+    const ctx = canvas.getContext('2d');
+    const width = 1080;
+    const height = type === 'Sq' ? 1080 : 1920;
+    const polaroidH = Math.round(height * 0.20);
+    const photoH = height - polaroidH;
+
+    // 1. Crear Polaroid en canvas temporal
+    const temp = document.createElement('canvas');
+    temp.width = width;
+    temp.height = height;
+    const tCtx = temp.getContext('2d');
+
+    // Fondo Foto (Degradado Equipo)
+    const pTeam = Object.values(allTeams).find(t => t.name === state.data.team) || {};
+    const c1 = pTeam.color1 || state.data.color || "#00ff88";
+    const c2 = pTeam.color2 || state.data.color2 || "#00d4ff";
+    const grd = tCtx.createLinearGradient(0, 0, width, photoH);
+    grd.addColorStop(0, c1);
+    grd.addColorStop(1, c2);
+    tCtx.fillStyle = grd;
+    tCtx.fillRect(0, 0, width, photoH);
+
+    // Dibujar Jugador con su estado (Zoom, Rotación, Posición)
+    const zoomVal = parseFloat(document.getElementById('arteZoom' + type).value || 1);
+    const rotVal = parseFloat(document.getElementById('arteRotate' + type).value || 0);
+    
+    const finalScale = state.scale * zoomVal;
+    const drawW = state.img.width * finalScale;
+    const drawH = state.img.height * finalScale;
+
+    tCtx.save();
+    // Clip para no pintar fuera del área de la foto
+    tCtx.beginPath();
+    tCtx.rect(0, 0, width, photoH);
+    tCtx.clip();
+
+    tCtx.translate(width / 2 + state.x, (photoH / 2) + state.y);
+    tCtx.rotate(rotVal * Math.PI / 180);
+    tCtx.drawImage(state.img, -drawW / 2, -drawH / 2, drawW, drawH);
+    tCtx.restore();
+
+    // Viñeta y Franja Blanca
+    drawPerimeterShadow(tCtx, width, photoH);
+    tCtx.fillStyle = "#ffffff";
+    tCtx.fillRect(0, photoH, width, polaroidH);
+
+    // Contenido Matchday
     const teamA = selectedMatchTeamA ? allTeams[selectedMatchTeamA] : null;
     const teamB = selectedMatchTeamB ? allTeams[selectedMatchTeamB] : null;
     const stage = (document.getElementById('matchStage') || {}).value || 'PARTIDO';
-    const date  = (document.getElementById('matchDate')  || {}).value || '';
+    const date = (document.getElementById('matchDate') || {}).value || '';
+    const pad = Math.round(width * 0.04);
+    const sSz = Math.round(polaroidH * 0.60);
+    const sY = photoH + (polaroidH - sSz) / 2;
 
-    const generateArte = async (canvasId, width, height) => {
-        const canvas = document.getElementById(canvasId);
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
+    if (teamA) { try { tCtx.drawImage(await loadImg(teamA.shield || teamA.shieldWhite), pad, sY, sSz, sSz); } catch(e){} }
+    if (teamA && teamB) {
+        tCtx.fillStyle = "#aaa";
+        tCtx.font = `700 ${Math.round(polaroidH * 0.14)}px Outfit`;
+        tCtx.textAlign = "center";
+        tCtx.fillText("VS", pad + sSz + Math.round(width * 0.04), photoH + polaroidH/2 + 5);
+    }
+    if (teamB) { try { tCtx.drawImage(await loadImg(teamB.shield || teamB.shieldWhite), pad + sSz + Math.round(width * 0.1), sY, sSz, sSz); } catch(e){} }
 
-        // --- A. CREAR LA POLAROID EN UN CANVAS TEMPORAL ---
-        const temp = document.createElement('canvas');
-        temp.width = width;
-        temp.height = height;
-        const tCtx = temp.getContext('2d');
+    const textX = width - pad;
+    const midY = photoH + polaroidH / 2;
+    tCtx.textAlign = "right";
+    tCtx.fillStyle = "#111";
+    tCtx.font = `900 ${Math.round(polaroidH * 0.2)}px Outfit`;
+    tCtx.fillText(stage.toUpperCase(), textX, midY - (polaroidH*0.07));
+    tCtx.fillStyle = "#666";
+    tCtx.font = `400 ${Math.round(polaroidH * 0.14)}px Outfit`;
+    tCtx.fillText(date, textX, midY + (polaroidH*0.09));
 
-        const polaroidH = Math.round(height * 0.20);
-        const photoH    = height - polaroidH;
+    addPaniniBorder(tCtx, width, height);
 
-        // 1. Fondo Foto
-        const grd = tCtx.createLinearGradient(0, 0, width, photoH);
-        grd.addColorStop(0, color1);
-        grd.addColorStop(1, color2);
-        tCtx.fillStyle = grd;
-        tCtx.fillRect(0, 0, width, photoH);
+    // 2. Renderizar en Canvas Final con Madera y Rotación
+    const tilt = state.tilt || 0;
+    const absTilt = Math.abs(tilt);
+    const finalW = width + (height * Math.sin(absTilt)) + 150;
+    const finalH = height + (width * Math.sin(absTilt)) + 150;
+    canvas.width = finalW;
+    canvas.height = finalH;
 
-        // 2. Jugador
-        if (crop) {
-            const scale = Math.max(width / crop.w, photoH / crop.h) * 1.05;
-            const pw = crop.w * scale;
-            const ph = crop.h * scale;
-            const px = (width - pw) / 2;
-            const py = photoH - ph + (ph * 0.05);
-            tCtx.save();
-            tCtx.shadowColor = "rgba(0,0,0,0.5)";
-            tCtx.shadowBlur  = 40;
-            tCtx.drawImage(playerImg, crop.x, crop.y, crop.w, crop.h, px, py, pw, ph);
-            tCtx.restore();
-        }
+    if (state.woodImg) {
+        drawImageProp(ctx, state.woodImg, 0, 0, finalW, finalH);
+        ctx.fillStyle = "rgba(0,0,0,0.3)";
+        ctx.fillRect(0, 0, finalW, finalH);
+    } else {
+        ctx.fillStyle = "#222";
+        ctx.fillRect(0, 0, finalW, finalH);
+    }
 
-        // 3. Viñeta
-        drawPerimeterShadow(tCtx, width, photoH);
+    ctx.save();
+    ctx.translate(finalW / 2, finalH / 2);
+    ctx.rotate(tilt);
+    ctx.translate(-width / 2, -height / 2);
 
-        // 4. Franja Polaroid
-        tCtx.fillStyle = "#ffffff";
-        tCtx.fillRect(0, photoH, width, polaroidH);
+    ctx.shadowColor = "rgba(0,0,0,0.8)";
+    ctx.shadowBlur = 50;
+    ctx.shadowOffsetX = 10;
+    ctx.shadowOffsetY = 15;
 
-        // 5. Contenido Matchday
-        const pad = Math.round(width * 0.04);
-        const sSz = Math.round(polaroidH * 0.60);
-        const sY  = photoH + (polaroidH - sSz) / 2;
-
-        if (teamA) {
-            try { tCtx.drawImage(await loadImg(teamA.shield || teamA.shieldWhite), pad, sY, sSz, sSz); } catch(e){}
-        }
-        if (teamA && teamB) {
-            tCtx.fillStyle = "#aaa";
-            tCtx.font = `700 ${Math.round(polaroidH * 0.14)}px Outfit`;
-            tCtx.textAlign = "center";
-            tCtx.fillText("VS", pad + sSz + Math.round(width * 0.04), photoH + polaroidH/2 + 5);
-        }
-        if (teamB) {
-            try { tCtx.drawImage(await loadImg(teamB.shield || teamB.shieldWhite), pad + sSz + Math.round(width * 0.1), sY, sSz, sSz); } catch(e){}
-        }
-
-        const textX = width - pad;
-        const midY  = photoH + polaroidH / 2;
-        tCtx.textAlign = "right";
-        tCtx.fillStyle = "#111";
-        tCtx.font = `900 ${Math.round(polaroidH * 0.2)}px Outfit`;
-        tCtx.fillText(stage.toUpperCase(), textX, midY - (polaroidH*0.07));
-        tCtx.fillStyle = "#666";
-        tCtx.font = `400 ${Math.round(polaroidH * 0.14)}px Outfit`;
-        tCtx.fillText(date, textX, midY + (polaroidH*0.09));
-
-        // 6. Borde Panini (opcional dentro de la polaroid)
-        addPaniniBorder(tCtx, width, height);
-
-        // --- B. DIBUJAR TODO EN EL CANVAS PRINCIPAL CON ROTACIÓN Y FONDO ---
-        
-        // Random tilt: -6 a +6 grados
-        const tilt = ((Math.random() * 12) - 6) * Math.PI / 180;
-        const absTilt = Math.abs(tilt);
-        const finalW = width + (height * Math.sin(absTilt)) + 150;
-        const finalH = height + (width * Math.sin(absTilt)) + 150;
-        canvas.width = finalW;
-        canvas.height = finalH;
-
-        // 1. Fondo de Madera
-        if (woodImg) {
-            drawImageProp(ctx, woodImg, 0, 0, finalW, finalH);
-            // Oscurecer un poco la madera
-            ctx.fillStyle = "rgba(0,0,0,0.3)";
-            ctx.fillRect(0, 0, finalW, finalH);
-        } else {
-            ctx.fillStyle = "#222";
-            ctx.fillRect(0, 0, finalW, finalH);
-        }
-
-        // 2. Dibujar Polaroid rotada
-        ctx.save();
-        ctx.translate(finalW / 2, finalH / 2);
-        ctx.rotate(tilt);
-        ctx.translate(-width / 2, -height / 2);
-
-        // Sombra real sobre la madera
-        ctx.shadowColor = "rgba(0,0,0,0.8)";
-        ctx.shadowBlur = 50;
-        ctx.shadowOffsetX = 10;
-        ctx.shadowOffsetY = 15;
-
-        ctx.drawImage(temp, 0, 0);
-        ctx.restore();
-    };
-
-    await generateArte('arteCanvasSquare',   1080, 1080);
-    await generateArte('arteCanvasVertical', 1080, 1920);
+    ctx.drawImage(temp, 0, 0);
+    ctx.restore();
 }
+
+function setupArteEvents() {
+    ['Sq', 'Ver'].forEach(type => {
+        const canvas = document.getElementById(type === 'Sq' ? 'arteCanvasSquare' : 'arteCanvasVertical');
+        const state = type === 'Sq' ? arteStateSq : arteStateVer;
+        if (!canvas) return;
+
+        const startMove = (e) => {
+            state.isDragging = true;
+            const pos = e.touches ? e.touches[0] : e;
+            state.startX = pos.clientX - state.x;
+            state.startY = pos.clientY - state.y;
+        };
+
+        const move = (e) => {
+            if (!state.isDragging) return;
+            e.preventDefault();
+            const pos = e.touches ? e.touches[0] : e;
+            state.x = pos.clientX - state.startX;
+            state.y = pos.clientY - state.startY;
+            updateArtePreview(type);
+        };
+
+        const endMove = () => state.isDragging = false;
+
+        canvas.onmousedown = startMove;
+        window.onmousemove = move;
+        window.onmouseup = endMove;
+
+        canvas.ontouchstart = startMove;
+        canvas.ontouchmove = move;
+        canvas.ontouchend = endMove;
+    });
+}
+
 
