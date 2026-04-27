@@ -931,6 +931,10 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
     ctxCarnet.fillRect(0, 0, barW, ch);
 
     await drawCarnetOverlay(ctxCarnet, player);
+
+    // Borde Panini Final
+    addPaniniBorder(ctxOut, CONFIG.outputWidth, CONFIG.outputHeight);
+    addPaniniBorder(ctxCarnet, cw, ch);
 }
 
 function createSmartCrop(playerCanvas, isTransparent = true) {
@@ -1324,6 +1328,18 @@ function drawPerimeterShadow(ctx, w, h) {
     ctx.restore();
 }
 
+// Borde blanco estilo cromo Panini — se dibuja siempre ÚLTIMO, encima de todo
+function addPaniniBorder(ctx, w, h) {
+    const t = Math.round(Math.min(w, h) * 0.025); // 2.5% del lado menor
+    ctx.save();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, w, t);           // Arriba
+    ctx.fillRect(0, h - t, w, t);       // Abajo
+    ctx.fillRect(0, 0, t, h);           // Izquierda
+    ctx.fillRect(w - t, 0, t, h);       // Derecha
+    ctx.restore();
+}
+
 // --- CARRUSEL INSTAGRAM EQUIPO (VERSION PESTAÑA) ---
 let carouselState = { img: null, x: 0, y: 0, scale: 1, rotate: 0, isDragging: false, startX: 0, startY: 0 };
 
@@ -1520,6 +1536,10 @@ async function confirmCarouselFraming() {
         await drawTickerOn(ctx1, 0);
         await drawTickerOn(ctx2, size);
     }
+
+    // Borde Panini Final
+    addPaniniBorder(ctx1, size, size);
+    addPaniniBorder(ctx2, size, size);
 
     document.getElementById('tabCarouselPreview').classList.remove('hidden');
 }
@@ -2088,6 +2108,9 @@ async function generateMatchPostals() {
                 drawImageProp(ctx, logo, 60, 60, 250, 100, 0, 0); 
                 ctx.globalAlpha = 1.0;
             } catch (e) {}
+
+            // Borde Panini
+            addPaniniBorder(ctx, width, height);
         };
 
         await generateOne('postalCanvasH', 1920, 1080);
@@ -2229,6 +2252,10 @@ async function generateArteLayouts(playerImg, data, crop) {
                 drawImageProp(ctx, logo, pad, shieldY, shieldSz * 2.2, shieldSz);
             } catch(e) {}
         }
+        
+        // Borde Panini
+        addPaniniBorder(ctx, width, height);
+
         ctx.restore(); // close rotation transform
     };
 
