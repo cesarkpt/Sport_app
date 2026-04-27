@@ -384,11 +384,15 @@ async function handleImageUpload(e) {
 
     const img = await loadImage(file);
 
-    // 1. Mostrar preview inmediato
+    // 1. Mostrar preview inmediato escalado al contenedor
+    const container = elements.inputCanvas.parentElement;
+    const maxW = container ? container.clientWidth : 600;
+    const maxH = container ? container.clientHeight : 400;
+    const scale = Math.max(maxW / img.width, maxH / img.height);
+    elements.inputCanvas.width = Math.round(img.width * scale);
+    elements.inputCanvas.height = Math.round(img.height * scale);
     const ctx = elements.inputCanvas.getContext('2d');
-    elements.inputCanvas.width = img.width;
-    elements.inputCanvas.height = img.height;
-    ctx.drawImage(img, 0, 0);
+    ctx.drawImage(img, 0, 0, elements.inputCanvas.width, elements.inputCanvas.height);
 
     // 2. Optimizar para IA
     const processingImg = await resizeImage(img, CONFIG.maxProcessingSize);
@@ -1264,6 +1268,7 @@ function drawPerimeterShadow(ctx, w, h) {
 // --- CARRUSEL INSTAGRAM EQUIPO (VERSION PESTAÑA) ---
 let carouselState = { img: null, x: 0, y: 0, scale: 1, rotate: 0, isDragging: false, startX: 0, startY: 0 };
 
+// carouselState.baseScale: the "fill container" scale (zoom multiplier = 1.0)
 async function initCarouselWithPhoto(img) {
     if (!img) return;
     carouselState.img = img;
@@ -1294,7 +1299,9 @@ function setupCarouselEvents() {
     window.onmouseup = () => carouselState.isDragging = false;
     const zoom = document.getElementById('tabCarouselZoom');
     if (zoom) zoom.oninput = (e) => {
-        const newScale = parseFloat(e.target.value);
+        // Slider value is a MULTIPLIER relative to baseScale (fill = 1.0)
+        const multiplier = parseFloat(e.target.value);
+        const newScale = carouselState.baseScale * multiplier;
         const cW = container.clientWidth, cH = container.clientHeight;
         const relX = (cW / 2 - carouselState.x) / carouselState.scale;
         const relY = (cH / 2 - carouselState.y) / carouselState.scale;
@@ -1315,12 +1322,15 @@ function resetCarouselPosition() {
     const container = document.getElementById('tabCarouselContainer');
     if (!container) return;
     const cW = container.clientWidth, cH = container.clientHeight;
-    carouselState.scale = Math.max(cW / carouselState.img.width, cH / carouselState.img.height);
+    // baseScale = scale that fills the container (cover)
+    carouselState.baseScale = Math.max(cW / carouselState.img.width, cH / carouselState.img.height);
+    carouselState.scale = carouselState.baseScale;
     carouselState.x = (cW - carouselState.img.width * carouselState.scale) / 2;
     carouselState.y = (cH - carouselState.img.height * carouselState.scale) / 2;
     carouselState.rotate = 0;
+    // Slider midpoint = 1.0 = fill container
     const zoom = document.getElementById('tabCarouselZoom');
-    if (zoom) zoom.value = carouselState.scale;
+    if (zoom) zoom.value = 1.0;
     const rot = document.getElementById('tabCarouselRotate');
     if (rot) rot.value = 0;
     updateCarouselImg();
@@ -1349,10 +1359,13 @@ async function confirmCarouselFraming() {
     canvas1.width = size; canvas1.height = size;
     canvas2.width = size; canvas2.height = size;
 
-    const realW = carouselState.img.width * carouselState.scale * (size / cH);
-    const realH = carouselState.img.height * carouselState.scale * (size / cH);
-    const realX = carouselState.x * (size / cH);
-    const realY = carouselState.y * (size / cH);
+    // The container represents 2 panels side by side (total width = 2*size output)
+    // Use WIDTH as the reference so the panorama splits correctly at center
+    const renderScale = (size * 2) / cW;
+    const realW = carouselState.img.width  * carouselState.scale * renderScale;
+    const realH = carouselState.img.height * carouselState.scale * renderScale;
+    const realX = carouselState.x * renderScale;
+    const realY = carouselState.y * renderScale;
 
     [ctx1, ctx2].forEach((ctx, i) => {
         ctx.fillStyle = "#000";
