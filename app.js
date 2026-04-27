@@ -706,7 +706,7 @@ async function waitForManualCorrection(initialData, detectedNumber, playerImg) {
         container.addEventListener('mousedown', start);
         container.addEventListener('touchstart', start);
         window.addEventListener('mousemove', move);
-        window.addEventListener('touchmove', move);
+        window.addEventListener('touchmove', move, { passive: false });
         window.addEventListener('mouseup', stop);
         window.addEventListener('touchend', stop);
     };
@@ -835,15 +835,13 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
         ctxOut.drawImage(playerCanvas, (CONFIG.outputWidth - w) / 2, (CONFIG.outputHeight - h) / 2, w, h);
     }
 
-    // Jugador — escalar para cubrir el alto del canvas, centrado horizontalmente
+    // Jugador — escalar para cubrir el ancho de la barra (1720) y alinearlo con el logo (y=90)
     if (manualCropHD) {
-        // Escalar el recorte para que ocupe desde el logo (y=90) hasta la barra
         const finalY = 90;
-        const usableH = CONFIG.outputHeight - 180 - finalY; // Altura libre desde el logo
-        const scale = usableH / manualCropHD.h;
-        const finalW = manualCropHD.w * scale;
-        const finalH = usableH;
-        const finalX = (CONFIG.outputWidth - finalW) / 2;
+        const finalW = 1720;
+        const scale = finalW / manualCropHD.w;
+        const finalH = manualCropHD.h * scale;
+        const finalX = 100;
 
         ctxOut.save();
         if (shouldRemoveBg) {
@@ -856,13 +854,16 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
         );
         ctxOut.restore();
     } else if (shouldRemoveBg) {
-        const scale = (CONFIG.outputHeight * 0.85) / playerCanvas.height;
-        const pW = playerCanvas.width * scale;
-        const pH = playerCanvas.height * scale;
+        const finalW = 1720;
+        const scale = finalW / playerCanvas.width;
+        const finalH = playerCanvas.height * scale;
+        const finalX = 100;
+        const finalY = 90;
+
         ctxOut.save();
         ctxOut.shadowColor = "rgba(0,0,0,0.6)";
         ctxOut.shadowBlur = 30;
-        ctxOut.drawImage(playerCanvas, (CONFIG.outputWidth - pW) / 2, (CONFIG.outputHeight - pH) + 20, pW, pH);
+        ctxOut.drawImage(playerCanvas, finalX, finalY, finalW, finalH);
         ctxOut.restore();
     }
 
@@ -882,7 +883,7 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
 
     // 2.5 LOGO DE LA APP (Arriba Izquierda - Bajado otros 15px de 75 a 90)
     try {
-        const logoImg = await loadImg("logo.png");
+        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
         drawImageProp(ctxOut, logoImg, 100, 90, 300, 140, 0, 0);
     } catch (e) { }
 
@@ -991,7 +992,7 @@ async function drawCarnetOverlay(ctx, player) {
 
     // 1. MI LOGO EN EL CARNET (Arriba Izquierda - Más grande)
     try {
-        const logoImg = await loadImg("logo.png");
+        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
         drawImageProp(ctx, logoImg, 15, 20, 180, 90, 0, 0);
     } catch (e) { }
 
@@ -1331,14 +1332,14 @@ function drawPerimeterShadow(ctx, w, h) {
 }
 
 // Borde blanco estilo cromo Panini — se dibuja siempre ÚLTIMO, encima de todo
-function addPaniniBorder(ctx, w, h) {
+function addPaniniBorder(ctx, w, h, excludeSides = []) {
     const t = Math.round(Math.min(w, h) * 0.025); // 2.5% del lado menor
     ctx.save();
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, w, t);           // Arriba
-    ctx.fillRect(0, h - t, w, t);       // Abajo
-    ctx.fillRect(0, 0, t, h);           // Izquierda
-    ctx.fillRect(w - t, 0, t, h);       // Derecha
+    if (!excludeSides.includes('top'))    ctx.fillRect(0, 0, w, t);           // Arriba
+    if (!excludeSides.includes('bottom')) ctx.fillRect(0, h - t, w, t);       // Abajo
+    if (!excludeSides.includes('left'))   ctx.fillRect(0, 0, t, h);           // Izquierda
+    if (!excludeSides.includes('right'))  ctx.fillRect(w - t, 0, t, h);       // Derecha
     ctx.restore();
 }
 
@@ -1376,21 +1377,33 @@ async function initCarouselWithPhoto(img) {
 function setupCarouselEvents() {
     const container = document.getElementById('tabCarouselContainer');
     if (!container) return;
-    container.onmousedown = (e) => {
+
+    const start = (e) => {
         carouselState.isDragging = true;
-        carouselState.startX = e.clientX - carouselState.x;
-        carouselState.startY = e.clientY - carouselState.y;
+        const pos = e.touches ? e.touches[0] : e;
+        carouselState.startX = pos.clientX - carouselState.x;
+        carouselState.startY = pos.clientY - carouselState.y;
     };
-    window.onmousemove = (e) => {
+
+    const move = (e) => {
         if (!carouselState.isDragging) return;
-        carouselState.x = e.clientX - carouselState.startX;
-        carouselState.y = e.clientY - carouselState.startY;
+        const pos = e.touches ? e.touches[0] : e;
+        carouselState.x = pos.clientX - carouselState.startX;
+        carouselState.y = pos.clientY - carouselState.startY;
         updateCarouselImg();
     };
-    window.onmouseup = () => carouselState.isDragging = false;
+
+    const stop = () => carouselState.isDragging = false;
+
+    container.addEventListener('mousedown', start);
+    container.addEventListener('touchstart', start);
+    window.addEventListener('mousemove', move);
+    window.addEventListener('touchmove', move, { passive: false });
+    window.addEventListener('mouseup', stop);
+    window.addEventListener('touchend', stop);
+
     const zoom = document.getElementById('tabCarouselZoom');
     if (zoom) zoom.oninput = (e) => {
-        // Slider value is a MULTIPLIER relative to baseScale (fill = 1.0)
         const multiplier = parseFloat(e.target.value);
         const newScale = carouselState.baseScale * multiplier;
         const cW = container.clientWidth, cH = container.clientHeight;
@@ -1471,7 +1484,7 @@ async function confirmCarouselFraming() {
 
     // Logo en Slide 1
     try {
-        const logoImg = await loadImg("logo.png");
+        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
         drawImageProp(ctx1, logoImg, 80, 80, 300, 140);
     } catch (e) {}
 
@@ -1539,9 +1552,9 @@ async function confirmCarouselFraming() {
         await drawTickerOn(ctx2, size);
     }
 
-    // Borde Panini Final
-    addPaniniBorder(ctx1, size, size);
-    addPaniniBorder(ctx2, size, size);
+    // Borde Panini Final (Unión perfecta para carrusel)
+    addPaniniBorder(ctx1, size, size, ['right']);
+    addPaniniBorder(ctx2, size, size, ['left']);
 
     document.getElementById('tabCarouselPreview').classList.remove('hidden');
 }
@@ -1816,7 +1829,9 @@ function drawImageProp(ctx, img, x, y, w, h, offsetX = 0.5, offsetY = 0.5) {
 function loadImg(url) {
     return new Promise((resolve, reject) => {
         const img = new Image();
-        img.crossOrigin = "anonymous";
+        if (url.startsWith('http')) {
+            img.crossOrigin = "anonymous";
+        }
         img.onload = () => resolve(img);
         img.onerror = () => reject(new Error("Error loading image: " + url));
         img.src = url;
@@ -2105,7 +2120,7 @@ async function generateMatchPostals() {
 
             // E. Logo
             try {
-                const logoImg = await loadImg("logo.png");
+                const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
                 ctx.globalAlpha = 0.6;
                 drawImageProp(ctx, logoImg, 60, 60, 250, 100, 0, 0); 
                 ctx.globalAlpha = 1.0;
@@ -2230,20 +2245,37 @@ async function updateArtePreview(type) {
     // Contenido Matchday
     const teamA = selectedMatchTeamA ? allTeams[selectedMatchTeamA] : null;
     const teamB = selectedMatchTeamB ? allTeams[selectedMatchTeamB] : null;
+    const isBW = document.getElementById('polaroidShieldBWToggle')?.checked;
+    const msg = document.getElementById('polaroidMessage')?.value;
+
     const stage = (document.getElementById('matchStage') || {}).value || 'PARTIDO';
     const date = (document.getElementById('matchDate') || {}).value || '';
     const pad = Math.round(width * 0.04);
     const sSz = Math.round(polaroidH * 0.60);
     const sY = photoH + (polaroidH - sSz) / 2;
 
-    if (teamA) { try { tCtx.drawImage(await loadImg(teamA.shield || teamA.shieldWhite), pad, sY, sSz, sSz); } catch(e){} }
+    if (teamA) { 
+        try { 
+            const sImg = await loadImg(teamA.shieldWhite || teamA.shield);
+            if (isBW) tCtx.filter = 'grayscale(1) invert(1)';
+            tCtx.drawImage(sImg, pad, sY, sSz, sSz);
+            tCtx.filter = 'none';
+        } catch(e){} 
+    }
     if (teamA && teamB) {
-        tCtx.fillStyle = "#aaa";
+        tCtx.fillStyle = isBW ? "#444" : "#aaa";
         tCtx.font = `700 ${Math.round(polaroidH * 0.14)}px Outfit`;
         tCtx.textAlign = "center";
         tCtx.fillText("VS", pad + sSz + Math.round(width * 0.04), photoH + polaroidH/2 + 5);
     }
-    if (teamB) { try { tCtx.drawImage(await loadImg(teamB.shield || teamB.shieldWhite), pad + sSz + Math.round(width * 0.1), sY, sSz, sSz); } catch(e){} }
+    if (teamB) { 
+        try { 
+            const sImg = await loadImg(teamB.shieldWhite || teamB.shield);
+            if (isBW) tCtx.filter = 'grayscale(1) invert(1)';
+            tCtx.drawImage(sImg, pad + sSz + Math.round(width * 0.1), sY, sSz, sSz);
+            tCtx.filter = 'none';
+        } catch(e){} 
+    }
 
     const textX = width - pad;
     const midY = photoH + polaroidH / 2;
@@ -2254,6 +2286,17 @@ async function updateArtePreview(type) {
     tCtx.fillStyle = "#666";
     tCtx.font = `400 ${Math.round(polaroidH * 0.14)}px Outfit`;
     tCtx.fillText(date, textX, midY + (polaroidH*0.09));
+
+    // Mensaje Manuscrito
+    if (msg) {
+        tCtx.save();
+        tCtx.textAlign = "center";
+        tCtx.fillStyle = "#222";
+        tCtx.font = `${Math.round(polaroidH * 0.35)}px Caveat`;
+        // Colocar centrado en la parte inferior si hay espacio
+        tCtx.fillText(msg, width / 2, photoH + polaroidH - (polaroidH * 0.1));
+        tCtx.restore();
+    }
 
     addPaniniBorder(tCtx, width, height);
 
@@ -2313,13 +2356,12 @@ function setupArteEvents() {
 
         const endMove = () => state.isDragging = false;
 
-        canvas.onmousedown = startMove;
-        window.onmousemove = move;
-        window.onmouseup = endMove;
-
-        canvas.ontouchstart = startMove;
-        canvas.ontouchmove = move;
-        canvas.ontouchend = endMove;
+        canvas.addEventListener('mousedown', startMove);
+        canvas.addEventListener('touchstart', startMove);
+        window.addEventListener('mousemove', move);
+        window.addEventListener('touchmove', move, { passive: false });
+        window.addEventListener('mouseup', endMove);
+        window.addEventListener('touchend', endMove);
     });
 }
 

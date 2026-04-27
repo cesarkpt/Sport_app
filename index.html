@@ -6,7 +6,7 @@
     <title>Sports Hub - Pro Card Generator</title>
     <link rel="stylesheet" href="style.css?v=1.4.2">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Oswald:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Oswald:wght@700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
     <!-- Librerías de IA -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
@@ -22,7 +22,7 @@
     <div class="app-container">
         <header>
             <div class="logo">
-                <img src="logo.png" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
+                <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
                 <button class="update-btn" onclick="toggleUpdates()">v1.4.2</button>
@@ -344,7 +344,7 @@
                         <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
                             <div class="input-group">
                                 <label style="font-size: 0.65rem; opacity: 0.8; margin-bottom: 5px; display: block;">ESCALA DEL GRUPO</label>
-                                <input type="range" id="postalScale" min="0.5" max="1.5" step="0.05" value="1" oninput="generateMatchPostals()" style="width: 100%; accent-color: var(--primary);">
+                                <input type="range" id="postalScale" min="0.1" max="1.5" step="0.05" value="1" oninput="generateMatchPostals()" style="width: 100%; accent-color: var(--primary);">
                             </div>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                                 <div class="input-group">
@@ -427,21 +427,35 @@
                 </div> <!-- /carouselTab -->
 
                 <div id="arteTab" class="tab-content hidden">
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 20px; border: 1px solid var(--glass-border); margin-bottom: 20px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 0.6rem; opacity: 0.7;">GIRO POLAROID</span>
+                                <label class="switch" style="transform: scale(0.7);">
+                                    <input type="checkbox" id="polaroidTiltToggle" checked onchange="updateArtePreview('Sq'); updateArtePreview('Ver');">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 0.6rem; opacity: 0.7;">ESCUDOS NEGROS</span>
+                                <label class="switch" style="transform: scale(0.7);">
+                                    <input type="checkbox" id="polaroidShieldBWToggle" onchange="updateArtePreview('Sq'); updateArtePreview('Ver');">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label style="font-size: 0.65rem; opacity: 0.8; margin-bottom: 5px; display: block;">MENSAJE MANUSCRITO (OPCIONAL)</label>
+                            <input type="text" id="polaroidMessage" placeholder="Escribe un mensaje aquí..." oninput="updateArtePreview('Sq'); updateArtePreview('Ver');" style="width: 100%; background: #000; border: 1px solid #333; color: white; padding: 12px; font-size: 0.9rem; border-radius: 10px; font-family: 'Caveat', cursive;">
+                        </div>
+                    </div>
+
                     <div class="result-grid" style="display: flex; flex-direction: column; gap: 20px;">
                         
                         <!-- Editor Cuadrado -->
                         <div class="result-card">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                <h3 style="font-size: 0.8rem; color: var(--secondary); margin: 0;">POLAROID 1:1</h3>
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span style="font-size: 0.6rem; opacity: 0.6;">GIRO</span>
-                                    <label class="switch" style="transform: scale(0.7);">
-                                        <input type="checkbox" id="polaroidTiltToggle" checked onchange="updateArtePreview('Sq'); updateArtePreview('Ver');">
-                                        <span class="slider round"></span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div id="arteContainerSq" class="carousel-container" style="height: 300px; background: #111; overflow: hidden; position: relative; border-radius: 15px; margin-bottom: 15px;">
+                            <h3 style="font-size: 0.8rem; color: var(--secondary); margin-bottom: 15px;">POLAROID CUADRADA (1:1)</h3>
+                            <div id="arteContainerSq" class="carousel-container" style="height: 450px; background: #000; overflow: hidden; position: relative; border-radius: 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1);">
                                 <canvas id="arteCanvasSquare" style="width: 100%; height: 100%; object-fit: contain; cursor: move;"></canvas>
                             </div>
                             <div class="zoom-control" style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
@@ -450,13 +464,13 @@
                                 <label style="font-size: 0.55rem; opacity: 0.7;">ROT</label>
                                 <input type="range" id="arteRotateSq" min="-30" max="30" step="1" value="0" style="flex: 1;" oninput="updateArtePreview('Sq')">
                             </div>
-                            <button class="btn-secondary" onclick="downloadImage('arteCanvasSquare', 'arte_1x1')" style="width: 100%; font-size: 0.7rem;">DESCARGAR 1:1</button>
+                            <button class="btn-secondary" onclick="downloadImage('arteCanvasSquare', 'polaroid_1x1')" style="width: 100%; font-size: 0.7rem;">DESCARGAR 1:1</button>
                         </div>
 
                         <!-- Editor Story -->
                         <div class="result-card">
-                            <h3 style="font-size: 0.8rem; color: var(--secondary);">POLAROID STORY</h3>
-                            <div id="arteContainerVer" class="carousel-container" style="height: 400px; background: #111; overflow: hidden; position: relative; border-radius: 15px; margin-bottom: 15px;">
+                            <h3 style="font-size: 0.8rem; color: var(--secondary); margin-bottom: 15px;">POLAROID STORY (9:16)</h3>
+                            <div id="arteContainerVer" class="carousel-container" style="height: 550px; background: #000; overflow: hidden; position: relative; border-radius: 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1);">
                                 <canvas id="arteCanvasVertical" style="width: 100%; height: 100%; object-fit: contain; cursor: move;"></canvas>
                             </div>
                             <div class="zoom-control" style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
@@ -465,7 +479,7 @@
                                 <label style="font-size: 0.55rem; opacity: 0.7;">ROT</label>
                                 <input type="range" id="arteRotateVer" min="-30" max="30" step="1" value="0" style="flex: 1;" oninput="updateArtePreview('Ver')">
                             </div>
-                            <button class="btn-secondary" onclick="downloadImage('arteCanvasVertical', 'arte_vertical')" style="width: 100%; font-size: 0.7rem;">DESCARGAR STORY</button>
+                            <button class="btn-secondary" onclick="downloadImage('arteCanvasVertical', 'polaroid_vertical')" style="width: 100%; font-size: 0.7rem;">DESCARGAR STORY</button>
                         </div>
 
                     </div>
