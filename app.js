@@ -882,7 +882,7 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
 
     // 2.5 LOGO DE LA APP (Arriba Izquierda - Bajado otros 15px de 75 a 90)
     try {
-        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
+        const logoImg = await loadImg("logo.png");
         drawImageProp(ctxOut, logoImg, 100, 90, 300, 140, 0, 0);
     } catch (e) { }
 
@@ -991,7 +991,7 @@ async function drawCarnetOverlay(ctx, player) {
 
     // 1. MI LOGO EN EL CARNET (Arriba Izquierda - Más grande)
     try {
-        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
+        const logoImg = await loadImg("logo.png");
         drawImageProp(ctx, logoImg, 15, 20, 180, 90, 0, 0);
     } catch (e) { }
 
@@ -1471,8 +1471,8 @@ async function confirmCarouselFraming() {
 
     // Logo en Slide 1
     try {
-        const logo = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
-        drawImageProp(ctx1, logo, 80, 80, 300, 140);
+        const logoImg = await loadImg("logo.png");
+        drawImageProp(ctx1, logoImg, 80, 80, 300, 140);
     } catch (e) {}
 
     // Info partido en Slide 2
@@ -2105,9 +2105,9 @@ async function generateMatchPostals() {
 
             // E. Logo
             try {
-                const logo = await loadImg("https://lh3.googleusercontent.com/d/1DBo2Nc5Ji0CZLXBzONl06AWJnmyI60X_?t=0");
+                const logoImg = await loadImg("logo.png");
                 ctx.globalAlpha = 0.6;
-                drawImageProp(ctx, logo, 60, 60, 250, 100, 0, 0); 
+                drawImageProp(ctx, logoImg, 60, 60, 250, 100, 0, 0); 
                 ctx.globalAlpha = 1.0;
             } catch (e) {}
 
