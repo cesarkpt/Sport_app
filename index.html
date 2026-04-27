@@ -270,6 +270,29 @@
             </section>
 
             <section class="result-section hidden" id="resultArea">
+
+                <!-- Panel de Acciones (aparece tras procesar) -->
+                <div id="actionPanel" class="hidden" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 18px 20px; margin-bottom: 20px;">
+                    <p style="font-size: 0.6rem; opacity: 0.5; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px;">¿Qué deseas generar?</p>
+                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
+                        <button id="btnGenTarjeta" class="btn-primary" onclick="runGenTarjetaHD()" style="font-size: 0.65rem; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 14px;">
+                            <span style="font-size: 1.4rem;">🃏</span>TARJETA HD
+                        </button>
+                        <button id="btnGenCarnet" class="btn-primary" onclick="runGenCarnet()" style="font-size: 0.65rem; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 14px;">
+                            <span style="font-size: 1.4rem;">🪪</span>CARNET
+                        </button>
+                        <button id="btnGenPostales" class="btn-primary" onclick="runGenPostales()" style="font-size: 0.65rem; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 14px;">
+                            <span style="font-size: 1.4rem;">📸</span>POSTALES
+                        </button>
+                        <button id="btnGenArte" class="btn-primary" onclick="runGenArte()" style="font-size: 0.65rem; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 14px;">
+                            <span style="font-size: 1.4rem;">🎨</span>ARTE
+                        </button>
+                        <button id="btnGenCarrusel" class="btn-secondary" onclick="runGenCarrusel()" style="font-size: 0.65rem; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 14px;">
+                            <span style="font-size: 1.4rem;">🎠</span>CARRUSEL
+                        </button>
+                    </div>
+                </div>
+
                 <div class="result-nav">
                     <button class="nav-tab active" onclick="showResultTab('previas')">PREVIAS</button>
                     <button class="nav-tab" onclick="showResultTab('postales')">POSTALES</button>

@@ -32,8 +32,11 @@ if (!activeTeamId && Object.keys(allTeams).length > 0) {
 }
 let editingTeamId = null;
 let currentPlayerData = null; // Guardar datos para subir a Drive al descargar
-let lastProcessedPlayerImg = null; // Guardar para generar postales después
+let lastProcessedPlayerImg = null;
 let lastProcessedCropHD = null;
+let lastProcessedCrop = null;
+let lastShouldRemoveBg = false;
+let lastPlayerData = null;
 
 function toggleTeamManager() {
     const tm = document.getElementById('teamManager');
@@ -511,40 +514,88 @@ async function processPlayerPhoto(processingImg, originalImg) {
         // --- PAUSA PARA CORRECCIÓN MANUAL Y ENCUADRE ---
         const finalData = await waitForManualCorrection(playerData, detectedNumber, finalPlayerImg);
 
-        // 3. Composición de Layout
-        updateStep(3, "Creando arte HD...");
+        // 3. Guardar estado global
         lastProcessedPlayerImg = finalPlayerImg;
         lastProcessedCropHD = finalData.cropHD;
-        
-        // Auto-pasar al Carrusel y Arte
+        lastProcessedCrop = finalData.crop;
+        lastShouldRemoveBg = shouldRemoveBg;
+        lastPlayerData = finalData.data;
+        currentPlayerData = finalData.data;
+
+        // Preparar carrusel en segundo plano (sin generar canvas aún)
         initCarouselWithPhoto(finalPlayerImg);
-        generateArteLayouts(finalPlayerImg, finalData.data, finalData.cropHD);
 
-        await generateLayouts(finalPlayerImg, finalData.data, shouldRemoveBg, finalData.crop, finalData.cropHD);
+        updateStep(3, "¡Listo! Elige qué generar.");
 
-        // --- 4. Guardado en Drive (MOVIDO AL BOTÓN DE DESCARGA) ---
-        currentPlayerData = finalData.data; 
-        updateStep(3, "Listo para descargar");
-
-        // 5. Mostrar Resultados
+        // 4. Mostrar panel de acciones
         setTimeout(() => {
             elements.processingArea.classList.add('hidden');
             elements.resultArea.classList.remove('hidden');
-        }, 500);
+            document.getElementById('actionPanel').classList.remove('hidden');
+            showResultTab('previas');
+        }, 400);
 
     } catch (error) {
         console.error("Error en procesamiento:", error);
         alert("Ocurrió un error al analizar la foto. Intentaremos continuar manualmente.");
         const fallbackData = { name: "ERROR IA", team: "DESCONOCIDO", number: "??", position: "DEL", teamCode: "DFT", color: "#777", color2: "#777" };
         const corrected = await waitForManualCorrection(fallbackData, "??", originalImg);
-        await generateLayouts(originalImg, corrected.data, false, corrected.crop, corrected.cropHD);
-
-        // También guardar en Drive en modo manual/emergencia
-        await saveToDrive(elements.outputCanvas.toDataURL('image/png'), corrected.data);
-
+        lastProcessedPlayerImg = originalImg;
+        lastProcessedCropHD = corrected.cropHD;
+        lastProcessedCrop = corrected.crop;
+        lastShouldRemoveBg = false;
+        lastPlayerData = corrected.data;
+        currentPlayerData = corrected.data;
+        initCarouselWithPhoto(originalImg);
         elements.processingArea.classList.add('hidden');
         elements.resultArea.classList.remove('hidden');
+        document.getElementById('actionPanel').classList.remove('hidden');
+        showResultTab('previas');
     }
+}
+
+// --- GENERADORES INDIVIDUALES POR FORMATO ---
+
+async function runGenTarjetaHD() {
+    if (!lastProcessedPlayerImg) return;
+    const btn = document.getElementById('btnGenTarjeta');
+    if (btn) { btn.innerHTML = '⏳ Generando...'; btn.disabled = true; }
+    await generateLayouts(lastProcessedPlayerImg, lastPlayerData, lastShouldRemoveBg, lastProcessedCrop, lastProcessedCropHD);
+    showResultTab('previas');
+    if (btn) { btn.innerHTML = '🃏 TARJETA HD'; btn.disabled = false; }
+}
+
+async function runGenCarnet() {
+    if (!lastProcessedPlayerImg) return;
+    const btn = document.getElementById('btnGenCarnet');
+    if (btn) { btn.innerHTML = '⏳ Generando...'; btn.disabled = true; }
+    await generateLayouts(lastProcessedPlayerImg, lastPlayerData, lastShouldRemoveBg, lastProcessedCrop, lastProcessedCropHD);
+    showResultTab('previas');
+    document.getElementById('carnetCanvas').scrollIntoView({ behavior: 'smooth' });
+    if (btn) { btn.innerHTML = '🪪 CARNET'; btn.disabled = false; }
+}
+
+async function runGenPostales() {
+    if (!lastProcessedPlayerImg) return;
+    const btn = document.getElementById('btnGenPostales');
+    if (btn) { btn.innerHTML = '⏳ Generando...'; btn.disabled = true; }
+    await generateMatchPostals();
+    showResultTab('postales');
+    if (btn) { btn.innerHTML = '📸 POSTALES'; btn.disabled = false; }
+}
+
+async function runGenArte() {
+    if (!lastProcessedPlayerImg) return;
+    const btn = document.getElementById('btnGenArte');
+    if (btn) { btn.innerHTML = '⏳ Generando...'; btn.disabled = true; }
+    await generateArteLayouts(lastProcessedPlayerImg, lastPlayerData, lastProcessedCropHD);
+    showResultTab('arte');
+    if (btn) { btn.innerHTML = '🎨 ARTE'; btn.disabled = false; }
+}
+
+function runGenCarrusel() {
+    document.getElementById('resultArea').classList.remove('hidden');
+    showResultTab('carousel');
 }
 
 async function recognizeText(img) {
@@ -775,23 +826,24 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
         ctxOut.drawImage(playerCanvas, (CONFIG.outputWidth - w) / 2, (CONFIG.outputHeight - h) / 2, w, h);
     }
 
-    // Jugador (ESCALADO AL ANCHO DE LA BARRA TICKER: 1720px)
+    // Jugador — escalar para cubrir el alto del canvas, centrado horizontalmente
     if (manualCropHD) {
-        const targetW = 1720;
-        const scale = targetW / manualCropHD.w;
-        const finalW = targetW;
-        const finalH = manualCropHD.h * scale;
+        // Escalar el recorte para que ocupe desde el logo (y=90) hasta la barra
+        const finalY = 90;
+        const usableH = CONFIG.outputHeight - 180 - finalY; // Altura libre desde el logo
+        const scale = usableH / manualCropHD.h;
+        const finalW = manualCropHD.w * scale;
+        const finalH = usableH;
+        const finalX = (CONFIG.outputWidth - finalW) / 2;
 
         ctxOut.save();
         if (shouldRemoveBg) {
             ctxOut.shadowColor = "rgba(0,0,0,0.6)";
             ctxOut.shadowBlur = 40;
         }
-        // Dibujar alineado con la parte superior del logo (Y=90)
-        const finalY = 90;
         ctxOut.drawImage(playerCanvas,
             manualCropHD.x, manualCropHD.y, manualCropHD.w, manualCropHD.h,
-            (CONFIG.outputWidth - finalW) / 2, finalY, finalW, finalH
+            finalX, finalY, finalW, finalH
         );
         ctxOut.restore();
     } else if (shouldRemoveBg) {
