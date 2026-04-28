@@ -34,7 +34,7 @@
                 <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()">v1.4.6</button>
+                <button class="update-btn" onclick="toggleUpdates()">v1.4.8</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
             </div>
@@ -312,7 +312,20 @@
                             <div class="canvas-container main-result">
                                 <canvas id="outputCanvas"></canvas>
                             </div>
-                            <button class="btn-secondary" onclick="downloadImage('outputCanvas', 'transmision')">DESCARGAR HD</button>
+                            <div class="action-footer-controls">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <label class="switch" style="transform: scale(0.6); margin-left: -15px;">
+                                        <input type="checkbox" id="cleanPlanoToggle" onchange="generateLayouts(lastProcessedPlayerImg, lastPlayerData, lastShouldRemoveBg, lastProcessedCrop, lastProcessedCropHD)">
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span style="font-size: 0.6rem; font-weight: 900; opacity: 0.7;">LIMPIAR</span>
+                                </div>
+                                <label class="checkbox-mini">
+                                    <input type="checkbox" id="driveUploadPlano">
+                                    <span class="label-text">COPIA DRIVE</span>
+                                </label>
+                                <button class="btn-secondary" onclick="downloadImage('outputCanvas', 'transmision')">DESCARGAR HD</button>
+                            </div>
                         </div>
 
                         <div class="result-card mini">
@@ -320,7 +333,20 @@
                             <div class="canvas-container carnet-result">
                                 <canvas id="carnetCanvas"></canvas>
                             </div>
-                            <button class="btn-secondary" onclick="downloadImage('carnetCanvas', 'carnet')">DESCARGAR CARNET</button>
+                            <div class="action-footer-controls">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <label class="switch" style="transform: scale(0.6); margin-left: -15px;">
+                                        <input type="checkbox" id="cleanCarnetToggle" onchange="generateLayouts(lastProcessedPlayerImg, lastPlayerData, lastShouldRemoveBg, lastProcessedCrop, lastProcessedCropHD)">
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span style="font-size: 0.6rem; font-weight: 900; opacity: 0.7;">LIMPIAR</span>
+                                </div>
+                                <label class="checkbox-mini">
+                                    <input type="checkbox" id="driveUploadCarnet">
+                                    <span class="label-text">COPIA DRIVE</span>
+                                </label>
+                                <button class="btn-secondary" onclick="downloadImage('carnetCanvas', 'carnet')">DESCARGAR CARNET</button>
+                            </div>
                         </div>
                     </div>
                 </div>

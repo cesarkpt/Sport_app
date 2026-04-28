@@ -991,7 +991,9 @@ async function drawCarnetOverlay(ctx, player) {
     const h = CONFIG.carnetHeight;
     const w = CONFIG.carnetWidth;
 
-    // 1. MI LOGO EN EL CARNET (Arriba Izquierda - Más grande)
+    const isClean = document.getElementById('cleanCarnetToggle')?.checked;
+
+    // 1. MI LOGO EN EL CARNET
     try {
         const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
         drawImageProp(ctx, logoImg, 15, 20, 180, 90, 0, 0);
@@ -1004,7 +1006,7 @@ async function drawCarnetOverlay(ctx, player) {
         const stage = document.getElementById('matchStage').value;
         const date = document.getElementById('matchDate').value || "";
 
-        const ms = 60; // Aumentado de 40 a 60
+        const ms = 60;
         const totalW = (ms * 2) + 15;
         const startX = w - totalW - 25;
         const my = 20;
@@ -1019,13 +1021,14 @@ async function drawCarnetOverlay(ctx, player) {
         ctx.fillStyle = "rgba(255,255,255,0.9)";
         ctx.textAlign = "center";
         const centerX = startX + totalW / 2;
-        ctx.font = "900 18px Outfit"; // Aumentado de 12 a 18
+        ctx.font = "900 18px Outfit";
         ctx.fillText(stage.toUpperCase(), centerX, my + ms + 25);
-        ctx.font = "400 14px Outfit"; // Aumentado de 10 a 14
+        ctx.font = "400 14px Outfit";
         ctx.fillText(date, centerX, my + ms + 45);
     }
 
-    // 3. (ELIMINADO NÚMERO GIGANTE)
+    // SI ESTÁ ACTIVADO 'LIMPIAR', SALIR AQUÍ (Solo Logo y Match Day)
+    if (isClean) return;
 
     // Degradado inferior
     const grd = ctx.createLinearGradient(0, h - 350, 0, h);
@@ -1145,6 +1148,9 @@ async function drawBackground(ctx, color, color2) {
 }
 
 async function drawSportsTicker(ctx, player) {
+    const isClean = document.getElementById('cleanPlanoToggle')?.checked;
+    if (isClean) return;
+
     const bY = 1080 - 180;
 
     // 1. Fondo Glassmorphism
@@ -1284,8 +1290,11 @@ function downloadImage(canvasId, name) {
     link.href = base64;
     link.click();
 
-    // SUBIR A DRIVE AL DESCARGAR
-    if (currentPlayerData) {
+    // SUBIR A DRIVE AL DESCARGAR (Solo si el checkbox está activo)
+    const shouldUpload = document.getElementById('driveUploadPlano')?.checked || 
+                         document.getElementById('driveUploadCarnet')?.checked;
+                         
+    if (shouldUpload && currentPlayerData) {
         console.log("Subiendo copia a Drive por solicitud de descarga...");
         saveToDrive(base64, currentPlayerData);
     }
