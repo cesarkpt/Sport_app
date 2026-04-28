@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v2.9.1 - UPDATE OK");
+console.log("Sports Hub Pro v2.9.2 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -3314,6 +3314,12 @@ function drawRoundedRect(ctx, x, y, width, height, radius, fill = true, stroke =
 }
 
 // --- MÓDULO POLAROID (ARTE) ---
+async function generateArteLayouts(img, data, cropHD) {
+    // Solo disparamos la actualización de las previas
+    updateArtePreview('Sq');
+    updateArtePreview('Ver');
+}
+
 async function updateArtePreview(type) {
     const canvas = document.getElementById(type === 'Sq' ? 'arteCanvasSquare' : 'arteCanvasVertical');
     if (!canvas || !lastProcessedPlayerImg) return;
@@ -3329,79 +3335,116 @@ async function updateArtePreview(type) {
     const message = document.getElementById('polaroidMessage').value;
     const shieldColor = document.getElementById('polaroidShieldColor').value;
 
-    // Fondo
-    ctx.fillStyle = "#000";
+    // 1. FONDO (Estadio con degradado)
+    ctx.fillStyle = "#050505";
+    ctx.fillRect(0, 0, W, H);
+    
+    // Intentar cargar fondo de estadio (el mismo del álbum o uno similar)
+    try {
+        const bgUrl = localStorage.getItem('album_bg_url') || 'https://lh3.googleusercontent.com/d/1XfK3V-5V3Z4Y6X7U8i9oP_Q_R_S_T_U_V'; 
+        const bgImg = await loadImg(bgUrl);
+        ctx.save();
+        ctx.globalAlpha = 0.4; // Oscurecer el estadio
+        drawImageProp(ctx, bgImg, 0, 0, W, H);
+        ctx.restore();
+    } catch(e) {}
+
+    // Degradados suaves (Vignette)
+    const grdV = ctx.createRadialGradient(W/2, H/2, W/4, W/2, H/2, W);
+    grdV.addColorStop(0, "transparent");
+    grdV.addColorStop(1, "rgba(0,0,0,0.8)");
+    ctx.fillStyle = grdV;
     ctx.fillRect(0, 0, W, H);
 
-    // Imagen Jugador (con el recorte HD si existe)
-    ctx.save();
-    const targetImg = lastProcessedPlayerImg;
-    const drawW = W * zoom;
-    const drawH = (targetImg.height * (drawW / targetImg.width));
-    
-    ctx.translate(W/2, H/2);
-    ctx.rotate(rotate * Math.PI / 180);
-    ctx.drawImage(targetImg, -drawW/2, -drawH/2, drawW, drawH);
-    ctx.restore();
+    // 2. LOGO (Arriba Izquierda)
+    try {
+        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
+        ctx.save();
+        ctx.globalAlpha = 0.9;
+        drawImageProp(ctx, logoImg, 50, 50, 240, 100);
+        ctx.restore();
+    } catch(e) {}
 
-    // Marco Polaroid
+    // 3. INFO MATCH DAY (Top Right)
+    if (selectedMatchTeamA && selectedMatchTeamB) {
+        const teamA = allTeams[selectedMatchTeamA];
+        const teamB = allTeams[selectedMatchTeamB];
+        const stage = (document.getElementById('matchStage') || {}).value || '';
+        const date = (document.getElementById('matchDate') || {}).value || '';
+        const sSize = 80;
+        const mX = W - 280;
+        const mY = 50;
+
+        try {
+            const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
+            drawImageProp(ctx, imgA, mX, mY, sSize, sSize);
+            const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
+            drawImageProp(ctx, imgB, mX + sSize + 20, mY, sSize, sSize);
+        } catch(e) {}
+
+        ctx.save();
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
+        ctx.font = "900 24px Outfit";
+        ctx.fillText(stage.toUpperCase(), mX + sSize + 10, mY + sSize + 30);
+        ctx.font = "400 18px Outfit";
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
+        ctx.fillText(date, mX + sSize + 10, mY + sSize + 55);
+        ctx.restore();
+    }
+
+    // 4. MARCO POLAROID
     const pW = W * 0.85;
     const pH = type === 'Sq' ? H * 0.85 : H * 0.6;
     const pX = (W - pW) / 2;
-    const pY = (H - pH) / 2.5;
+    const pY = (H - pH) / 2.2;
 
     ctx.save();
     if (hasTilt) {
         ctx.translate(W/2, H/2);
-        ctx.rotate(-2 * Math.PI / 180);
+        ctx.rotate(-2.5 * Math.PI / 180);
         ctx.translate(-W/2, -H/2);
     }
 
-    // Sombra
-    ctx.shadowColor = "rgba(0,0,0,0.8)";
-    ctx.shadowBlur = 40;
+    // Sombra suave (No agresiva)
+    ctx.shadowColor = "rgba(0,0,0,0.5)";
+    ctx.shadowBlur = 30;
+    ctx.shadowOffsetY = 15;
+    
+    // El Marco Blanco
     ctx.fillStyle = "white";
     ctx.fillRect(pX, pY, pW, pH);
-    
-    // Hueco Imagen (Negro)
+    ctx.shadowBlur = 0; // Desactivar sombra para el resto
+
+    // Hueco de la imagen
     const margin = pW * 0.05;
     const imgAreaW = pW - (margin * 2);
     const imgAreaH = pH - (margin * 3.5);
-    ctx.fillStyle = "#050505";
+    ctx.fillStyle = "#080808";
     ctx.fillRect(pX + margin, pY + margin, imgAreaW, imgAreaH);
     
-    // Dibujar Jugador dentro del hueco (Clipping)
+    // Dibujar Jugador
     ctx.save();
     ctx.beginPath();
     ctx.rect(pX + margin, pY + margin, imgAreaW, imgAreaH);
     ctx.clip();
     
-    // Re-dibujar imagen para que encaje en el marco polaroid
-    const pZoom = zoom * 1.2;
+    const targetImg = lastProcessedPlayerImg;
+    const pZoom = zoom * 1.1;
     const pDrawW = imgAreaW * pZoom;
     const pDrawH = (targetImg.height * (pDrawW / targetImg.width));
+    
     ctx.translate(pX + margin + imgAreaW/2, pY + margin + imgAreaH/2);
     ctx.rotate(rotate * Math.PI / 180);
     ctx.drawImage(targetImg, -pDrawW/2, -pDrawH/2, pDrawW, pDrawH);
     ctx.restore();
 
-    // Branding en la parte blanca inferior
-    const footerY = pY + margin + imgAreaH + 20;
-    
-    // Logo (Arriba Izquierda del Canvas General)
-    try {
-        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
-        ctx.globalAlpha = 0.8;
-        drawImageProp(ctx, logoImg, 50, 50, 250, 100);
-        ctx.globalAlpha = 1.0;
-    } catch(e) {}
-
-    // Escudo del Equipo
+    // 5. BRANDING INFERIOR (En el marco blanco)
     const activeTeam = lastPlayerData ? allTeams[lastPlayerData.teamId || selectedMatchTeamA] : null;
     if (activeTeam && activeTeam.shield) {
         try {
             const sImg = await loadImg(shieldColor === 'white' ? (activeTeam.shieldWhite || activeTeam.shield) : activeTeam.shield);
-            const sSize = 100;
+            const sSize = 90;
             ctx.save();
             if (shieldColor === 'black') ctx.filter = "brightness(0)";
             drawImageProp(ctx, sImg, pX + margin, pY + pH - margin - sSize + 10, sSize, sSize);
@@ -3410,16 +3453,12 @@ async function updateArtePreview(type) {
     }
 
     // Texto Manuscrito
-    if (message) {
-        ctx.fillStyle = "#222";
-        ctx.font = "700 60px 'Caveat', cursive";
+    if (message || lastPlayerData) {
+        const txt = message || lastPlayerData.name.toUpperCase();
+        ctx.fillStyle = "#1a1a1a";
+        ctx.font = "700 55px 'Caveat', cursive";
         ctx.textAlign = "right";
-        ctx.fillText(message, pX + pW - margin, pY + pH - margin - 20);
-    } else if (lastPlayerData) {
-        ctx.fillStyle = "#333";
-        ctx.font = "700 45px 'Caveat', cursive";
-        ctx.textAlign = "right";
-        ctx.fillText(lastPlayerData.name.toUpperCase(), pX + pW - margin, pY + pH - margin - 20);
+        ctx.fillText(txt, pX + pW - margin, pY + pH - margin - 15);
     }
 
     ctx.restore();
