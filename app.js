@@ -2365,9 +2365,7 @@ async function updateArtePreview(type) {
     canvas.width = finalW;
     canvas.height = finalH;
 
-    const pTeam = Object.values(allTeams).find(t => t.name === state.data.team) || {};
-    const c1 = pTeam.color1 || state.data.color || "#00ff88";
-    const c2 = pTeam.color2 || state.data.color2 || "#00d4ff";
+    // Los colores c1 y c2 ya fueron calculados arriba, los reutilizamos para el degradado exterior.
     
     if (state.woodImg) {
         drawImageProp(ctx, state.woodImg, 0, 0, finalW, finalH);
