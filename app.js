@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v2.9.4 - UPDATE OK");
+console.log("Sports Hub Pro v2.9.5 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -3056,35 +3056,32 @@ async function generateAlbum() {
     const c1 = team.color1 || '#00ff88';
     const c2 = team.color2 || c1;
     
-    // COLORIZACIÓN ENCAPSULADA (v1.7.8 - Ultra Transparente)
-    ctx.save();
-    ctx.globalCompositeOperation = 'soft-light';
-    ctx.globalAlpha = 0.3; // Mucho más bajo para asegurar que el estadio se vea
-
-    // COLORIZACIÓN UNIDA (v2.4.0 - Dinámica)
+    // COLORIZACIÓN ENCAPSULADA
     ctx.save();
     ctx.globalCompositeOperation = 'soft-light';
     ctx.globalAlpha = 0.3;
 
-    // Overlay Página Izquierda
-    const grdL = ctx.createLinearGradient(albumOverlays[0].p1.x, albumOverlays[0].p1.y, albumOverlays[0].p2.x, albumOverlays[0].p2.y);
-    grdL.addColorStop(0, c1);
-    grdL.addColorStop(1, c2);
+    // Overlay Página Izquierda (C2 -> C1, Diagonal 45°)
+    const ovL = albumOverlays[0];
+    const grdL = ctx.createLinearGradient(ovL.p1.x, ovL.p1.y, ovL.p3.x, ovL.p3.y);
+    grdL.addColorStop(0, c2);
+    grdL.addColorStop(1, c1);
     ctx.fillStyle = grdL;
-    drawAlbumPolygon(ctx, albumOverlays[0]);
-
-    // Overlay Página Derecha
-    const grdR = ctx.createLinearGradient(albumOverlays[1].p1.x, albumOverlays[1].p1.y, albumOverlays[1].p2.x, albumOverlays[1].p2.y);
-    grdR.addColorStop(0, c2);
-    grdR.addColorStop(1, c1);
-    ctx.fillStyle = grdR;
-    drawAlbumPolygon(ctx, albumOverlays[1]);
+    drawAlbumPolygon(ctx, ovL);
     
-    // Refuerzo de color suave unido
+    // Overlay Página Derecha (C1 -> C2, Diagonal 45°)
+    const ovR = albumOverlays[1];
+    const grdR = ctx.createLinearGradient(ovR.p1.x, ovR.p1.y, ovR.p3.x, ovR.p3.y);
+    grdR.addColorStop(0, c1);
+    grdR.addColorStop(1, c2);
+    ctx.fillStyle = grdR;
+    drawAlbumPolygon(ctx, ovR);
+    
+    // Refuerzo de color sutil (Modo 'color' al 12%)
     ctx.globalCompositeOperation = 'color';
-    ctx.globalAlpha = 0.15;
-    drawAlbumPolygon(ctx, albumOverlays[0]);
-    drawAlbumPolygon(ctx, albumOverlays[1]);
+    ctx.globalAlpha = 0.12;
+    drawAlbumPolygon(ctx, ovL);
+    drawAlbumPolygon(ctx, ovR);
 
     // Dibujar puntos de control de Overlays si el diseño está libre y activo
     if (!albumLocked && document.getElementById('editOverlays')?.checked) {
