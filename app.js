@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v1.7.7 - Carga Exitosa");
+console.log("Sports Hub Pro v1.7.9 - Carga Exitosa");
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
     maxProcessingSize: 800, // Tamaño máximo para procesar con IA (más rápido en móviles)
@@ -2656,9 +2656,39 @@ async function generateAlbum() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     
-    const templateURL = 'https://drive.google.com/uc?export=download&id=1fhmSEr6dh5nUP9BKIqH0Lwg3Ue8smkLL';
+    // URL optimizada para Canvas (lh3)
+    const templateURL = 'https://lh3.googleusercontent.com/d/1fhmSEr6dh5nUP9BKIqH0Lwg3Ue8smkLL';
+    
+    // Lógica de Caché Local para el fondo
     if (!albumTemplate) {
-        try { albumTemplate = await loadImg(templateURL); } catch(e) { console.warn("Fondo alternativo"); }
+        const cachedData = localStorage.getItem('album_bg_cache');
+        const cachedURL = localStorage.getItem('album_bg_url');
+        
+        if (cachedData && cachedURL === templateURL) {
+            console.log("Cargando fondo desde caché local... 🚀");
+            try {
+                albumTemplate = await loadImg(cachedData);
+            } catch(e) {
+                localStorage.removeItem('album_bg_cache');
+            }
+        }
+        
+        if (!albumTemplate) {
+            console.log("Descargando fondo por primera vez... 📥");
+            try {
+                albumTemplate = await loadImg(templateURL);
+                // Guardar en caché como JPEG comprimido para no exceder límites de localStorage
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = albumTemplate.width;
+                tempCanvas.height = albumTemplate.height;
+                tempCanvas.getContext('2d').drawImage(albumTemplate, 0, 0);
+                const base64 = tempCanvas.toDataURL('image/jpeg', 0.8);
+                localStorage.setItem('album_bg_cache', base64);
+                localStorage.setItem('album_bg_url', templateURL);
+            } catch(e) { 
+                console.warn("Fallo carga fondo:", e); 
+            }
+        }
     }
     
     const W = 2000;
@@ -2678,10 +2708,10 @@ async function generateAlbum() {
     const c1 = team.color1 || '#00ff88';
     const c2 = team.color2 || c1;
     
-    // COLORIZACIÓN ENCAPSULADA (Para no tapar el estadio)
+    // COLORIZACIÓN ENCAPSULADA (v1.7.8 - Ultra Transparente)
     ctx.save();
     ctx.globalCompositeOperation = 'soft-light';
-    ctx.globalAlpha = 0.5; // Menos opacidad para ver el fondo
+    ctx.globalAlpha = 0.3; // Mucho más bajo para asegurar que el estadio se vea
 
     // Gradiente Página Izquierda (Encapsulado en área Escudo/Team)
     const grdL = ctx.createLinearGradient(100, 80, 950, 80);
@@ -2733,11 +2763,8 @@ async function generateAlbum() {
         }
         
         ctx.save();
-        // REMOVIDO: Sombra a petición del usuario
+        // REMOVIDO: Borde blanco (sticker) y sombras a petición del usuario
         
-        // Efecto "Sticker" (Borde blanco fino)
-        ctx.fillStyle = 'white';
-        ctx.fillRect(x - 4, y - 4, w + 8, h + 8);
         ctx.beginPath();
         ctx.rect(x, y, w, h);
         ctx.clip();
