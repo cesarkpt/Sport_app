@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v2.0.0 - UPDATE OK");
+console.log("Sports Hub Pro v2.1.0 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -2793,34 +2793,60 @@ async function generateAlbum() {
     drawRoundedRect(ctx, 1030, 80, 920, 1280, 30, true, false);
     ctx.restore();
     
-    const gridStartX = 1060;
-    const gridStartY = 135;
-    const cellW = 265;
-    const cellH = 265;
+    const stickerH = 300; // Altura unificada para todos
+    const playerW = 225;  // Ratio 3:4 para jugadores
+    const teamW = 540;    // Ratio para foto de equipo
+    const shieldW = 260;  // Ratio para escudo
+    
+    const gridStartX = 1100;
+    const gridStartY = 100;
     const gapX = 35;
-    const gapY = 40;
+    const gapY = 35;
+
+    const yBottomLeft = 400; // Referencia parte más baja para Escudo/Team
 
     albumImages.forEach((img, i) => {
         if (!img) return;
         let x, y, w, h;
         
-        if (i === 0) { x = 155; y = 125; w = 200; h = 200; }
-        else if (i === 1) { x = 410; y = 125; w = 480; h = 280; }
-        else if (i === 2) {
-            x = gridStartX + (2 * (cellW + gapX));
-            y = gridStartY + (3 * (cellH + gapY));
-            w = cellW; h = cellH;
-        } else {
+        if (i === 0) { // ESCUDO
+            w = shieldW; h = stickerH;
+            x = 100;
+            y = yBottomLeft - h;
+        }
+        else if (i === 1) { // TEAM
+            w = teamW; h = stickerH;
+            x = 100 + shieldW + 30; // 30px de separación
+            y = yBottomLeft - h;
+        }
+        else if (i === 2) { // DT (Posición 12 en grilla, fila 4, col 3)
+            w = playerW; h = stickerH;
+            x = gridStartX + (2 * (playerW + gapX));
+            y = gridStartY + (3 * (h + gapY));
+        } else { // JUGADORES (11 slots)
             const idx = i - 3;
             const col = idx % 3;
             const row = Math.floor(idx / 3);
-            x = gridStartX + (col * (cellW + gapX));
-            y = gridStartY + (row * (cellH + gapY));
-            w = cellW; h = cellH;
+            x = gridStartX + (col * (playerW + gapX));
+            y = gridStartY + (row * (stickerH + gapY));
+            w = playerW; h = stickerH;
         }
         
         ctx.save();
-        // REMOVIDO: Borde blanco (sticker) y sombras a petición del usuario
+        // Dibujar Cromo con Borde Panini Individual
+        // El borde es el 2% del lado menor
+        const border = Math.min(w, h) * 0.02;
+        
+        // Sombra suave bajo el sticker
+        ctx.shadowColor = "rgba(0,0,0,0.4)";
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetY = 5;
+        
+        // Borde Blanco (Sticker)
+        ctx.fillStyle = "white";
+        ctx.fillRect(x - border, y - border, w + border * 2, h + border * 2);
+        
+        ctx.shadowColor = "transparent"; // Reset sombra para la foto
         
         ctx.beginPath();
         ctx.rect(x, y, w, h);
