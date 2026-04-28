@@ -1,4 +1,4 @@
-console.log("🚀 Sports Hub Pro v1.4.2 cargado correctamente.");
+console.log("🚀 Sports Hub Pro v1.6.8 cargado correctamente.");
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
     maxProcessingSize: 800, // Tamaño máximo para procesar con IA (más rápido en móviles)
@@ -2734,34 +2734,4 @@ async function generateAlbum() {
         const logo = await loadImg('https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0');
         drawImageProp(ctx, logo, W - 350, 50, 300, 140);
     } catch(e) {}
-}
-
-function openAlbumEditor() {
-    console.log("Abriendo Editor de Álbum...");
-    const resArea = document.getElementById('resultArea');
-    if (resArea) resArea.classList.remove('hidden');
-    
-    const albumBtn = document.querySelector('.tab-btn[onclick*="album"]');
-    showResultTab('album', albumBtn);
-    
-    const selector = document.getElementById('albumTeamSelector');
-    if (selector) {
-        selector.innerHTML = '';
-        const teams = Object.values(allTeams);
-        if (teams.length === 0) {
-            const opt = document.createElement('option');
-            opt.textContent = 'SIN EQUIPOS';
-            selector.appendChild(opt);
-        } else {
-            teams.forEach(t => {
-                const opt = document.createElement('option');
-                opt.value = t.name;
-                opt.textContent = t.name.toUpperCase();
-                if (selectedMatchTeamA === t.name) opt.selected = true;
-                selector.appendChild(opt);
-            });
-        }
-    }
-    renderAlbumSlots();
-    generateAlbum();
 }
