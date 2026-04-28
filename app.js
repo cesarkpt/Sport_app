@@ -2428,24 +2428,20 @@ async function updateArtePreview(type) {
 
     // Los colores c1 y c2 ya fueron calculados arriba, los reutilizamos para el degradado exterior.
     
+    // Fondo con Degradado y Bandera "Teñida"
+    const bgGrd = ctx.createLinearGradient(0, 0, finalW, finalH);
+    bgGrd.addColorStop(0, c1);
+    bgGrd.addColorStop(1, c2);
+    ctx.fillStyle = bgGrd;
+    ctx.fillRect(0, 0, finalW, finalH);
+
     if (state.woodImg) {
-        drawImageProp(ctx, state.woodImg, 0, 0, finalW, finalH);
-        
-        // Degradado lineal con colores del equipo encima del fondo (Opacidad reducida para ver la textura)
-        const bgGrd = ctx.createLinearGradient(0, 0, finalW, finalH);
-        bgGrd.addColorStop(0, c1);
-        bgGrd.addColorStop(1, c2);
-        ctx.fillStyle = bgGrd;
-        ctx.globalAlpha = 0.4; 
-        ctx.fillRect(0, 0, finalW, finalH);
-        ctx.globalAlpha = 1.0;
-    } else {
-        // Si falla la textura, pintar el degradado sólido
-        const bgGrd = ctx.createLinearGradient(0, 0, finalW, finalH);
-        bgGrd.addColorStop(0, c1);
-        bgGrd.addColorStop(1, c2);
-        ctx.fillStyle = bgGrd;
-        ctx.fillRect(0, 0, finalW, finalH);
+        ctx.save();
+        ctx.globalCompositeOperation = 'multiply'; // Hace que la bandera blanca tome los colores del fondo
+        ctx.globalAlpha = 0.8; // Ajuste fino para que se vea la textura sin quemar el color
+        // Estirar sin proporción (ancho y largo total)
+        ctx.drawImage(state.woodImg, 0, 0, finalW, finalH);
+        ctx.restore();
     }
 
     ctx.save();
