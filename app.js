@@ -2257,7 +2257,7 @@ async function updateArtePreview(type) {
     // Contenido inferior
     const teamA = selectedMatchTeamA ? allTeams[selectedMatchTeamA] : null;
     const teamB = selectedMatchTeamB ? allTeams[selectedMatchTeamB] : null;
-    const isBW = document.getElementById('polaroidShieldBWToggle')?.checked;
+    const shieldColorMode = document.getElementById('polaroidShieldColor')?.value || 'white';
     
     // Mensaje Manuscrito (Izquierda)
     const rawMsg = document.getElementById('polaroidMessage')?.value;
@@ -2292,11 +2292,13 @@ async function updateArtePreview(type) {
     // Dibujar Escudo A
     if (teamA) { 
         try { 
-            const sImg = await loadImg(teamA.shieldWhite || teamA.shield);
+            const baseShield = (shieldColorMode === 'color') ? teamA.shield : (teamA.shieldWhite || teamA.shield);
+            const sImg = await loadImg(baseShield);
             const sScale = Math.min(sSz / sImg.width, sSz / sImg.height);
             const sW = sImg.width * sScale;
             const sH = sImg.height * sScale;
-            if (isBW) tCtx.filter = 'grayscale(1) invert(1)';
+            if (shieldColorMode === 'black') tCtx.filter = 'brightness(0)';
+            else if (shieldColorMode === 'white' && !teamA.shieldWhite) tCtx.filter = 'brightness(0) invert(1)';
             tCtx.drawImage(sImg, nextX + (sSz - sW)/2, sY + (sSz - sH)/2, sW, sH);
             tCtx.filter = 'none';
         } catch(e){} 
@@ -2306,7 +2308,7 @@ async function updateArtePreview(type) {
     // Dibujar VS
     if (teamA && teamB) {
         nextX += spacing;
-        tCtx.fillStyle = isBW ? "#444" : "#aaa";
+        tCtx.fillStyle = (shieldColorMode === 'black') ? "#222" : "#aaa";
         tCtx.font = `700 ${Math.round(polaroidH * 0.15)}px Outfit`;
         tCtx.textAlign = "center";
         tCtx.fillText("VS", nextX + (vsW/2), sY + (sSz/2) + (polaroidH*0.05));
@@ -2316,11 +2318,13 @@ async function updateArtePreview(type) {
     // Dibujar Escudo B
     if (teamB) { 
         try { 
-            const sImg = await loadImg(teamB.shieldWhite || teamB.shield);
+            const baseShield = (shieldColorMode === 'color') ? teamB.shield : (teamB.shieldWhite || teamB.shield);
+            const sImg = await loadImg(baseShield);
             const sScale = Math.min(sSz / sImg.width, sSz / sImg.height);
             const sW = sImg.width * sScale;
             const sH = sImg.height * sScale;
-            if (isBW) tCtx.filter = 'grayscale(1) invert(1)';
+            if (shieldColorMode === 'black') tCtx.filter = 'brightness(0)';
+            else if (shieldColorMode === 'white' && !teamB.shieldWhite) tCtx.filter = 'brightness(0) invert(1)';
             tCtx.drawImage(sImg, nextX + (sSz - sW)/2, sY + (sSz - sH)/2, sW, sH);
             tCtx.filter = 'none';
         } catch(e){} 
