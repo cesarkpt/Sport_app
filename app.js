@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v2.9.6 - UPDATE OK");
+console.log("Sports Hub Pro v2.9.7 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -3360,7 +3360,7 @@ async function updateArtePreview(type) {
     const message = document.getElementById('polaroidMessage').value;
     const shieldColor = document.getElementById('polaroidShieldColor').value;
 
-    // 1. FONDO (Estadio con degradado cinemático)
+    // 1. FONDO (Estadio con el sistema de sombras de Plano TV)
     ctx.fillStyle = "#020202";
     ctx.fillRect(0, 0, W, H);
     
@@ -3373,24 +3373,8 @@ async function updateArtePreview(type) {
         ctx.restore();
     } catch(e) {}
 
-    // Viñeta Cinematográfica (Linear + Radial para evitar barras)
-    const grdTop = ctx.createLinearGradient(0, 0, 0, H * 0.4);
-    grdTop.addColorStop(0, "rgba(0,0,0,0.95)");
-    grdTop.addColorStop(1, "transparent");
-    ctx.fillStyle = grdTop;
-    ctx.fillRect(0, 0, W, H * 0.4);
-
-    const grdBot = ctx.createLinearGradient(0, H, 0, H * 0.6);
-    grdBot.addColorStop(0, "rgba(0,0,0,0.95)");
-    grdBot.addColorStop(1, "transparent");
-    ctx.fillStyle = grdBot;
-    ctx.fillRect(0, H * 0.6, W, H * 0.4);
-
-    const grdR = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W);
-    grdR.addColorStop(0, "transparent");
-    grdR.addColorStop(1, "rgba(0,0,0,0.4)");
-    ctx.fillStyle = grdR;
-    ctx.fillRect(0, 0, W, H);
+    // Aplicar Sombras Perimetrales Profesionales (Mismo sistema que Plano TV)
+    drawPerimeterShadow(ctx, W, H);
 
     // 2. MARCO POLAROID
     const pW = W * 0.9;
