@@ -2563,21 +2563,45 @@ async function downloadFullCarousel() {
     // 5. Descargar
     const teamA = allTeams[selectedMatchTeamA];
     const tCode = (teamA ? (teamA.code || teamA.name.substring(0,3)) : "XXX").toUpperCase().replace(/\s+/g, '_');
-    const finalName = `TEAM_FULL_${tCode}`;
-
-    const link = document.createElement('a');
-    link.download = `${finalName}_${Date.now()}.png`;
-    link.href = canvasFull.toDataURL('image/png');
-    link.click();
-}
-
+    // --- LÓGICA DE ÁLBUM (v1.6.6) ---
 let albumImages = new Array(14).fill(null);
 let albumTemplate = null;
+
+function openAlbumEditor() {
+    console.log("Abriendo Editor de Álbum...");
+    const resArea = document.getElementById('resultArea');
+    if (resArea) resArea.classList.remove('hidden');
+    
+    const albumBtn = document.querySelector('.tab-btn[onclick*="album"]');
+    showResultTab('album', albumBtn);
+    
+    const selector = document.getElementById('albumTeamSelector');
+    if (selector) {
+        selector.innerHTML = '';
+        const teams = Object.values(allTeams);
+        if (teams.length === 0) {
+            const opt = document.createElement('option');
+            opt.textContent = 'SIN EQUIPOS';
+            selector.appendChild(opt);
+        } else {
+            teams.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.name;
+                opt.textContent = t.name.toUpperCase();
+                if (selectedMatchTeamA === t.name) opt.selected = true;
+                selector.appendChild(opt);
+            });
+        }
+    }
+    renderAlbumSlots();
+    generateAlbum();
+}
 
 async function handleAlbumBulkUpload(input) {
     if (!input.files || input.files.length === 0) return;
     const files = Array.from(input.files).slice(0, 14);
     
+    console.log(`Cargando ${files.length} fotos para el álbum...`);
     for (let i = 0; i < files.length; i++) {
         const base64 = await imageToBase64(files[i]);
         albumImages[i] = await loadImg(base64);
@@ -2595,36 +2619,38 @@ function renderAlbumSlots() {
         const div = document.createElement('div');
         div.className = 'album-slot';
         div.dataset.index = i + 1;
+        div.style.position = 'relative';
+        
         if (img) {
             const thumb = new Image();
             thumb.src = img.src;
             div.appendChild(thumb);
         }
-    div.onclick = () => {
-        const inp = document.createElement('input');
-        inp.type = 'file';
-        inp.accept = 'image/*';
-        inp.onchange = async (e) => {
-            if (e.target.files[0]) {
-                const base64 = await imageToBase64(e.target.files[0]);
-                albumImages[i] = await loadImg(base64);
-                renderAlbumSlots();
-                generateAlbum();
-            }
+        
+        div.onclick = () => {
+            const inp = document.createElement('input');
+            inp.type = 'file';
+            inp.accept = 'image/*';
+            inp.onchange = async (e) => {
+                if (e.target.files[0]) {
+                    const base64 = await imageToBase64(e.target.files[0]);
+                    albumImages[i] = await loadImg(base64);
+                    renderAlbumSlots();
+                    generateAlbum();
+                }
+            };
+            inp.click();
         };
-        inp.click();
-    };
-    
-    // Etiqueta guía
-    const label = document.createElement('span');
-    label.style.cssText = 'position:absolute; top:0; left:0; background:rgba(0,0,0,0.7); font-size:6px; padding:1px 3px; border-radius:0 0 4px 0; pointer-events:none; color:#fff;';
-    if (i === 0) label.textContent = 'ESCUDO';
-    else if (i === 1) label.textContent = 'TEAM';
-    else label.textContent = `JUG ${i-1}`;
-    div.appendChild(label);
-    
-    grid.appendChild(div);
-});
+
+        const label = document.createElement('span');
+        label.style.cssText = 'position:absolute; top:0; left:0; background:rgba(0,0,0,0.7); font-size:7px; padding:1px 4px; color:#fff; border-radius:0 0 4px 0; pointer-events:none;';
+        if (i === 0) label.textContent = 'ESCUDO';
+        else if (i === 1) label.textContent = 'TEAM';
+        else label.textContent = `JUG ${i-1}`;
+        div.appendChild(label);
+        
+        grid.appendChild(div);
+    });
 }
 
 async function generateAlbum() {
@@ -2632,10 +2658,9 @@ async function generateAlbum() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     
-    // Plantilla (URL del usuario)
-    const templateURL = 'https://lh3.googleusercontent.com/d/1b2E1qbrONtvdYQXyHJ-c8gtImy9rJZ9n?t=0'; 
+    const templateURL = 'https://lh3.googleusercontent.com/d/1b2E1qbrONtvdYQXyHJ-c8gtImy9rJZ9n?t=0';
     if (!albumTemplate) {
-        try { albumTemplate = await loadImg(templateURL); } catch(e) { console.error('Falta plantilla album'); }
+        try { albumTemplate = await loadImg(templateURL); } catch(e) { console.warn("Usando fondo alternativo"); }
     }
     
     const W = 2000;
@@ -2643,7 +2668,6 @@ async function generateAlbum() {
     canvas.width = W;
     canvas.height = H;
     
-    // 1. Dibujar Plantilla
     if (albumTemplate) {
         ctx.drawImage(albumTemplate, 0, 0, W, H);
     } else {
@@ -2651,10 +2675,9 @@ async function generateAlbum() {
         ctx.fillRect(0, 0, W, H);
     }
     
-    // 2. Teñir con colores del equipo (Multiply)
     const albumTeamName = document.getElementById('albumTeamSelector')?.value;
     const team = Object.values(allTeams).find(t => t.name === albumTeamName) || { color1: '#00ff88', color2: '#00d4ff' };
-    const c1 = team.color1 || team.color || '#00ff88';
+    const c1 = team.color1 || '#00ff88';
     const c2 = team.color2 || c1;
     
     ctx.save();
@@ -2663,18 +2686,11 @@ async function generateAlbum() {
     grd.addColorStop(1, c2);
     ctx.fillStyle = grd;
     ctx.globalCompositeOperation = 'multiply';
-    ctx.globalAlpha = 0.5; // Un poco más traslúcido para no oscurecer tanto
+    ctx.globalAlpha = 0.5;
     ctx.fillRect(0, 0, W, H);
     ctx.restore();
     
-    // 3. Dibujar Fotos
-    // IZQUIERDA (2 Fotos)
-    const leftCoords = [
-        [60, 60, 880, 620],   // Arriba izquierda
-        [50, 930, 900, 420]   // Abajo izquierda (sobre el cuadro del estadio)
-    ];
-    
-    // DERECHA (12 Grid 3x4)
+    const leftCoords = [ [60, 60, 880, 620], [50, 930, 900, 420] ];
     const gridStartX = 1060;
     const gridStartY = 100;
     const cellW = 270;
@@ -2697,7 +2713,6 @@ async function generateAlbum() {
         }
         
         ctx.save();
-        // Sombra suave para las fotos
         ctx.shadowColor = 'rgba(0,0,0,0.5)';
         ctx.shadowBlur = 15;
         ctx.beginPath();
@@ -2707,7 +2722,6 @@ async function generateAlbum() {
         ctx.restore();
     });
     
-    // 4. Overlays (Logo, etc)
     try {
         const logo = await loadImg('https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0');
         drawImageProp(ctx, logo, W - 350, 50, 300, 140);
@@ -2715,14 +2729,13 @@ async function generateAlbum() {
 }
 
 function openAlbumEditor() {
+    console.log("Abriendo Editor de Álbum...");
     const resArea = document.getElementById('resultArea');
     if (resArea) resArea.classList.remove('hidden');
     
-    // Buscar el botón de la pestaña álbum para marcarlo como activo
     const albumBtn = document.querySelector('.tab-btn[onclick*="album"]');
     showResultTab('album', albumBtn);
     
-    // Cargar selector de equipos dinámicamente
     const selector = document.getElementById('albumTeamSelector');
     if (selector) {
         selector.innerHTML = '';
@@ -2736,7 +2749,6 @@ function openAlbumEditor() {
                 const opt = document.createElement('option');
                 opt.value = t.name;
                 opt.textContent = t.name.toUpperCase();
-                // Pre-seleccionar el equipo A del partido si existe
                 if (selectedMatchTeamA === t.name) opt.selected = true;
                 selector.appendChild(opt);
             });
