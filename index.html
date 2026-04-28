@@ -12,6 +12,15 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0a0e14">
+    <script>
+        window.onerror = function(msg, url, line, col, error) {
+            alert("JS Error:\n" + msg + "\nLine: " + line);
+            return false;
+        };
+        window.addEventListener('unhandledrejection', function(event) {
+            alert("Promise Error:\n" + event.reason);
+        });
+    </script>
 </head>
 <body>
     <script>
