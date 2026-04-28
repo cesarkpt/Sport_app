@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v1.7.1 - Carga Exitosa");
+console.log("Sports Hub Pro v1.7.3 - Carga Exitosa");
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
     maxProcessingSize: 800, // Tamaño máximo para procesar con IA (más rápido en móviles)
@@ -2582,9 +2582,19 @@ let albumTemplate = null;
 
 function openAlbumEditor() {
     console.log("Abriendo Editor de Album...");
-    const resArea = document.getElementById('resultArea');
-    if (resArea) resArea.classList.remove('hidden');
+    // 1. Ocultar seccion de subida y procesamiento
+    if (elements.uploadSection) elements.uploadSection.classList.add('hidden');
+    if (elements.processingArea) elements.processingArea.classList.add('hidden');
     
+    // 2. Mostrar area de resultados
+    const resArea = document.getElementById('resultArea');
+    if (resArea) {
+        resArea.classList.remove('hidden');
+        resArea.style.display = 'block';
+        resArea.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // 3. Activar pestaña de album
     const albumBtn = document.querySelector('.tab-btn[onclick*="album"]');
     showResultTab('album', albumBtn);
     
