@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports Hub - Pro Card Generator</title>
-    <script>console.log("Sports Hub Pro v1.7.4 - Carga Exitosa");</script>
+    <script>console.log("Sports Hub Pro v1.7.7 - Carga Exitosa");</script>
     <link rel="stylesheet" href="style.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Oswald:wght@700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
@@ -35,7 +35,7 @@
                 <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()">v1.7.4</button>
+                <button class="update-btn" onclick="toggleUpdates()">v1.7.7</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
             </div>
@@ -544,10 +544,14 @@
                             </div>
                         </div>
                         
-                        <div class="album-controls" style="margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                            <button class="btn-primary" onclick="document.getElementById('albumBulkInput').click()" style="font-size: 0.7rem;">Cargar 14 fotos 📸</button>
+                        <div class="album-controls" style="margin-bottom: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                            <button class="btn-secondary" onclick="uploadSingleAlbum(0)" style="font-size: 0.6rem; background: rgba(255,215,0,0.1);">ESCUDO 🛡️</button>
+                            <button class="btn-secondary" onclick="uploadSingleAlbum(1)" style="font-size: 0.6rem; background: rgba(0,212,255,0.1);">TEAM 👥</button>
+                            <button class="btn-secondary" onclick="uploadSingleAlbum(2)" style="font-size: 0.6rem; background: rgba(156,39,176,0.1);">DT 👔</button>
+                        </div>
+                        <div class="album-controls" style="margin-bottom: 20px;">
+                            <button class="btn-primary" onclick="document.getElementById('albumBulkInput').click()" style="font-size: 0.7rem; width: 100%;">CARGAR 12 JUGADORES 📸</button>
                             <input type="file" id="albumBulkInput" multiple accept="image/*" style="display:none" onchange="handleAlbumBulkUpload(this)">
-                            <button class="btn-secondary" onclick="generateAlbum()" style="font-size: 0.7rem;">Refrescar Álbum 🔄</button>
                         </div>
 
                         <div id="albumPreviewContainer" class="carousel-container" style="height: auto; background: #111; overflow: hidden; position: relative; border-radius: 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1);">
@@ -675,6 +679,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=1.7.4"></script>
+    <script src="app.js?v=1.7.7"></script>
 </body>
 </html>
