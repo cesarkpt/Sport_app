@@ -1,5 +1,4 @@
-alert("SISTEMA ACTUALIZADO A V1.9.0");
-console.log("Sports Hub Pro v1.9.0 - UPDATE EXTREME");
+console.log("Sports Hub Pro v1.9.1 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -2131,26 +2130,22 @@ function processBulkImport() {
         alert("No se reconoció el formato.\n\nUsa:\n1. Equipo, Numero, Nombre, Posicion\n2. Equipo: Jugador 1, Jugador 2");
     }
 }
+
 function showResultTab(tabId, activeBtn = null) {
+    // Ocultar todos los contenidos
     document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
     
-    // Limpiar resaltado de todos los botones generadores
-    document.querySelectorAll('#actionPanel button').forEach(b => {
-        b.style.boxShadow = 'none';
-        b.style.border = 'none';
-        b.style.transform = 'scale(1)';
-    });
+    // Quitar clase activa de todos los botones de pestañas
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
+    // Mostrar el contenido seleccionado
     const tab = document.getElementById(tabId + 'Tab');
     if (tab) tab.classList.remove('hidden');
     
-    // Resaltar el botón activo (o el que originó el evento)
+    // Marcar el botón como activo
     const btn = activeBtn || (window.event ? window.event.currentTarget : null);
-    if (btn && btn.tagName === 'BUTTON') {
-        btn.style.boxShadow = '0 0 15px var(--primary)';
-        btn.style.border = '1px solid var(--primary)';
-        btn.style.transform = 'scale(1.05)';
-        btn.style.transition = 'all 0.3s ease';
+    if (btn && btn.classList.contains('tab-btn')) {
+        btn.classList.add('active');
     }
 }
 
