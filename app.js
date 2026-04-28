@@ -2619,8 +2619,8 @@ async function generateAlbum() {
     
     // 2. Teñir con colores del equipo (Multiply)
     const albumTeamName = document.getElementById('albumTeamSelector')?.value;
-    const team = Object.values(allTeams).find(t => t.name === albumTeamName) || { color: '#00ff88', color2: '#00d4ff' };
-    const c1 = team.color;
+    const team = Object.values(allTeams).find(t => t.name === albumTeamName) || { color1: '#00ff88', color2: '#00d4ff' };
+    const c1 = team.color1 || team.color || '#00ff88';
     const c2 = team.color2 || c1;
     
     ctx.save();
