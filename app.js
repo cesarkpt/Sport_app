@@ -2263,80 +2263,8 @@ function resetArtePosition(type) {
     if (rotSl) rotSl.value = 0;
 }
 
-async async function downloadFullCarousel() {
-    if (!carouselState.img) return;
-    
-    const size = 1080;
-    const canvasFull = document.createElement('canvas');
-    canvasFull.width = size * 2;
-    canvasFull.height = size;
-    const ctx = canvasFull.getContext('2d');
-    
-    // 1. Obtener dimensiones reales del encuadre
-    const container = document.getElementById('tabCarouselContainer');
-    const cW = container.clientWidth;
-    const renderScale = (size * 2) / cW;
-    const realW = carouselState.img.width  * carouselState.scale * renderScale;
-    const realH = carouselState.img.height * carouselState.scale * renderScale;
-    const realX = carouselState.x * renderScale;
-    const realY = carouselState.y * renderScale;
 
-    // 2. Dibujar Fondo
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, size * 2, size);
-
-    // 3. Dibujar Imagen
-    ctx.save();
-    ctx.translate(realX + realW / 2, realY + realH / 2);
-    ctx.rotate(carouselState.rotate * Math.PI / 180);
-    ctx.drawImage(carouselState.img, -realW / 2, -realH / 2, realW, realH);
-    ctx.restore();
-
-    // 4. Sombras y Overlays
-    drawPerimeterShadow(ctx, size * 2, size);
-
-    // Logo (Slide 1)
-    try {
-        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
-        drawImageProp(ctx, logoImg, 80, 80, 300, 140);
-    } catch (e) {}
-
-    // Info Partido (Slide 2)
-    if (selectedMatchTeamA && selectedMatchTeamB) {
-        const teamA = allTeams[selectedMatchTeamA];
-        const teamB = allTeams[selectedMatchTeamB];
-        const stage = (document.getElementById('matchStage') || {}).value || '';
-        const date = (document.getElementById('matchDate') || {}).value || '';
-        const sSize = 100;
-        const totalW = (sSize * 2) + 20;
-        const x2 = (size * 2) - totalW - 80;
-        const y2 = 80;
-
-        try {
-            const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
-            drawImageProp(ctx, imgA, x2, y2, sSize, sSize);
-            const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-            drawImageProp(ctx, imgB, x2 + sSize + 20, y2, sSize, sSize);
-        } catch (e) {}
-
-        ctx.fillStyle = "white";
-        ctx.textAlign = "center";
-        const centerX2 = x2 + totalW / 2;
-        ctx.font = "900 30px Outfit";
-        ctx.fillText(stage, centerX2, y2 + sSize + 40);
-        ctx.font = "400 22px Outfit";
-        ctx.fillStyle = "rgba(255,255,255,0.8)";
-        ctx.fillText(date, centerX2, y2 + sSize + 70);
-    }
-
-    // 5. Descargar
-    const link = document.createElement('a');
-    link.download = `carrusel_completo_${Date.now()}.png`;
-    link.href = canvasFull.toDataURL('image/png');
-    link.click();
-}
-
-function updateArtePreview(type) {
+async function updateArtePreview(type) {
     const state = type === 'Sq' ? arteStateSq : arteStateVer;
     const canvas = document.getElementById(type === 'Sq' ? 'arteCanvasSquare' : 'arteCanvasVertical');
     if (!canvas || !state.img) return;
@@ -2353,88 +2281,54 @@ function updateArtePreview(type) {
     temp.height = height;
     const tCtx = temp.getContext('2d');
 
-    // Fondo Foto (Degradado Equipo)
-    const pTeam = Object.values(allTeams).find(t => t.name === state.data.team) || {};
-    const c1 = pTeam.color1 || state.data.color || "#00ff88";
-    const c2 = pTeam.color2 || state.data.color2 || "#00d4ff";
-    const grd = tCtx.createLinearGradient(0, 0, width, photoH);
-    grd.addColorStop(0, c1);
-    grd.addColorStop(1, c2);
-    tCtx.fillStyle = grd;
-    tCtx.fillRect(0, 0, width, photoH);
+    // Fondo Blanco Polaroid
+    tCtx.fillStyle = '#fff';
+    tCtx.fillRect(0, 0, width, height);
 
-    // Dibujar Jugador con su estado (Zoom, Rotación, Posición)
-    const zoomVal = parseFloat(document.getElementById('arteZoom' + type).value || 1);
-    const rotVal = parseFloat(document.getElementById('arteRotate' + type).value || 0);
-    
-    const finalScale = state.scale * zoomVal;
-    const drawW = state.img.width * finalScale;
-    const drawH = state.img.height * finalScale;
-
+    // Foto Jugador
     tCtx.save();
-    // Clip para no pintar fuera del área de la foto
+    const pad = Math.round(width * 0.05);
+    const photoW = width - (pad * 2);
     tCtx.beginPath();
-    tCtx.rect(0, 0, width, photoH);
+    tCtx.rect(pad, pad, photoW, photoH - pad);
     tCtx.clip();
 
-    tCtx.translate(width / 2 + state.x, (photoH / 2) + state.y);
-    tCtx.rotate(rotVal * Math.PI / 180);
+    tCtx.translate(pad + photoW / 2 + state.x, pad + (photoH - pad) / 2 + state.y);
+    tCtx.rotate(state.rotate * Math.PI / 180);
+    const drawW = state.img.width * state.scale;
+    const drawH = state.img.height * state.scale;
     tCtx.drawImage(state.img, -drawW / 2, -drawH / 2, drawW, drawH);
     tCtx.restore();
 
-    // Viñeta y Franja Blanca
-    drawPerimeterShadow(tCtx, width, photoH);
-    tCtx.fillStyle = "#ffffff";
-    tCtx.fillRect(0, photoH, width, polaroidH);
+    // Sombra interna foto
+    tCtx.strokeStyle = 'rgba(0,0,0,0.1)';
+    tCtx.lineWidth = 2;
+    tCtx.strokeRect(pad, pad, photoW, photoH - pad);
 
-    // 1.5 Logo en la Foto (Arriba a la Izquierda)
-    try {
-        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
-        const padLogo = Math.round(width * 0.04);
-        const logoMaxW = width * 0.25;
-        const logoMaxH = photoH * 0.15;
-        const scaleL = Math.min(logoMaxW / logoImg.width, logoMaxH / logoImg.height);
-        tCtx.globalAlpha = 0.9;
-        tCtx.drawImage(logoImg, padLogo, padLogo, logoImg.width * scaleL, logoImg.height * scaleL);
-        tCtx.globalAlpha = 1.0;
-    } catch(e) {}
-
-    // Contenido inferior
+    // Info Polaroid
+    const player = state.data;
     const teamA = selectedMatchTeamA ? allTeams[selectedMatchTeamA] : null;
     const teamB = selectedMatchTeamB ? allTeams[selectedMatchTeamB] : null;
-    const shieldColorMode = document.getElementById('polaroidShieldColor')?.value || 'white';
-    
-    // Mensaje Manuscrito (Izquierda)
-    const rawMsg = document.getElementById('polaroidMessage')?.value;
-    const msg = rawMsg && rawMsg.trim() !== '' ? rawMsg : 'Memorias.....';
-    const pad = Math.round(width * 0.04);
-    
-    tCtx.save();
-    tCtx.textAlign = "left";
-    tCtx.fillStyle = "#222";
-    tCtx.font = `${Math.round(polaroidH * 0.30)}px Caveat`;
-    // Centrado verticalmente con el bloque de escudos y textos de la derecha
-    tCtx.fillText(msg, pad, photoH + (polaroidH * 0.55));
-    tCtx.restore();
+    const stage = document.getElementById('matchStage').value || '';
+    const date = document.getElementById('matchDate').value || '';
+    const shieldColorMode = document.getElementById('shieldColorMode').value || 'color';
 
-    // Matchday (Derecha: Escudos -> Etapa -> Fecha)
-    const stage = (document.getElementById('matchStage') || {}).value || 'PARTIDO';
-    const date = (document.getElementById('matchDate') || {}).value || '';
-    
-    const sSz = Math.round(polaroidH * 0.38); // Escudos más pequeños para que quepa el texto
-    const spacing = Math.round(width * 0.015);
+    // Colores para el fondo exterior
+    const c1 = player.color;
+    const c2 = player.color2 || player.color;
+
+    const sSz = Math.round(polaroidH * 0.45);
+    const spacing = 15;
     const vsW = Math.round(width * 0.06);
     
-    // 1. Calcular ancho total de los escudos
     let shieldsW = 0;
     if (teamA) shieldsW += sSz;
     if (teamA && teamB) shieldsW += spacing + vsW + spacing;
     if (teamB) shieldsW += sSz;
     
     let nextX = width - pad - shieldsW;
-    const sY = photoH + (polaroidH * 0.15); // Empezar más arriba
+    const sY = photoH + (polaroidH * 0.15);
 
-    // Dibujar Escudo A
     if (teamA) { 
         try { 
             const baseShield = (shieldColorMode === 'color') ? teamA.shield : (teamA.shieldWhite || teamA.shield);
@@ -2450,17 +2344,15 @@ function updateArtePreview(type) {
         nextX += sSz;
     }
 
-    // Dibujar VS
     if (teamA && teamB) {
         nextX += spacing;
-        tCtx.fillStyle = (shieldColorMode === 'black') ? "#222" : "#aaa";
+        tCtx.fillStyle = (shieldColorMode === 'black') ? '#222' : '#aaa';
         tCtx.font = `700 ${Math.round(polaroidH * 0.15)}px Outfit`;
-        tCtx.textAlign = "center";
-        tCtx.fillText("VS", nextX + (vsW/2), sY + (sSz/2) + (polaroidH*0.05));
+        tCtx.textAlign = 'center';
+        tCtx.fillText('VS', nextX + (vsW/2), sY + (sSz/2) + (polaroidH*0.05));
         nextX += vsW + spacing;
     }
 
-    // Dibujar Escudo B
     if (teamB) { 
         try { 
             const baseShield = (shieldColorMode === 'color') ? teamB.shield : (teamB.shieldWhite || teamB.shield);
@@ -2475,22 +2367,19 @@ function updateArtePreview(type) {
         } catch(e){} 
     }
 
-    // Textos debajo de los escudos (Centrados con respecto al grupo de escudos)
     const textY = sY + sSz + (polaroidH * 0.15);
     const groupCenterX = width - pad - (shieldsW / 2);
-    
-    tCtx.textAlign = "center";
-    tCtx.fillStyle = "#111";
+    tCtx.textAlign = 'center';
+    tCtx.fillStyle = '#111';
     tCtx.font = `900 ${Math.round(polaroidH * 0.14)}px Outfit`;
     tCtx.fillText(stage.toUpperCase(), groupCenterX, textY);
-    
-    tCtx.fillStyle = "#666";
+    tCtx.fillStyle = '#666';
     tCtx.font = `400 ${Math.round(polaroidH * 0.12)}px Outfit`;
     tCtx.fillText(date, groupCenterX, textY + (polaroidH * 0.12));
 
     addPaniniBorder(tCtx, width, height);
 
-    // 2. Renderizar en Canvas Final con Madera y Rotación
+    // 2. Renderizar en Canvas Final
     const applyTilt = document.getElementById('polaroidTiltToggle')?.checked;
     const tilt = applyTilt ? (state.tilt || 0) : 0;
     const absTilt = Math.abs(tilt);
@@ -2499,9 +2388,6 @@ function updateArtePreview(type) {
     canvas.width = finalW;
     canvas.height = finalH;
 
-    // Los colores c1 y c2 ya fueron calculados arriba, los reutilizamos para el degradado exterior.
-    
-    // Fondo con Degradado y Bandera "Teñida"
     const bgGrd = ctx.createLinearGradient(0, 0, finalW, finalH);
     bgGrd.addColorStop(0, c1);
     bgGrd.addColorStop(1, c2);
@@ -2510,9 +2396,8 @@ function updateArtePreview(type) {
 
     if (state.woodImg) {
         ctx.save();
-        ctx.globalCompositeOperation = 'multiply'; // Hace que la bandera blanca tome los colores del fondo
-        ctx.globalAlpha = 0.8; // Ajuste fino para que se vea la textura sin quemar el color
-        // Estirar sin proporción (ancho y largo total)
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.globalAlpha = 0.8;
         ctx.drawImage(state.woodImg, 0, 0, finalW, finalH);
         ctx.restore();
     }
@@ -2521,12 +2406,10 @@ function updateArtePreview(type) {
     ctx.translate(finalW / 2, finalH / 2);
     ctx.rotate(tilt);
     ctx.translate(-width / 2, -height / 2);
-
-    ctx.shadowColor = "rgba(0,0,0,0.8)";
+    ctx.shadowColor = 'rgba(0,0,0,0.8)';
     ctx.shadowBlur = 50;
     ctx.shadowOffsetX = 10;
     ctx.shadowOffsetY = 15;
-
     ctx.drawImage(temp, 0, 0);
     ctx.restore();
 }
@@ -2554,7 +2437,6 @@ function setupArteEvents() {
         };
 
         const endMove = () => state.isDragging = false;
-
         canvas.addEventListener('mousedown', startMove);
         canvas.addEventListener('touchstart', startMove);
         window.addEventListener('mousemove', move);
@@ -2564,18 +2446,13 @@ function setupArteEvents() {
     });
 }
 
-
-
 async function downloadFullCarousel() {
     if (!carouselState.img) return;
-    
     const size = 1080;
     const canvasFull = document.createElement('canvas');
     canvasFull.width = size * 2;
     canvasFull.height = size;
     const ctx = canvasFull.getContext('2d');
-    
-    // 1. Obtener dimensiones reales del encuadre
     const container = document.getElementById('tabCarouselContainer');
     const cW = container.clientWidth;
     const renderScale = (size * 2) / cW;
@@ -2584,27 +2461,20 @@ async function downloadFullCarousel() {
     const realX = carouselState.x * renderScale;
     const realY = carouselState.y * renderScale;
 
-    // 2. Dibujar Fondo
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, size * 2, size);
-
-    // 3. Dibujar Imagen
     ctx.save();
     ctx.translate(realX + realW / 2, realY + realH / 2);
     ctx.rotate(carouselState.rotate * Math.PI / 180);
     ctx.drawImage(carouselState.img, -realW / 2, -realH / 2, realW, realH);
     ctx.restore();
-
-    // 4. Sombras y Overlays
     drawPerimeterShadow(ctx, size * 2, size);
 
-    // Logo (Slide 1)
     try {
-        const logoImg = await loadImg('https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0');
+        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
         drawImageProp(ctx, logoImg, 80, 80, 300, 140);
     } catch (e) {}
 
-    // Info Partido (Slide 2)
     if (selectedMatchTeamA && selectedMatchTeamB) {
         const teamA = allTeams[selectedMatchTeamA];
         const teamB = allTeams[selectedMatchTeamB];
@@ -2614,14 +2484,12 @@ async function downloadFullCarousel() {
         const totalW = (sSize * 2) + 20;
         const x2 = (size * 2) - totalW - 80;
         const y2 = 80;
-
         try {
             const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
             drawImageProp(ctx, imgA, x2, y2, sSize, sSize);
             const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
             drawImageProp(ctx, imgB, x2 + sSize + 20, y2, sSize, sSize);
         } catch (e) {}
-
         ctx.fillStyle = 'white';
         ctx.textAlign = 'center';
         const centerX2 = x2 + totalW / 2;
@@ -2632,9 +2500,8 @@ async function downloadFullCarousel() {
         ctx.fillText(date, centerX2, y2 + sSize + 70);
     }
 
-    // 5. Descargar
     const link = document.createElement('a');
-    link.download = carrusel_completo_.png;
+    link.download = `carrusel_completo_${Date.now()}.png`;
     link.href = canvasFull.toDataURL('image/png');
     link.click();
 }
