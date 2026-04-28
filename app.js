@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v2.9.0 - UPDATE OK");
+console.log("Sports Hub Pro v2.9.1 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -1522,6 +1522,31 @@ function updateCarouselImg() {
     if (!img || !carouselState.img) return;
     img.style.width = (carouselState.img.width * carouselState.scale) + 'px';
     img.style.transform = `translate(${carouselState.x}px, ${carouselState.y}px) rotate(${carouselState.rotate}deg)`;
+}
+
+function showResultTab(tabId, btn) {
+    // Manejar botones de tab
+    if (btn) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    // Manejar paneles de tab
+    document.querySelectorAll('.tab-content').forEach(panel => {
+        panel.classList.add('hidden');
+        if (panel.id === tabId + 'Tab') panel.classList.remove('hidden');
+    });
+
+    onTabChange(tabId);
+}
+
+function onTabChange(tabId) {
+    if (tabId === 'carousel') confirmCarouselFraming();
+    if (tabId === 'album') generateAlbum();
+    if (tabId === 'arte') {
+        updateArtePreview('Sq');
+        updateArtePreview('Ver');
+    }
 }
 
 async function confirmCarouselFraming() {
@@ -3286,4 +3311,116 @@ function drawRoundedRect(ctx, x, y, width, height, radius, fill = true, stroke =
     ctx.closePath();
     if (fill) ctx.fill();
     if (stroke) ctx.stroke();
+}
+
+// --- MÓDULO POLAROID (ARTE) ---
+async function updateArtePreview(type) {
+    const canvas = document.getElementById(type === 'Sq' ? 'arteCanvasSquare' : 'arteCanvasVertical');
+    if (!canvas || !lastProcessedPlayerImg) return;
+    const ctx = canvas.getContext('2d');
+    
+    const W = type === 'Sq' ? 1080 : 1080;
+    const H = type === 'Sq' ? 1080 : 1920;
+    canvas.width = W; canvas.height = H;
+
+    const zoom = parseFloat(document.getElementById('arteZoom' + type).value);
+    const rotate = parseFloat(document.getElementById('arteRotate' + type).value);
+    const hasTilt = document.getElementById('polaroidTiltToggle').checked;
+    const message = document.getElementById('polaroidMessage').value;
+    const shieldColor = document.getElementById('polaroidShieldColor').value;
+
+    // Fondo
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, W, H);
+
+    // Imagen Jugador (con el recorte HD si existe)
+    ctx.save();
+    const targetImg = lastProcessedPlayerImg;
+    const drawW = W * zoom;
+    const drawH = (targetImg.height * (drawW / targetImg.width));
+    
+    ctx.translate(W/2, H/2);
+    ctx.rotate(rotate * Math.PI / 180);
+    ctx.drawImage(targetImg, -drawW/2, -drawH/2, drawW, drawH);
+    ctx.restore();
+
+    // Marco Polaroid
+    const pW = W * 0.85;
+    const pH = type === 'Sq' ? H * 0.85 : H * 0.6;
+    const pX = (W - pW) / 2;
+    const pY = (H - pH) / 2.5;
+
+    ctx.save();
+    if (hasTilt) {
+        ctx.translate(W/2, H/2);
+        ctx.rotate(-2 * Math.PI / 180);
+        ctx.translate(-W/2, -H/2);
+    }
+
+    // Sombra
+    ctx.shadowColor = "rgba(0,0,0,0.8)";
+    ctx.shadowBlur = 40;
+    ctx.fillStyle = "white";
+    ctx.fillRect(pX, pY, pW, pH);
+    
+    // Hueco Imagen (Negro)
+    const margin = pW * 0.05;
+    const imgAreaW = pW - (margin * 2);
+    const imgAreaH = pH - (margin * 3.5);
+    ctx.fillStyle = "#050505";
+    ctx.fillRect(pX + margin, pY + margin, imgAreaW, imgAreaH);
+    
+    // Dibujar Jugador dentro del hueco (Clipping)
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(pX + margin, pY + margin, imgAreaW, imgAreaH);
+    ctx.clip();
+    
+    // Re-dibujar imagen para que encaje en el marco polaroid
+    const pZoom = zoom * 1.2;
+    const pDrawW = imgAreaW * pZoom;
+    const pDrawH = (targetImg.height * (pDrawW / targetImg.width));
+    ctx.translate(pX + margin + imgAreaW/2, pY + margin + imgAreaH/2);
+    ctx.rotate(rotate * Math.PI / 180);
+    ctx.drawImage(targetImg, -pDrawW/2, -pDrawH/2, pDrawW, pDrawH);
+    ctx.restore();
+
+    // Branding en la parte blanca inferior
+    const footerY = pY + margin + imgAreaH + 20;
+    
+    // Logo (Arriba Izquierda del Canvas General)
+    try {
+        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
+        ctx.globalAlpha = 0.8;
+        drawImageProp(ctx, logoImg, 50, 50, 250, 100);
+        ctx.globalAlpha = 1.0;
+    } catch(e) {}
+
+    // Escudo del Equipo
+    const activeTeam = lastPlayerData ? allTeams[lastPlayerData.teamId || selectedMatchTeamA] : null;
+    if (activeTeam && activeTeam.shield) {
+        try {
+            const sImg = await loadImg(shieldColor === 'white' ? (activeTeam.shieldWhite || activeTeam.shield) : activeTeam.shield);
+            const sSize = 100;
+            ctx.save();
+            if (shieldColor === 'black') ctx.filter = "brightness(0)";
+            drawImageProp(ctx, sImg, pX + margin, pY + pH - margin - sSize + 10, sSize, sSize);
+            ctx.restore();
+        } catch(e) {}
+    }
+
+    // Texto Manuscrito
+    if (message) {
+        ctx.fillStyle = "#222";
+        ctx.font = "700 60px 'Caveat', cursive";
+        ctx.textAlign = "right";
+        ctx.fillText(message, pX + pW - margin, pY + pH - margin - 20);
+    } else if (lastPlayerData) {
+        ctx.fillStyle = "#333";
+        ctx.font = "700 45px 'Caveat', cursive";
+        ctx.textAlign = "right";
+        ctx.fillText(lastPlayerData.name.toUpperCase(), pX + pW - margin, pY + pH - margin - 20);
+    }
+
+    ctx.restore();
 }
