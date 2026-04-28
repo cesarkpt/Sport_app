@@ -1908,7 +1908,8 @@ async function uploadToCloud() {
         const teamsToUpload = JSON.parse(JSON.stringify(allTeams));
         Object.values(teamsToUpload).forEach(team => {
             if (team.roster) {
-                team.roster.forEach(player => {
+                // El roster es un objeto {id: player}, usamos Object.values
+                Object.values(team.roster).forEach(player => {
                     delete player.photo; // Quitamos el peso de la foto para el Excel
                 });
             }
