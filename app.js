@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v2.7.1 - UPDATE OK");
+console.log("Sports Hub Pro v2.7.2 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -3060,6 +3060,27 @@ async function generateAlbum() {
     }
     ctx.restore();
 
+    ctx.restore();
+
+    // 3. CROMOS (Encima de Overlays)
+    albumImages.forEach((img, i) => {
+        if (!img) return;
+        const p = albumPositions[i] || getDefaultAlbumPos(i);
+        const { x, y, w, h } = p;
+        
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,0.5)";
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetY = 8;
+        
+        ctx.beginPath();
+        ctx.rect(x, y, w, h);
+        ctx.clip();
+        drawImageProp(ctx, img, x, y, w, h);
+        ctx.restore();
+    });
+
+    // 4. BRANDING (Encima de todo)
     // Ticker en Album (Interactivo)
     if (team) {
         const { x: bX, y: bY, w: barW, h: barH } = albumTickerPos;
@@ -3113,25 +3134,7 @@ async function generateAlbum() {
         }
     }
     
-    albumImages.forEach((img, i) => {
-        if (!img) return;
-        const p = albumPositions[i] || getDefaultAlbumPos(i);
-        const { x, y, w, h } = p;
-        
-        ctx.save();
-        // Sombra suave bajo el cromo (sin borde blanco tipo Panini por petición)
-        ctx.shadowColor = "rgba(0,0,0,0.5)";
-        ctx.shadowBlur = 15;
-        ctx.shadowOffsetY = 8;
-        
-        ctx.beginPath();
-        ctx.rect(x, y, w, h);
-        ctx.clip();
-        drawImageProp(ctx, img, x, y, w, h);
-        ctx.restore();
-    });
-
-    // Borde Panini Final (General)
+    // 5. BORDE PANINI FINAL
     addPaniniBorder(ctx, W, H);
     
     try {
