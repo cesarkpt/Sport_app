@@ -2563,7 +2563,15 @@ async function downloadFullCarousel() {
     // 5. Descargar
     const teamA = allTeams[selectedMatchTeamA];
     const tCode = (teamA ? (teamA.code || teamA.name.substring(0,3)) : "XXX").toUpperCase().replace(/\s+/g, '_');
-    // --- LÓGICA DE ÁLBUM (v1.6.6) ---
+    const finalName = `TEAM_FULL_${tCode}`;
+
+    const link = document.createElement('a');
+    link.download = `${finalName}_${Date.now()}.png`;
+    link.href = canvasFull.toDataURL('image/png');
+    link.click();
+}
+
+// --- LÓGICA DE ÁLBUM (v1.6.7) ---
 let albumImages = new Array(14).fill(null);
 let albumTemplate = null;
 
