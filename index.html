@@ -80,27 +80,27 @@
                             
                             <div class="input-row-grid">
                                 <div class="input-group">
-                                    <label>Nombre del Equipo</label>
+                                    <label for="teamNameInput">Nombre del Equipo</label>
                                     <input type="text" id="teamNameInput" placeholder="Ej: Real Madrid">
                                 </div>
                                 <div class="input-group" style="width: 80px;">
-                                    <label>Código</label>
+                                    <label for="teamCodeInput">Código</label>
                                     <input type="text" id="teamCodeInput" placeholder="ABC" maxlength="3" style="text-align: center;">
                                 </div>
                             </div>
 
                             <div class="input-group" style="margin-top: 15px;">
-                                <label>Director Técnico (DT)</label>
+                                <label for="teamCoachInput">Director Técnico (DT)</label>
                                 <input type="text" id="teamCoachInput" placeholder="Nombre del Entrenador">
                             </div>
 
                             <div class="color-pickers" style="margin-top: 15px;">
                                 <div class="color-field">
-                                    <label>Color Principal</label>
+                                    <label for="teamColor1">Color Principal</label>
                                     <input type="color" id="teamColor1" value="#00ff88">
                                 </div>
                                 <div class="color-field">
-                                    <label>Color Secundario</label>
+                                    <label for="teamColor2">Color Secundario</label>
                                     <input type="color" id="teamColor2" value="#00d4ff">
                                 </div>
                             </div>
@@ -135,7 +135,9 @@
                             <h5>NÓMINA</h5>
                             <div class="roster-input-wrapper">
                                 <div class="roster-fields">
+                                    <label for="playerNum" class="sr-only">Número</label>
                                     <input type="number" id="playerNum" placeholder="#" style="width: 60px;">
+                                    <label for="playerName" class="sr-only">Nombre</label>
                                     <input type="text" id="playerName" placeholder="Nombre completo">
                                     <button class="add-btn" onclick="addPlayerToRoster()" style="width: 50px;">+</button>
                                 </div>
@@ -158,7 +160,7 @@
             </section>
             <section class="settings-strip">
                 <div class="toggle-container">
-                    <span>QUITAR FONDO (IA)</span>
+                    <label for="bgToggle">QUITAR FONDO (IA)</label>
                     <label class="switch">
                         <input type="checkbox" id="bgToggle">
                         <span class="slider round"></span>
@@ -216,7 +218,7 @@
                                 <div class="cropper-overlay"></div>
                             </div>
                             <div class="zoom-control">
-                                <label>ZOOM</label>
+                                <label for="cropperZoom">ZOOM</label>
                                 <input type="range" id="cropperZoom" min="0.5" max="3" step="0.1" value="1">
                             </div>
                         </div>
@@ -231,23 +233,23 @@
                                 <div class="cropper-overlay" style="border-color: var(--primary);"></div>
                             </div>
                             <div class="zoom-control">
-                                <label>ZOOM HD</label>
+                                <label for="cropperZoomHD">ZOOM HD</label>
                                 <input type="range" id="cropperZoomHD" min="0.2" max="2" step="0.1" value="0.5">
                             </div>
                             <p class="help-text">Ajusta la posición del jugador en la tarjeta principal</p>
                         </div>
 
                         <div class="input-group">
-                            <label>Nombre</label>
+                            <label for="editName">Nombre</label>
                             <input type="text" id="editName" placeholder="Nombre del Jugador">
                         </div>
                         <div class="input-row">
                             <div class="input-group">
-                                <label>Dorsal</label>
+                                <label for="editNumber">Dorsal</label>
                                 <input type="text" id="editNumber" placeholder="00">
                             </div>
                             <div class="input-group">
-                                <label>Equipo</label>
+                                <label for="editTeam">Equipo</label>
                                 <input type="text" id="editTeam" placeholder="Equipo">
                             </div>
                             <div class="input-group">
@@ -331,7 +333,7 @@
                                         <input type="checkbox" id="cleanPlanoToggle" onchange="generateLayouts(lastProcessedPlayerImg, lastPlayerData, lastShouldRemoveBg, lastProcessedCrop, lastProcessedCropHD)">
                                         <span class="slider round"></span>
                                     </label>
-                                    <span style="font-size: 0.6rem; font-weight: 900; opacity: 0.7;">LIMPIAR</span>
+                                    <label for="cleanPlanoToggle" style="font-size: 0.6rem; font-weight: 900; opacity: 0.7; cursor: pointer;">LIMPIAR</label>
                                 </div>
                                 <label class="checkbox-mini">
                                     <input type="checkbox" id="driveUploadPlano">
@@ -352,7 +354,7 @@
                                         <input type="checkbox" id="cleanCarnetToggle" onchange="generateLayouts(lastProcessedPlayerImg, lastPlayerData, lastShouldRemoveBg, lastProcessedCrop, lastProcessedCropHD)">
                                         <span class="slider round"></span>
                                     </label>
-                                    <span style="font-size: 0.6rem; font-weight: 900; opacity: 0.7;">LIMPIAR</span>
+                                    <label for="cleanCarnetToggle" style="font-size: 0.6rem; font-weight: 900; opacity: 0.7; cursor: pointer;">LIMPIAR</label>
                                 </div>
                                 <label class="checkbox-mini">
                                     <input type="checkbox" id="driveUploadCarnet">
@@ -372,7 +374,7 @@
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                             <div class="input-group">
-                                <label style="font-size: 0.6rem; opacity: 0.7;">ESTADO</label>
+                                <label for="postalWord" style="font-size: 0.6rem; opacity: 0.7;">ESTADO</label>
                                 <select id="postalWord" style="width: 100%; background: #000; border: 1px solid #333; color: white; padding: 10px; font-size: 0.8rem; border-radius: 8px; font-family: Outfit, sans-serif;">
                                     <option value="PROXIMO PARTIDO">PRÓXIMO PARTIDO</option>
                                     <option value="ENTRETIEMPO">ENTRETIEMPO</option>
@@ -380,22 +382,22 @@
                                 </select>
                             </div>
                             <div class="input-group">
-                                <label style="font-size: 0.6rem; opacity: 0.7;">MARCADOR</label>
+                                <label for="postalScore" style="font-size: 0.6rem; opacity: 0.7;">MARCADOR</label>
                                 <input type="text" id="postalScore" placeholder="1 - 0" value="0 - 0" style="width: 100%; background: #000; border: 1px solid #333; color: white; padding: 10px; font-size: 0.8rem; border-radius: 8px; text-align: center;">
                             </div>
                         </div>
                         <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
                             <div class="input-group">
-                                <label style="font-size: 0.65rem; opacity: 0.8; margin-bottom: 5px; display: block;">ESCALA DEL GRUPO</label>
+                                <label for="postalScale" style="font-size: 0.65rem; opacity: 0.8; margin-bottom: 5px; display: block;">ESCALA DEL GRUPO</label>
                                 <input type="range" id="postalScale" min="0.1" max="1.5" step="0.05" value="1" oninput="generateMatchPostals()" style="width: 100%; accent-color: var(--primary);">
                             </div>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                                 <div class="input-group">
-                                    <label style="font-size: 0.65rem; opacity: 0.8; margin-bottom: 5px; display: block;">VERTICAL (Y)</label>
+                                    <label for="postalY" style="font-size: 0.65rem; opacity: 0.8; margin-bottom: 5px; display: block;">VERTICAL (Y)</label>
                                     <input type="range" id="postalY" min="-600" max="600" step="10" value="0" oninput="generateMatchPostals()" style="width: 100%; accent-color: var(--primary);">
                                 </div>
                                 <div class="input-group">
-                                    <label style="font-size: 0.65rem; opacity: 0.8; margin-bottom: 5px; display: block;">HORIZONTAL (X)</label>
+                                    <label for="postalX" style="font-size: 0.65rem; opacity: 0.8; margin-bottom: 5px; display: block;">HORIZONTAL (X)</label>
                                     <input type="range" id="postalX" min="-600" max="600" step="10" value="0" oninput="generateMatchPostals()" style="width: 100%; accent-color: var(--primary);">
                                 </div>
                             </div>
@@ -439,12 +441,13 @@
                             </div>
                             
                             <div class="zoom-control" style="margin-top: 15px; display: flex; align-items: center; gap: 12px;">
-                                <label style="font-size: 0.6rem; opacity: 0.7; white-space: nowrap;">ZOOM</label>
+                                <label for="tabCarouselZoom" style="font-size: 0.6rem; opacity: 0.7; white-space: nowrap;">ZOOM</label>
                                 <input type="range" id="tabCarouselZoom" min="0.25" max="1.75" step="0.01" value="1" style="flex: 3;">
+                                <label for="tabCarouselRotate" class="sr-only">Rotación</label>
                                 <input type="range" id="tabCarouselRotate" min="-20" max="20" step="1" value="0" style="flex: 1;">
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; background: rgba(255,255,255,0.05); padding: 8px 15px; border-radius: 10px;">
-                                <span style="font-size: 0.6rem; opacity: 0.7;">MODO LIMPIAR (SIN BARRA NEGRA)</span>
+                                <label for="cleanCarouselToggle" style="font-size: 0.6rem; opacity: 0.7;">MODO LIMPIAR (SIN BARRA NEGRA)</label>
                                 <label class="switch" style="transform: scale(0.7);">
                                     <input type="checkbox" id="cleanCarouselToggle">
                                     <span class="slider round"></span>
@@ -481,14 +484,14 @@
                     <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 20px; border: 1px solid var(--glass-border); margin-bottom: 20px;">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="font-size: 0.6rem; opacity: 0.7;">GIRO POLAROID</span>
+                                <label for="polaroidTiltToggle" style="font-size: 0.6rem; opacity: 0.7;">GIRO POLAROID</label>
                                 <label class="switch" style="transform: scale(0.7);">
                                     <input type="checkbox" id="polaroidTiltToggle" checked onchange="updateArtePreview('Sq'); updateArtePreview('Ver');">
                                     <span class="slider round"></span>
                                 </label>
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="font-size: 0.6rem; opacity: 0.7;">COLOR ESCUDOS</span>
+                                <label for="polaroidShieldColor" style="font-size: 0.6rem; opacity: 0.7;">COLOR ESCUDOS</label>
                                 <select id="polaroidShieldColor" onchange="updateArtePreview('Sq'); updateArtePreview('Ver');" style="background: #000; border: 1px solid #333; color: white; padding: 5px; font-size: 0.7rem; border-radius: 5px; font-family: Outfit, sans-serif;">
                                     <option value="color">Original</option>
                                     <option value="white" selected>Blanco</option>
@@ -497,7 +500,7 @@
                             </div>
                         </div>
                         <div class="input-group">
-                            <label style="font-size: 0.65rem; opacity: 0.8; margin-bottom: 5px; display: block;">MENSAJE MANUSCRITO (OPCIONAL)</label>
+                            <label for="polaroidMessage" style="font-size: 0.65rem; opacity: 0.8; margin-bottom: 5px; display: block;">MENSAJE MANUSCRITO (OPCIONAL)</label>
                             <input type="text" id="polaroidMessage" placeholder="Memorias....." oninput="updateArtePreview('Sq'); updateArtePreview('Ver');" style="width: 100%; background: #000; border: 1px solid #333; color: white; padding: 12px; font-size: 0.9rem; border-radius: 10px; font-family: 'Caveat', cursive;">
                         </div>
                     </div>
@@ -511,9 +514,9 @@
                                 <canvas id="arteCanvasSquare" style="width: 100%; height: 100%; object-fit: contain; cursor: move;"></canvas>
                             </div>
                             <div class="zoom-control" style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
-                                <label style="font-size: 0.55rem; opacity: 0.7;">ZOOM</label>
+                                <label for="arteZoomSq" style="font-size: 0.55rem; opacity: 0.7;">ZOOM</label>
                                 <input type="range" id="arteZoomSq" min="0.25" max="2.0" step="0.01" value="1" style="flex: 1;" oninput="updateArtePreview('Sq')">
-                                <label style="font-size: 0.55rem; opacity: 0.7;">ROT</label>
+                                <label for="arteRotateSq" style="font-size: 0.55rem; opacity: 0.7;">ROT</label>
                                 <input type="range" id="arteRotateSq" min="-30" max="30" step="1" value="0" style="flex: 1;" oninput="updateArtePreview('Sq')">
                             </div>
                             <button class="btn-secondary" onclick="downloadImage('arteCanvasSquare', 'polaroid_1x1')" style="width: 100%; font-size: 0.7rem;">DESCARGAR 1:1</button>
@@ -526,9 +529,9 @@
                                 <canvas id="arteCanvasVertical" style="width: 100%; height: 100%; object-fit: contain; cursor: move;"></canvas>
                             </div>
                             <div class="zoom-control" style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
-                                <label style="font-size: 0.55rem; opacity: 0.7;">ZOOM</label>
+                                <label for="arteZoomVer" style="font-size: 0.55rem; opacity: 0.7;">ZOOM</label>
                                 <input type="range" id="arteZoomVer" min="0.25" max="2.0" step="0.01" value="1" style="flex: 1;" oninput="updateArtePreview('Ver')">
-                                <label style="font-size: 0.55rem; opacity: 0.7;">ROT</label>
+                                <label for="arteRotateVer" style="font-size: 0.55rem; opacity: 0.7;">ROT</label>
                                 <input type="range" id="arteRotateVer" min="-30" max="30" step="1" value="0" style="flex: 1;" oninput="updateArtePreview('Ver')">
                             </div>
                             <button class="btn-secondary" onclick="downloadImage('arteCanvasVertical', 'polaroid_vertical')" style="width: 100%; font-size: 0.7rem;">DESCARGAR STORY</button>
@@ -542,7 +545,7 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <h3 style="font-size: 0.8rem; color: var(--secondary); margin: 0;">EDITOR DE ÁLBUM (14 FOTOS)</h3>
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="font-size: 0.6rem; opacity: 0.7;">EQUIPO:</span>
+                                <label for="albumTeamSelector" style="font-size: 0.6rem; opacity: 0.7;">EQUIPO:</label>
                                 <select id="albumTeamSelector" onchange="generateAlbum()" style="background: #000; border: 1px solid #333; color: white; padding: 5px; font-size: 0.7rem; border-radius: 5px; font-family: Outfit, sans-serif;">
                                     <!-- Opciones de equipos se cargan dinámicamente -->
                                 </select>
@@ -651,12 +654,14 @@
                     </div>
                 </div>
                 <div class="match-meta">
+                    <label for="matchStage" class="sr-only">Etapa del Partido</label>
                     <select id="matchStage" class="match-select-small">
                         <option value="APERTURA">APERTURA</option>
                         <option value="CUADRANGULAR">CUADRANGULAR</option>
                         <option value="SEMIFINAL">SEMIFINAL</option>
                         <option value="FINAL">FINAL</option>
                     </select>
+                    <label for="matchDate" class="sr-only">Fecha del Partido</label>
                     <input type="text" id="matchDate" placeholder="DD-MM-AAAA" class="match-date-input">
                 </div>
                 <button class="btn-primary" onclick="toggleMatchModal()" style="margin-top:20px">LISTO</button>
@@ -686,6 +691,7 @@
                     Pega tu lista de Excel o CSV aquí.<br>
                     Formatos: <b>Equipo, Número, Nombre, Posición</b> o <b>Equipo: Jugador1, Jugador2...</b>
                 </p>
+                <label for="importTextArea" class="sr-only">Texto para importar</label>
                 <textarea id="importTextArea" rows="10" style="width:100%; background:rgba(0,0,0,0.3); color:white; border-radius:10px; padding:10px; font-family:monospace; border:1px solid var(--glass-border);" placeholder="Real Madrid, 7, Vinicius Jr, DEL&#10;Barcelona: Lamine Yamal, Raphinha"></textarea>
                 <button class="btn-primary" onclick="processBulkImport()" style="margin-top:15px; width:100%">PROCESAR E IMPORTAR</button>
             </div>
