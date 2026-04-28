@@ -2221,8 +2221,8 @@ async function generateArteLayouts(playerImg, data, crop) {
         await new Promise(r => imgEl.onload = r);
     }
 
-    // Cargar madera si no está (Usando lh3.googleusercontent para CORS)
-    const woodUrl = "https://lh3.googleusercontent.com/d/11DBLJqtGBSjNq5ZU1ONWr_PXV9crwuqv";
+    // Cargar fondo personalizado (Usando lh3.googleusercontent para CORS)
+    const woodUrl = "https://lh3.googleusercontent.com/d/1U1Vc4ccbJp-1rwYH3LVwZ-kv45v2nBK5";
     let wood;
     try { wood = await loadImg(woodUrl); } catch(e) {}
 
