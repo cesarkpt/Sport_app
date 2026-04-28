@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v1.9.6 - UPDATE OK");
+console.log("Sports Hub Pro v1.9.7 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -1559,10 +1559,7 @@ async function confirmCarouselFraming() {
         }
     });
 
-    if (isClean) {
-        document.getElementById('tabCarouselPreview').classList.remove('hidden');
-        return;
-    }
+
 
     // Logo en Slide 1
     try {
@@ -1598,10 +1595,10 @@ async function confirmCarouselFraming() {
         ctx2.restore();
     }
 
-    // Ticker: use activeTeamId (player's team) with fallback to match team
+    // Ticker: solo si NO estamos en modo limpiar
     const tickerTeamId = activeTeamId || selectedMatchTeamA;
     const tickerTeam = tickerTeamId ? allTeams[tickerTeamId] : null;
-    if (tickerTeam) {
+    if (tickerTeam && !isClean) {
         const barW = 1200;
         const barH = 150;
         const bX_total = w - barW / 2;
