@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v2.1.0 - UPDATE OK");
+console.log("Sports Hub Pro v2.2.0 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -2632,9 +2632,108 @@ async function downloadFullCarousel() {
     link.href = canvasFull.toDataURL('image/png');
     link.click();
 }
-// --- LOGICA DE ALBUM (v1.7.6) ---
+// --- LOGICA DE ALBUM (v2.2.0 - INTERACTIVO) ---
 let albumImages = new Array(14).fill(null);
+let albumPositions = new Array(14).fill(null); // {x, y, w, h}
 let albumTemplate = null;
+let draggedAlbumIdx = -1;
+let albumDragOffset = { x: 0, y: 0 };
+
+function getDefaultAlbumPos(i) {
+    const stickerH = 300;
+    const playerW = 225;
+    const teamW = 540;
+    const shieldW = 260;
+    const gridStartX = 1100;
+    const gridStartY = 100;
+    const gapX = 35;
+    const gapY = 35;
+    const yBottomLeft = 400;
+
+    let x, y, w, h;
+    if (i === 0) { // ESCUDO
+        w = shieldW; h = stickerH;
+        x = 100; y = yBottomLeft - h;
+    } else if (i === 1) { // TEAM
+        w = teamW; h = stickerH;
+        x = 100 + shieldW + 30; y = yBottomLeft - h;
+    } else if (i === 2) { // DT
+        w = playerW; h = stickerH;
+        x = gridStartX + (2 * (playerW + gapX));
+        y = gridStartY + (3 * (h + gapY));
+    } else { // JUGADORES
+        const idx = i - 3;
+        const col = idx % 3;
+        const row = Math.floor(idx / 3);
+        x = gridStartX + (col * (playerW + gapX));
+        y = gridStartY + (row * (stickerH + gapY));
+        w = playerW; h = stickerH;
+    }
+    return { x, y, w, h };
+}
+
+function resetAlbumPositions() {
+    for (let i = 0; i < 14; i++) {
+        albumPositions[i] = getDefaultAlbumPos(i);
+    }
+    generateAlbum();
+}
+
+function initAlbumInteractions() {
+    const canvas = document.getElementById('albumCanvas');
+    if (!canvas) return;
+
+    const getMousePos = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const event = e.touches ? e.touches[0] : e;
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+            x: (event.clientX - rect.left) * scaleX,
+            y: (event.clientY - rect.top) * scaleY
+        };
+    };
+
+    const onStart = (e) => {
+        const pos = getMousePos(e);
+        // Hit test de atrás hacia adelante (los últimos dibujados están arriba)
+        for (let i = 13; i >= 0; i--) {
+            const p = albumPositions[i];
+            if (!p) continue;
+            if (pos.x >= p.x && pos.x <= p.x + p.w && pos.y >= p.y && pos.y <= p.y + p.h) {
+                draggedAlbumIdx = i;
+                albumDragOffset = { x: pos.x - p.x, y: pos.y - p.y };
+                e.preventDefault();
+                return;
+            }
+        }
+    };
+
+    const onMove = (e) => {
+        if (draggedAlbumIdx === -1) return;
+        const pos = getMousePos(e);
+        albumPositions[draggedAlbumIdx].x = pos.x - albumDragOffset.x;
+        albumPositions[draggedAlbumIdx].y = pos.y - albumDragOffset.y;
+        generateAlbum();
+        e.preventDefault();
+    };
+
+    const onEnd = () => {
+        draggedAlbumIdx = -1;
+    };
+
+    canvas.addEventListener('mousedown', onStart);
+    canvas.addEventListener('touchstart', onStart, { passive: false });
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('mouseup', onEnd);
+    window.addEventListener('touchend', onEnd);
+}
+
+// Inicializar posiciones la primera vez
+for (let i = 0; i < 14; i++) {
+    albumPositions[i] = getDefaultAlbumPos(i);
+}
 
 function openAlbumEditor() {
     console.log("Abriendo Editor de Album...");
@@ -2672,6 +2771,7 @@ function openAlbumEditor() {
         }
     }
     renderAlbumSlots();
+    initAlbumInteractions();
     generateAlbum();
 }
 
@@ -2793,60 +2893,16 @@ async function generateAlbum() {
     drawRoundedRect(ctx, 1030, 80, 920, 1280, 30, true, false);
     ctx.restore();
     
-    const stickerH = 300; // Altura unificada para todos
-    const playerW = 225;  // Ratio 3:4 para jugadores
-    const teamW = 540;    // Ratio para foto de equipo
-    const shieldW = 260;  // Ratio para escudo
-    
-    const gridStartX = 1100;
-    const gridStartY = 100;
-    const gapX = 35;
-    const gapY = 35;
-
-    const yBottomLeft = 400; // Referencia parte más baja para Escudo/Team
-
     albumImages.forEach((img, i) => {
         if (!img) return;
-        let x, y, w, h;
-        
-        if (i === 0) { // ESCUDO
-            w = shieldW; h = stickerH;
-            x = 100;
-            y = yBottomLeft - h;
-        }
-        else if (i === 1) { // TEAM
-            w = teamW; h = stickerH;
-            x = 100 + shieldW + 30; // 30px de separación
-            y = yBottomLeft - h;
-        }
-        else if (i === 2) { // DT (Posición 12 en grilla, fila 4, col 3)
-            w = playerW; h = stickerH;
-            x = gridStartX + (2 * (playerW + gapX));
-            y = gridStartY + (3 * (h + gapY));
-        } else { // JUGADORES (11 slots)
-            const idx = i - 3;
-            const col = idx % 3;
-            const row = Math.floor(idx / 3);
-            x = gridStartX + (col * (playerW + gapX));
-            y = gridStartY + (row * (stickerH + gapY));
-            w = playerW; h = stickerH;
-        }
+        const p = albumPositions[i] || getDefaultAlbumPos(i);
+        const { x, y, w, h } = p;
         
         ctx.save();
-        // Dibujar Cromo con Borde Panini Individual
-        // El borde es el 2% del lado menor
-        const border = Math.min(w, h) * 0.02;
-        
-        // Sombra suave bajo el sticker
-        ctx.shadowColor = "rgba(0,0,0,0.4)";
+        // Sombra suave bajo el cromo (sin borde blanco tipo Panini por petición)
+        ctx.shadowColor = "rgba(0,0,0,0.5)";
         ctx.shadowBlur = 15;
-        ctx.shadowOffsetY = 5;
-        
-        // Borde Blanco (Sticker)
-        ctx.fillStyle = "white";
-        ctx.fillRect(x - border, y - border, w + border * 2, h + border * 2);
-        
-        ctx.shadowColor = "transparent"; // Reset sombra para la foto
+        ctx.shadowOffsetY = 8;
         
         ctx.beginPath();
         ctx.rect(x, y, w, h);

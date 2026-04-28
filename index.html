@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports Hub - Pro Card Generator</title>
     <script>
-        console.log("Sports Hub Pro v2.1.0 - UPDATE OK");
+        console.log("Sports Hub Pro v2.2.0 - UPDATE OK");
     </script>
-    <link rel="stylesheet" href="style.css?v=2.1.0">
+    <link rel="stylesheet" href="style.css?v=2.2.0">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Oswald:wght@700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
     <!-- Librerías de IA -->
@@ -42,7 +42,7 @@
                 <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v2.1.0 - OK</button>
+                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v2.2.0 - OK</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
             </div>
@@ -543,8 +543,9 @@
                             <button class="btn-secondary" onclick="uploadSingleAlbum(1)" style="font-size: 0.6rem; background: rgba(0,212,255,0.1);">TEAM 👥</button>
                             <button class="btn-secondary" onclick="uploadSingleAlbum(2)" style="font-size: 0.6rem; background: rgba(156,39,176,0.1);">DT 👔</button>
                         </div>
-                        <div class="album-controls" style="margin-bottom: 20px;">
-                            <button class="btn-primary" onclick="document.getElementById('albumBulkInput').click()" style="font-size: 0.7rem; width: 100%;">CARGAR 12 JUGADORES 📸</button>
+                        <div class="album-controls" style="margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <button class="btn-primary" onclick="document.getElementById('albumBulkInput').click()" style="font-size: 0.7rem;">CARGAR 12 JUGADORES 📸</button>
+                            <button class="btn-secondary" onclick="resetAlbumPositions()" style="font-size: 0.7rem; border-color: var(--primary); color: var(--primary);">AUTO-ALINEAR REJILLA 📐</button>
                             <input type="file" id="albumBulkInput" multiple accept="image/*" style="display:none" onchange="handleAlbumBulkUpload(this)">
                         </div>
 
@@ -591,6 +592,14 @@
                 <button onclick="toggleUpdates()" class="close-btn">&times;</button>
             </div>
             <div class="updates-list">
+                <div class="update-item">
+                    <span class="update-ver">v2.2.0</span>
+                    <p>Milestone: Editor de Álbum Interactivo. Ahora puedes arrastrar y soltar los cromos sobre el álbum para ajustar su posición manualmente. Incluye botón de Auto-Alineación.</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v2.1.1</span>
+                    <p>Ajuste Álbum: Se ha eliminado el efecto Panini (borde blanco) únicamente del módulo Álbum, manteniendo la alineación y sombras optimizadas.</p>
+                </div>
                 <div class="update-item">
                     <span class="update-ver">v2.1.0</span>
                     <p>Optimización Álbum: Altura unificada para todos los cromos (300px), alineación inferior de Escudo/Team y restauración del borde tipo sticker individual para cada elemento.</p>
@@ -720,6 +729,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=2.1.0"></script>
+    <script src="app.js?v=2.2.0"></script>
 </body>
 </html>
