@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v1.9.1 - UPDATE OK");
+console.log("Sports Hub Pro v1.9.2 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -553,7 +553,7 @@ async function processPlayerPhoto(processingImg, originalImg) {
         setTimeout(() => {
             elements.processingArea.classList.add('hidden');
             elements.resultArea.classList.remove('hidden');
-            document.getElementById('actionPanel').classList.remove('hidden');
+            // document.getElementById('actionPanel').classList.remove('hidden'); // Eliminado v1.9.1
             showResultTab('previas');
         }, 400);
 
@@ -1391,7 +1391,7 @@ function drawPerimeterShadow(ctx, w, h) {
 function addPaniniBorder(ctx, w, h, excludeSides = []) {
     const t = Math.round(Math.min(w, h) * 0.025); // 2.5% del lado menor
     ctx.save();
-    ctx.fillStyle = "#ffffff";
+    return; // Desactivado
     if (!excludeSides.includes('top'))    ctx.fillRect(0, 0, w, t);           // Arriba
     if (!excludeSides.includes('bottom')) ctx.fillRect(0, h - t, w, t);       // Abajo
     if (!excludeSides.includes('left'))   ctx.fillRect(0, 0, t, h);           // Izquierda
@@ -1515,13 +1515,13 @@ async function confirmCarouselFraming() {
     const ctx1 = canvas1.getContext('2d');
     const ctx2 = canvas2.getContext('2d');
 
-    const size = 1080;
-    canvas1.width = size; canvas1.height = size;
-    canvas2.width = size; canvas2.height = size;
+    const h = 1080;
+    const w = 810; // Ratio 3:4 del cromo (810/1080 = 0.75)
+    canvas1.width = w; canvas1.height = h;
+    canvas2.width = w; canvas2.height = h;
 
-    // The container represents 2 panels side by side (total width = 2*size output)
-    // Use WIDTH as the reference so the panorama splits correctly at center
-    const renderScale = (size * 2) / cW;
+    // The container represents 2 panels side by side (total width = 2*w output)
+    const renderScale = (w * 2) / cW;
     const realW = carouselState.img.width  * carouselState.scale * renderScale;
     const realH = carouselState.img.height * carouselState.scale * renderScale;
     const realX = carouselState.x * renderScale;
@@ -1529,17 +1529,18 @@ async function confirmCarouselFraming() {
 
     const isClean = (document.getElementById('cleanCarouselToggle') || {}).checked;
 
-    [ctx1, ctx2].forEach((ctx, i) => {
+    [canvas1, canvas2].forEach((canvas, i) => {
+        const ctx = canvas.getContext('2d');
         ctx.fillStyle = "#000";
-        ctx.fillRect(0, 0, size, size);
+        ctx.fillRect(0, 0, w, h);
         ctx.save();
-        ctx.translate(realX - (i * size) + realW / 2, realY + realH / 2);
+        ctx.translate(realX - (i * w) + realW / 2, realY + realH / 2);
         ctx.rotate(carouselState.rotate * Math.PI / 180);
         ctx.drawImage(carouselState.img, -realW / 2, -realH / 2, realW, realH);
         ctx.restore();
         
         if (!isClean) {
-            drawPerimeterShadow(ctx, size, size);
+            drawPerimeterShadow(ctx, w, h);
         }
     });
 

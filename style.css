@@ -1420,7 +1420,7 @@ input:checked + .slider:before {
 }
 .carousel-cropper-wrapper {
     width: 100%;
-    aspect-ratio: 2/1; /* Mantenimiento estricto de proporción panorámica */
+    aspect-ratio: 1.5/1; /* Proporción doble cromo (3:4 x 2 = 6:4 = 3:2 = 1.5) */
     background: #000;
     border-radius: 15px;
     overflow: hidden;
