@@ -2152,8 +2152,8 @@ async function generateArteLayouts(playerImg, data, crop) {
         await new Promise(r => imgEl.onload = r);
     }
 
-    // Cargar madera si no está
-    const woodUrl = "https://drive.google.com/uc?export=view&id=11DBLJqtGBSjNq5ZU1ONWr_PXV9crwuqv";
+    // Cargar madera si no está (Usando lh3.googleusercontent para CORS)
+    const woodUrl = "https://lh3.googleusercontent.com/d/11DBLJqtGBSjNq5ZU1ONWr_PXV9crwuqv";
     let wood;
     try { wood = await loadImg(woodUrl); } catch(e) {}
 
@@ -2354,23 +2354,27 @@ async function updateArtePreview(type) {
     canvas.width = finalW;
     canvas.height = finalH;
 
+    const pTeam = Object.values(allTeams).find(t => t.name === state.data.team) || {};
+    const c1 = pTeam.color1 || state.data.color || "#00ff88";
+    const c2 = pTeam.color2 || state.data.color2 || "#00d4ff";
+    
     if (state.woodImg) {
         drawImageProp(ctx, state.woodImg, 0, 0, finalW, finalH);
         
-        // Degradado lineal con colores del equipo encima del fondo
-        const pTeam = Object.values(allTeams).find(t => t.name === state.data.team) || {};
-        const c1 = pTeam.color1 || state.data.color || "#00ff88";
-        const c2 = pTeam.color2 || state.data.color2 || "#00d4ff";
-        
+        // Degradado lineal con colores del equipo encima del fondo (con opacidad)
         const bgGrd = ctx.createLinearGradient(0, 0, finalW, finalH);
         bgGrd.addColorStop(0, c1);
         bgGrd.addColorStop(1, c2);
         ctx.fillStyle = bgGrd;
-        ctx.globalAlpha = 0.85; // Opacidad para mezclar degradado con la textura de fondo
+        ctx.globalAlpha = 0.85; 
         ctx.fillRect(0, 0, finalW, finalH);
         ctx.globalAlpha = 1.0;
     } else {
-        ctx.fillStyle = "#222";
+        // Si falla la textura, pintar el degradado sólido
+        const bgGrd = ctx.createLinearGradient(0, 0, finalW, finalH);
+        bgGrd.addColorStop(0, c1);
+        bgGrd.addColorStop(1, c2);
+        ctx.fillStyle = bgGrd;
         ctx.fillRect(0, 0, finalW, finalH);
     }
 
