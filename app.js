@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v1.9.8 - UPDATE OK");
+console.log("Sports Hub Pro v1.9.9 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -2570,7 +2570,7 @@ async function downloadFullCarousel() {
             const date = (document.getElementById('matchDate') || {}).value || '';
             const sSize = 100;
             const totalW = (sSize * 2) + 20;
-            const x2 = (size * 2) - totalW - 80;
+            const x2 = (w * 2) - totalW - 80;
             const y2 = 80;
             try {
                 const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
