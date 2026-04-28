@@ -47,20 +47,26 @@ function doPost(e) {
   }
 }
 
-/**
- * GESTIÓN DE DATOS (EXCEL)
- */
 function saveAllTeamsData(allTeamsData) {
   try {
     const ss = getOrCreateSpreadsheet();
     let configSheet = ss.getSheetByName("Config") || ss.insertSheet("Config");
-    configSheet.getRange(1, 1).setValue("JSON_DATA_DATABASE");
     
+    // Log del tamaño de los datos
     const jsonString = JSON.stringify(allTeamsData);
+    logAction("DATA_SIZE", "El JSON mide: " + jsonString.length + " caracteres");
+    
+    if (jsonString.length > 50000) {
+      logAction("LIMIT_EXCEEDED", "Error: Se superó el límite de 50k de Google Sheets");
+      return { success: false, error: "Límite de caracteres excedido" };
+    }
+
+    configSheet.getRange(1, 1).setValue("JSON_DATA_DATABASE");
     configSheet.getRange(2, 1).setValue(jsonString);
     
     return { success: true, timestamp: new Date().toISOString() };
   } catch (e) {
+    logAction("SAVE_EXCEPTION", e.toString());
     return { success: false, error: e.toString() };
   }
 }
@@ -93,9 +99,6 @@ function getOrCreateSpreadsheet() {
   }
 }
 
-/**
- * SISTEMA DE LOGS
- */
 function logAction(type, message) {
   try {
     const ss = getOrCreateSpreadsheet();
