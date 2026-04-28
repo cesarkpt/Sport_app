@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v1.9.2 - UPDATE OK");
+console.log("Sports Hub Pro v1.9.3 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -1563,7 +1563,7 @@ async function confirmCarouselFraming() {
         const date = (document.getElementById('matchDate') || {}).value || '';
         const sSize = 100;
         const totalW2 = (sSize * 2) + 20;
-        const x2 = size - totalW2 - 80;
+        const x2 = w - totalW2 - 80;
         const y2 = 80;
         try {
             const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
@@ -1589,8 +1589,8 @@ async function confirmCarouselFraming() {
     if (tickerTeam) {
         const barW = 1200;
         const barH = 150;
-        const bX_total = (size * 2) / 2 - barW / 2;
-        const bY = size - 240;
+        const bX_total = w - barW / 2;
+        const bY = h - 240;
 
         const drawTickerOn = async (ctx, offsetX) => {
             ctx.save();
@@ -1616,12 +1616,12 @@ async function confirmCarouselFraming() {
         };
 
         await drawTickerOn(ctx1, 0);
-        await drawTickerOn(ctx2, size);
+        await drawTickerOn(ctx2, w);
     }
 
     // Borde Panini Final (Unión perfecta para carrusel)
-    addPaniniBorder(ctx1, size, size, ['right']);
-    addPaniniBorder(ctx2, size, size, ['left']);
+    addPaniniBorder(ctx1, w, h, ['right']);
+    addPaniniBorder(ctx2, w, h, ['left']);
 
     document.getElementById('tabCarouselPreview').classList.remove('hidden');
 }
