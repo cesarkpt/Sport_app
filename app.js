@@ -2577,7 +2577,7 @@ async function downloadFullCarousel() {
 }
 
 // --- LOGICA DE ALBUM (v1.7.6) ---
-let albumImages = new Array(15).fill(null);
+let albumImages = new Array(14).fill(null);
 let albumTemplate = null;
 
 function openAlbumEditor() {
@@ -2642,9 +2642,9 @@ function uploadSingleAlbum(index) {
 async function handleAlbumBulkUpload(input) {
     if (!input.files || input.files.length === 0) return;
     // Las 12 fotos de los jugadores van del indice 3 al 14
-    const files = Array.from(input.files).slice(0, 12);
+    const files = Array.from(input.files).slice(0, 11);
     
-    console.log("Cargando 12 fotos de jugadores para el album...");
+    console.log("Cargando 11 fotos de jugadores para el album...");
     for (let i = 0; i < files.length; i++) {
         const base64 = await imageToBase64(files[i]);
         albumImages[i + 3] = await loadImg(base64);
@@ -2691,7 +2691,7 @@ async function generateAlbum() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     
-    const templateURL = 'https://lh3.googleusercontent.com/d/1b2E1qbrONtvdYQXyHJ-c8gtImy9rJZ9n?t=0';
+    const templateURL = 'https://drive.google.com/uc?export=download&id=1fhmSEr6dh5nUP9BKIqH0Lwg3Ue8smkLL';
     if (!albumTemplate) {
         try { albumTemplate = await loadImg(templateURL); } catch(e) { console.warn("Fondo alternativo"); }
     }
@@ -2713,47 +2713,67 @@ async function generateAlbum() {
     const c1 = team.color1 || '#00ff88';
     const c2 = team.color2 || c1;
     
+    // COLORIZACIÓN ALINEADA CON LA LÍNEA CENTRAL
     ctx.save();
-    const grd = ctx.createLinearGradient(0, 0, W, H);
-    grd.addColorStop(0, c1);
-    grd.addColorStop(1, c2);
-    ctx.fillStyle = grd;
-    // Usamos soft-light para teñir las luces y sombras sin perder detalle
+    // Gradiente para la página izquierda
+    const grdL = ctx.createLinearGradient(0, 0, 1000, 0);
+    grdL.addColorStop(0, c1);
+    grdL.addColorStop(1, c2);
+    ctx.fillStyle = grdL;
     ctx.globalCompositeOperation = 'soft-light';
-    ctx.globalAlpha = 0.8;
-    ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 0.7;
+    ctx.fillRect(0, 0, 1000, H);
+
+    // Gradiente para la página derecha (espejo o continuo)
+    const grdR = ctx.createLinearGradient(1000, 0, 2000, 0);
+    grdR.addColorStop(0, c2);
+    grdR.addColorStop(1, c1);
+    ctx.fillStyle = grdR;
+    ctx.fillRect(1000, 0, 1000, H);
     
-    // Segunda capa en modo 'color' para asegurar que el tono sea el del equipo
+    // Refuerzo de color
     ctx.globalCompositeOperation = 'color';
-    ctx.globalAlpha = 0.3;
+    ctx.globalAlpha = 0.2;
     ctx.fillRect(0, 0, W, H);
     ctx.restore();
     
-    // COORDENADAS (v1.7.6)
-    // Lado Izquierdo: Escudo (0), Team (1), DT (2)
-    const mainCoords = [
-        [100, 100, 400, 400],   // Escudo (Metalizado)
-        [520, 100, 400, 400],   // Team Photo (Derecha del escudo)
-        [100, 550, 820, 750]    // DT / Team Full (Debajo, mas grande)
-    ];
+    // COORDENADAS (v1.8.1 - Nuevo Template Sin Estadio)
+    // Mapeo de 14 slots:
+    // 0: Escudo (Left Top)
+    // 1: Team (Left Top Right)
+    // 2: DT (Right Grid Bottom Right)
+    // 3-13: Jugadores 1-11 (Right Grid)
 
-    // Lado Derecho: 12 Jugadores (Indices 3 a 14)
-    const gridStartX = 1050;
-    const gridStartY = 100;
-    const cellW = 210;
-    const cellH = 280;
-    const gapX = 15;
-    const gapY = 20;
     
+    const gridStartX = 1060;
+    const gridStartY = 135;
+    const cellW = 265;
+    const cellH = 265;
+    const gapX = 35;
+    const gapY = 40;
+
     albumImages.forEach((img, i) => {
         if (!img) return;
         let x, y, w, h;
-        if (i < 3) {
-            [x, y, w, h] = mainCoords[i];
+        
+        if (i === 0) { // ESCUDO
+            [x, y, w, h] = [155, 125, 200, 200];
+        } else if (i === 1) { // TEAM
+            [x, y, w, h] = [410, 125, 480, 280];
+
+
+        } else if (i === 2) { // DT (Posición específica en la grilla: col 2, row 3)
+            x = gridStartX + (2 * (cellW + gapX));
+            y = gridStartY + (3 * (cellH + gapY));
+            w = cellW;
+            h = cellH;
         } else {
+            // Jugadores 1-11 (índices 3 al 13)
             const idx = i - 3;
-            const col = idx % 4; // 4 columnas
-            const row = Math.floor(idx / 4); // 3 filas
+            const col = idx % 3; // 3 columnas
+            const row = Math.floor(idx / 3); // 4 filas
+            
+            // Si el índice llegara a la posición del DT, lo saltamos (aunque con 11 jugadores no llega)
             x = gridStartX + (col * (cellW + gapX));
             y = gridStartY + (row * (cellH + gapY));
             w = cellW;
@@ -2761,14 +2781,14 @@ async function generateAlbum() {
         }
         
         ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,0.6)';
-        ctx.shadowBlur = 20;
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 15;
         ctx.shadowOffsetX = 5;
-        ctx.shadowOffsetY = 10;
+        ctx.shadowOffsetY = 8;
         
         // Efecto "Sticker" (Borde blanco fino)
         ctx.fillStyle = 'white';
-        ctx.fillRect(x - 5, y - 5, w + 10, h + 10);
+        ctx.fillRect(x - 4, y - 4, w + 8, h + 8);
         
         ctx.beginPath();
         ctx.rect(x, y, w, h);
@@ -2779,6 +2799,6 @@ async function generateAlbum() {
     
     try {
         const logo = await loadImg('https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0');
-        drawImageProp(ctx, logo, W - 350, H - 150, 300, 100);
+        drawImageProp(ctx, logo, W - 350, H - 100, 300, 80);
     } catch(e) {}
 }
