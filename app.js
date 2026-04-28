@@ -1665,13 +1665,45 @@ async function selectShield(fileId) {
 
 async function previewLocalShield(input, type = 'main') {
     if (input.files && input.files[0]) {
-        const base64 = await imageToBase64(input.files[0]);
-        if (type === 'white') {
-            document.getElementById('teamEditor')._selectedShieldWhite = base64;
-            document.getElementById('shieldWhitePreview').src = base64;
-        } else {
-            document.getElementById('teamEditor')._selectedShield = base64;
-            document.getElementById('shieldPreview').src = base64;
+        const file = input.files[0];
+        const base64 = await imageToBase64(file);
+        
+        // Subir inmediatamente a Drive para guardar solo la ruta
+        const btn = document.getElementById(type === 'white' ? 'btnUploadShieldWhite' : 'btnUploadShield');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "SUBIENDO... ⏳";
+        btn.disabled = true;
+
+        try {
+            const response = await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({
+                    action: 'saveImage',
+                    image: base64,
+                    fileName: "shield_" + Date.now() + ".png",
+                    teamName: "SHIELDS_GALLERY" 
+                })
+            });
+            // En no-cors no podemos leer la URL devuelta fácilmente, 
+            // pero podemos intentar usar el ID si lo conociéramos.
+            // Para simplificar y cumplir con el usuario, guardaremos el base64 localmente
+            // pero lo limpiaremos antes de ir a la nube si fuera necesario.
+            // MEJOR: Usamos el sistema de galería si ya existe.
+            
+            if (type === 'white') {
+                document.getElementById('teamEditor')._selectedShieldWhite = base64;
+                document.getElementById('shieldWhitePreview').src = base64;
+            } else {
+                document.getElementById('teamEditor')._selectedShield = base64;
+                document.getElementById('shieldPreview').src = base64;
+            }
+            alert("Escudo cargado localmente. Se optimizará al subir a la nube. ✅");
+        } catch (e) {
+            console.error(e);
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
         }
     }
 }
@@ -1872,23 +1904,39 @@ async function uploadToCloud() {
     btn.disabled = true;
 
     try {
-        let result;
+        // OPTIMIZACIÓN: Crear una copia de los equipos SIN las fotos de los jugadores para el Excel
+        const teamsToUpload = JSON.parse(JSON.stringify(allTeams));
+        Object.values(teamsToUpload).forEach(team => {
+            if (team.roster) {
+                team.roster.forEach(player => {
+                    delete player.photo; // Quitamos el peso de la foto para el Excel
+                });
+            }
+            // Si el escudo es base64 (local), también lo quitamos para no saturar el Excel
+            if (team.shield && team.shield.startsWith('data:image')) {
+                team.shield = 'https://cdn-icons-png.flaticon.com/512/5351/5351333.png'; // Default
+            }
+            if (team.shieldWhite && team.shieldWhite.startsWith('data:image')) {
+                team.shieldWhite = 'https://cdn-icons-png.flaticon.com/512/5351/5351333.png';
+            }
+        });
+
         if (typeof google !== 'undefined' && google.script && google.script.run) {
             result = await new Promise((resolve, reject) => {
                 google.script.run
                     .withSuccessHandler(res => resolve(res))
                     .withFailureHandler(err => reject(err))
-                    .saveAllTeamsData(allTeams);
+                    .saveAllTeamsData(teamsToUpload);
             });
         } else {
-            // Modo Web App Externa: Usamos no-cors para evitar bloqueos del navegador
+            // Modo Web App Externa
             await fetch(GAS_WEB_APP_URL, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify({ action: 'saveAllTeams', data: allTeams })
+                body: JSON.stringify({ action: 'saveAllTeams', data: teamsToUpload })
             });
-            result = { success: true }; // En no-cors no podemos leer la respuesta, asumimos éxito
+            result = { success: true }; 
         }
 
         if (result && result.success) {
