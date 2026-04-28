@@ -926,13 +926,16 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
         ctxCarnet.drawImage(carnetCrop, 0, 0, carnetCrop.width, carnetCrop.height, 0, 0, cw, carnetCrop.height * cScale);
     }
 
-    // Barra lateral Degradada (50px)
-    const barW = 50;
-    const grdSide = ctxCarnet.createLinearGradient(0, 0, 0, ch);
-    grdSide.addColorStop(0, player.color);
-    grdSide.addColorStop(1, player.color2 || player.color);
-    ctxCarnet.fillStyle = grdSide;
-    ctxCarnet.fillRect(0, 0, barW, ch);
+    // Barra lateral Degradada (50px) - Ocultar si está en modo LIMPIAR
+    const isClean = document.getElementById('cleanCarnetToggle')?.checked;
+    if (!isClean) {
+        const barW = 50;
+        const grdSide = ctxCarnet.createLinearGradient(0, 0, 0, ch);
+        grdSide.addColorStop(0, player.color);
+        grdSide.addColorStop(1, player.color2 || player.color);
+        ctxCarnet.fillStyle = grdSide;
+        ctxCarnet.fillRect(0, 0, barW, ch);
+    }
 
     await drawCarnetOverlay(ctxCarnet, player);
 
@@ -2428,12 +2431,12 @@ async function updateArtePreview(type) {
     if (state.woodImg) {
         drawImageProp(ctx, state.woodImg, 0, 0, finalW, finalH);
         
-        // Degradado lineal con colores del equipo encima del fondo (con opacidad)
+        // Degradado lineal con colores del equipo encima del fondo (Opacidad reducida para ver la textura)
         const bgGrd = ctx.createLinearGradient(0, 0, finalW, finalH);
         bgGrd.addColorStop(0, c1);
         bgGrd.addColorStop(1, c2);
         ctx.fillStyle = bgGrd;
-        ctx.globalAlpha = 0.85; 
+        ctx.globalAlpha = 0.4; 
         ctx.fillRect(0, 0, finalW, finalH);
         ctx.globalAlpha = 1.0;
     } else {
