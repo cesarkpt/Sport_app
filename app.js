@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v1.7.0 - Carga Exitosa");
+console.log("Sports Hub Pro v1.7.1 - Carga Exitosa");
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
     maxProcessingSize: 800, // Tamaño máximo para procesar con IA (más rápido en móviles)
@@ -946,7 +946,7 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
     }
 
     // Barra lateral Degradada (50px) - Ocultar si está en modo LIMPIAR
-    const isClean = document.getElementById('cleanCarnetToggle')?.checked;
+    const isClean = (document.getElementById('cleanCarnetToggle') || {}).checked;
     if (!isClean) {
         const barW = 50;
         const grdSide = ctxCarnet.createLinearGradient(0, 0, 0, ch);
@@ -1013,7 +1013,7 @@ async function drawCarnetOverlay(ctx, player) {
     const h = CONFIG.carnetHeight;
     const w = CONFIG.carnetWidth;
 
-    const isClean = document.getElementById('cleanCarnetToggle')?.checked;
+    const isClean = (document.getElementById('cleanCarnetToggle') || {}).checked;
 
     // 1. MI LOGO EN EL CARNET
     try {
@@ -1172,7 +1172,7 @@ async function drawBackground(ctx, color, color2) {
 }
 
 async function drawSportsTicker(ctx, player) {
-    const isClean = document.getElementById('cleanPlanoToggle')?.checked;
+    const isClean = (document.getElementById('cleanPlanoToggle') || {}).checked;
     if (isClean) return;
 
     const bY = 1080 - 180;
@@ -1322,12 +1322,12 @@ function downloadImage(canvasId, defaultName) {
     else if (canvasId === 'albumCanvas') prefix = "ALB";
 
     // 2. Obtener Código de Equipo
-    const teamInput = document.getElementById('albumTeamSelector')?.value || document.getElementById('editTeam')?.value || "";
+    const teamInput = (document.getElementById('albumTeamSelector') || {}).value || (document.getElementById('editTeam') || {}).value || "";
     const team = Object.values(allTeams).find(t => t.name.toUpperCase() === teamInput.toUpperCase());
     let tCode = (team ? (team.code || team.name.substring(0,3)) : "XXX").toUpperCase().replace(/\s+/g, '_');
     
     // 3. Obtener Número o DT
-    const num = document.getElementById('editNumber')?.value || "";
+    const num = (document.getElementById('editNumber') || {}).value || "";
     
     // 4. Construir Nombre Final
     let finalName = `${prefix}_${tCode}`;
@@ -1339,8 +1339,8 @@ function downloadImage(canvasId, defaultName) {
     link.click();
 
     // SUBIR A DRIVE AL DESCARGAR (Solo si el checkbox está activo)
-    const isDriveActive = document.getElementById('driveUploadPlano')?.checked || 
-                         document.getElementById('driveUploadCarnet')?.checked;
+    const isDriveActive = (document.getElementById('driveUploadPlano') || {}).checked || 
+                         (document.getElementById('driveUploadCarnet') || {}).checked;
     if (isDriveActive) {
         saveToDrive(canvas.toDataURL('image/png'), `${finalName}.png`);
     }
@@ -1526,7 +1526,7 @@ async function confirmCarouselFraming() {
     const realX = carouselState.x * renderScale;
     const realY = carouselState.y * renderScale;
 
-    const isClean = document.getElementById('cleanCarouselToggle')?.checked;
+    const isClean = (document.getElementById('cleanCarouselToggle') || {}).checked;
 
     [ctx1, ctx2].forEach((ctx, i) => {
         ctx.fillStyle = "#000";
@@ -1557,8 +1557,8 @@ async function confirmCarouselFraming() {
     if (selectedMatchTeamA && selectedMatchTeamB) {
         const teamA = allTeams[selectedMatchTeamA];
         const teamB = allTeams[selectedMatchTeamB];
-        const stage = document.getElementById('matchStage')?.value || '';
-        const date = document.getElementById('matchDate')?.value || '';
+        const stage = (document.getElementById('matchStage') || {}).value || '';
+        const date = (document.getElementById('matchDate') || {}).value || '';
         const sSize = 100;
         const totalW2 = (sSize * 2) + 20;
         const x2 = size - totalW2 - 80;
@@ -2367,9 +2367,9 @@ async function updateArtePreview(type) {
     const player = state.data;
     const teamA = selectedMatchTeamA ? allTeams[selectedMatchTeamA] : null;
     const teamB = selectedMatchTeamB ? allTeams[selectedMatchTeamB] : null;
-    const stage = document.getElementById('matchStage')?.value || '';
-    const date = document.getElementById('matchDate')?.value || '';
-    const shieldColorMode = document.getElementById('polaroidShieldColor')?.value || 'white';
+    const stage = (document.getElementById('matchStage') || {}).value || '';
+    const date = (document.getElementById('matchDate') || {}).value || '';
+    const shieldColorMode = (document.getElementById('polaroidShieldColor') || {}).value || 'white';
 
     // Colores para el fondo exterior
     const c1 = player.color;
@@ -2438,7 +2438,7 @@ async function updateArtePreview(type) {
     addPaniniBorder(tCtx, width, height);
 
     // 2. Renderizar en Canvas Final
-    const applyTilt = document.getElementById('polaroidTiltToggle')?.checked;
+    const applyTilt = (document.getElementById('polaroidTiltToggle') || {}).checked;
     const tilt = applyTilt ? (state.tilt || 0) : 0;
     const absTilt = Math.abs(tilt);
     const finalW = width + (height * Math.sin(absTilt)) + 150;
@@ -2528,7 +2528,7 @@ async function downloadFullCarousel() {
     ctx.restore();
 
     // 4. Sombras y Overlays
-    const isClean = document.getElementById('cleanCarouselToggle')?.checked;
+    const isClean = (document.getElementById('cleanCarouselToggle') || {}).checked;
     if (!isClean) {
         drawPerimeterShadow(ctx, size * 2, size);
 
@@ -2688,7 +2688,7 @@ async function generateAlbum() {
         ctx.fillRect(0, 0, W, H);
     }
     
-    const albumTeamName = document.getElementById('albumTeamSelector')?.value;
+    const albumTeamName = (document.getElementById('albumTeamSelector') || {}).value;
     const team = Object.values(allTeams).find(t => t.name === albumTeamName) || { color1: '#00ff88', color2: '#00d4ff' };
     const c1 = team.color1 || '#00ff88';
     const c2 = team.color2 || c1;
