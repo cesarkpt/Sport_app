@@ -1307,21 +1307,42 @@ function updateStep(num, text) {
     el.classList.add('active');
 }
 
-function downloadImage(canvasId, name) {
+function downloadImage(canvasId, defaultName) {
     const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    // 1. Determinar Prefijo
+    let prefix = "FILE";
+    if (canvasId === 'outputCanvas') prefix = "PTV";
+    else if (canvasId === 'carnetCanvas') prefix = "CROM";
+    else if (canvasId === 'arteCanvasSquare') prefix = "INFO_01";
+    else if (canvasId === 'arteCanvasVertical') prefix = "POL_01";
+    else if (canvasId === 'tabCarouselCanvas1' || canvasId === 'carouselCanvas1') prefix = "TEAM_P1";
+    else if (canvasId === 'tabCarouselCanvas2' || canvasId === 'carouselCanvas2') prefix = "TEAM_P2";
+    else if (canvasId === 'albumCanvas') prefix = "ALB";
+
+    // 2. Obtener Código de Equipo
+    const teamInput = document.getElementById('albumTeamSelector')?.value || document.getElementById('editTeam')?.value || "";
+    const team = Object.values(allTeams).find(t => t.name.toUpperCase() === teamInput.toUpperCase());
+    let tCode = (team ? (team.code || team.name.substring(0,3)) : "XXX").toUpperCase().replace(/\s+/g, '_');
+    
+    // 3. Obtener Número o DT
+    const num = document.getElementById('editNumber')?.value || "";
+    
+    // 4. Construir Nombre Final
+    let finalName = `${prefix}_${tCode}`;
+    if (num) finalName += `_${num.toUpperCase()}`;
+
     const link = document.createElement('a');
-    link.download = `sportshub_${name}_${Date.now()}.png`;
-    const base64 = canvas.toDataURL('image/png');
-    link.href = base64;
+    link.download = `${finalName}_${Date.now()}.png`;
+    link.href = canvas.toDataURL('image/png');
     link.click();
 
     // SUBIR A DRIVE AL DESCARGAR (Solo si el checkbox está activo)
-    const shouldUpload = document.getElementById('driveUploadPlano')?.checked || 
+    const isDriveActive = document.getElementById('driveUploadPlano')?.checked || 
                          document.getElementById('driveUploadCarnet')?.checked;
-                         
-    if (shouldUpload && currentPlayerData) {
-        console.log("Subiendo copia a Drive por solicitud de descarga...");
-        saveToDrive(base64, currentPlayerData);
+    if (isDriveActive) {
+        saveToDrive(canvas.toDataURL('image/png'), `${finalName}.png`);
     }
 }
 
@@ -2540,8 +2561,12 @@ async function downloadFullCarousel() {
     }
 
     // 5. Descargar
+    const teamA = allTeams[selectedMatchTeamA];
+    const tCode = (teamA ? (teamA.code || teamA.name.substring(0,3)) : "XXX").toUpperCase().replace(/\s+/g, '_');
+    const finalName = `TEAM_FULL_${tCode}`;
+
     const link = document.createElement('a');
-    link.download = `carrusel_completo_${Date.now()}.png`;
+    link.download = `${finalName}_${Date.now()}.png`;
     link.href = canvasFull.toDataURL('image/png');
     link.click();
 }
@@ -2575,22 +2600,31 @@ function renderAlbumSlots() {
             thumb.src = img.src;
             div.appendChild(thumb);
         }
-        div.onclick = () => {
-            const inp = document.createElement('input');
-            inp.type = 'file';
-            inp.accept = 'image/*';
-            inp.onchange = async (e) => {
-                if (e.target.files[0]) {
-                    const base64 = await imageToBase64(e.target.files[0]);
-                    albumImages[i] = await loadImg(base64);
-                    renderAlbumSlots();
-                    generateAlbum();
-                }
-            };
-            inp.click();
+    div.onclick = () => {
+        const inp = document.createElement('input');
+        inp.type = 'file';
+        inp.accept = 'image/*';
+        inp.onchange = async (e) => {
+            if (e.target.files[0]) {
+                const base64 = await imageToBase64(e.target.files[0]);
+                albumImages[i] = await loadImg(base64);
+                renderAlbumSlots();
+                generateAlbum();
+            }
         };
-        grid.appendChild(div);
-    });
+        inp.click();
+    };
+    
+    // Etiqueta guía
+    const label = document.createElement('span');
+    label.style.cssText = 'position:absolute; top:0; left:0; background:rgba(0,0,0,0.7); font-size:6px; padding:1px 3px; border-radius:0 0 4px 0; pointer-events:none; color:#fff;';
+    if (i === 0) label.textContent = 'ESCUDO';
+    else if (i === 1) label.textContent = 'TEAM';
+    else label.textContent = `JUG ${i-1}`;
+    div.appendChild(label);
+    
+    grid.appendChild(div);
+});
 }
 
 async function generateAlbum() {
@@ -2599,7 +2633,7 @@ async function generateAlbum() {
     const ctx = canvas.getContext('2d');
     
     // Plantilla (URL del usuario)
-    const templateURL = 'https://lh3.googleusercontent.com/d/1vA...'; // REEMPLAZAR CON ID REAL
+    const templateURL = 'https://lh3.googleusercontent.com/d/1b2E1qbrONtvdYQXyHJ-c8gtImy9rJZ9n?t=0'; 
     if (!albumTemplate) {
         try { albumTemplate = await loadImg(templateURL); } catch(e) { console.error('Falta plantilla album'); }
     }
@@ -2629,23 +2663,23 @@ async function generateAlbum() {
     grd.addColorStop(1, c2);
     ctx.fillStyle = grd;
     ctx.globalCompositeOperation = 'multiply';
-    ctx.globalAlpha = 0.6;
+    ctx.globalAlpha = 0.5; // Un poco más traslúcido para no oscurecer tanto
     ctx.fillRect(0, 0, W, H);
     ctx.restore();
     
     // 3. Dibujar Fotos
-    // IZQUIERDA (2 Grandes)
+    // IZQUIERDA (2 Fotos)
     const leftCoords = [
-        [50, 100, 900, 600], // Slot 1 superior
-        [50, 750, 900, 600]  // Slot 2 inferior (ajustar según estadio)
+        [60, 60, 880, 620],   // Arriba izquierda
+        [50, 930, 900, 420]   // Abajo izquierda (sobre el cuadro del estadio)
     ];
     
     // DERECHA (12 Grid 3x4)
-    const gridStartX = 1050;
+    const gridStartX = 1060;
     const gridStartY = 100;
-    const cellW = 280;
-    const cellH = 280;
-    const gap = 25;
+    const cellW = 270;
+    const cellH = 270;
+    const gap = 20;
     
     albumImages.forEach((img, i) => {
         if (!img) return;
@@ -2663,7 +2697,9 @@ async function generateAlbum() {
         }
         
         ctx.save();
-        // Recorte redondeado opcional o sombra
+        // Sombra suave para las fotos
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 15;
         ctx.beginPath();
         ctx.rect(x, y, w, h);
         ctx.clip();
