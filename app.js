@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v2.9.3 - UPDATE OK");
+console.log("Sports Hub Pro v2.9.4 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -3015,6 +3015,7 @@ async function generateAlbum() {
             try {
                 albumTemplate = await loadImg(cachedData);
             } catch(e) {
+                console.warn("Caché corrupto, limpiando...");
                 localStorage.removeItem('album_bg_cache');
             }
         }
@@ -3023,16 +3024,17 @@ async function generateAlbum() {
             console.log("Descargando fondo por primera vez... 📥");
             try {
                 albumTemplate = await loadImg(templateURL);
-                // Guardar en caché como JPEG comprimido para no exceder límites de localStorage
+                // Guardar en caché
                 const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = albumTemplate.width;
-                tempCanvas.height = albumTemplate.height;
-                tempCanvas.getContext('2d').drawImage(albumTemplate, 0, 0);
+                tempCanvas.width = 1000; // Cachear a tamaño reducido para no saturar localStorage
+                tempCanvas.height = Math.round(1000 * (albumTemplate.height / albumTemplate.width));
+                tempCanvas.getContext('2d').drawImage(albumTemplate, 0, 0, tempCanvas.width, tempCanvas.height);
                 const base64 = tempCanvas.toDataURL('image/jpeg', 0.8);
                 localStorage.setItem('album_bg_cache', base64);
                 localStorage.setItem('album_bg_url', templateURL);
             } catch(e) { 
-                console.warn("Fallo carga fondo:", e); 
+                console.error("Error crítico cargando fondo de álbum:", e);
+                // Fallback a un color sólido si falla todo
             }
         }
     }
@@ -3348,10 +3350,10 @@ async function updateArtePreview(type) {
         ctx.restore();
     } catch(e) {}
 
-    // Viñeta Cinematográfica (Radial grande)
-    const grdV = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W * 0.8);
+    // Viñeta Cinematográfica (Mejorada: Radial masivo y central)
+    const grdV = ctx.createRadialGradient(W/2, H/2, W * 0.2, W/2, H/2, W * 0.9);
     grdV.addColorStop(0, "transparent");
-    grdV.addColorStop(1, "rgba(0,0,0,0.9)");
+    grdV.addColorStop(1, "rgba(0,0,0,0.85)");
     ctx.fillStyle = grdV;
     ctx.fillRect(0, 0, W, H);
 
