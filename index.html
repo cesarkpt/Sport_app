@@ -34,7 +34,7 @@
                 <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()">v1.5.2</button>
+                <button class="update-btn" onclick="toggleUpdates()">v1.5.4</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
             </div>
@@ -252,6 +252,8 @@
                                     <button class="pos-btn" onclick="setPos(this, 'DEF')">DEF</button>
                                     <button class="pos-btn" onclick="setPos(this, 'VOL')">VOL</button>
                                     <button class="pos-btn" onclick="setPos(this, 'DEL')">DEL</button>
+                                    <button class="pos-btn" onclick="setPos(this, 'DT')" style="background: #ff9800; color: black; border-color: #ff9800;">DT</button>
+                                    <button class="pos-btn" onclick="setPos(this, 'PRE')" style="background: #9c27b0; color: white; border-color: #9c27b0;">PRE</button>
                                     <button class="cap-btn" id="editCapBtn" onclick="toggleCap(this)">©</button>
                                 </div>
                             </div>
@@ -428,11 +430,16 @@
                             <div class="zoom-control" style="margin-top: 15px; display: flex; align-items: center; gap: 12px;">
                                 <label style="font-size: 0.6rem; opacity: 0.7; white-space: nowrap;">ZOOM</label>
                                 <input type="range" id="tabCarouselZoom" min="0.25" max="1.75" step="0.01" value="1" style="flex: 3;">
-                                <button class="btn-secondary" onclick="resetCarouselPosition()" style="padding: 5px 12px; font-size: 0.6rem; white-space: nowrap;">RECENTRAR</button>
-                                <label style="font-size: 0.6rem; opacity: 0.7; white-space: nowrap;">ROT.</label>
                                 <input type="range" id="tabCarouselRotate" min="-20" max="20" step="1" value="0" style="flex: 1;">
                             </div>
-                            <button class="btn-primary" onclick="confirmCarouselFraming()" style="margin-top: 20px; width: 100%;">GENERAR VISTA PREVIA</button>
+                            <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; background: rgba(255,255,255,0.05); padding: 8px 15px; border-radius: 10px;">
+                                <span style="font-size: 0.6rem; opacity: 0.7;">MODO LIMPIAR (SIN BARRA NEGRA)</span>
+                                <label class="switch" style="transform: scale(0.7);">
+                                    <input type="checkbox" id="cleanCarouselToggle">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <button class="btn-primary" onclick="confirmCarouselFraming()" style="margin-top: 15px; width: 100%;">GENERAR VISTA PREVIA</button>
                         </div>
 
                         <div id="tabCarouselPreview" class="carousel-preview-grid hidden" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
