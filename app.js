@@ -220,6 +220,25 @@ function setPos(btn, pos) {
     parent.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     btn.dataset.val = pos;
+
+    // Lógica especial para el panel de edición de foto subida
+    if (parent.id === 'editPosBtns') {
+        const numInput = document.getElementById('editNumber');
+        const nameInput = document.getElementById('editName');
+        const teamInput = document.getElementById('editTeam');
+
+        if (pos === 'DT') {
+            numInput.value = 'DT';
+            // Buscar nombre del DT en el equipo seleccionado
+            const teamName = teamInput.value;
+            const team = Object.values(allTeams).find(t => t.name.toUpperCase() === teamName.toUpperCase());
+            if (team && team.coach) {
+                nameInput.value = team.coach.toUpperCase();
+            }
+        } else if (pos === 'PRE') {
+            numInput.value = '';
+        }
+    }
 }
 
 function toggleCap(btn) {
@@ -1122,10 +1141,12 @@ async function drawCarnetOverlay(ctx, player) {
     grdNum.addColorStop(0, hexToRgba(player.color, 0.6));
     grdNum.addColorStop(1, hexToRgba(player.color2 || player.color, 0.6));
 
-    ctx.fillStyle = grdNum;
-    ctx.font = "italic 900 140px Outfit";
-    ctx.textAlign = "right";
-    ctx.fillText(player.number, w - 60, h - 50);
+    if (player.number && player.number !== "") {
+        ctx.fillStyle = grdNum;
+        ctx.font = "italic 900 140px Outfit";
+        ctx.textAlign = "right";
+        ctx.fillText(player.number, w - 60, h - 50);
+    }
     ctx.restore();
 
     // 7. Icono Capitán (C) - Alineado con el nuevo margen del número
@@ -1204,7 +1225,8 @@ async function drawSportsTicker(ctx, player) {
     ctx.fillStyle = "#FFF";
     ctx.font = "900 65px Outfit";
     const displayName = player.name.replace(" (C)", "");
-    ctx.fillText(`${player.number} | ${displayName}`, currentX, bY + 82);
+    const fullDisplayText = (player.number && player.number !== "") ? `${player.number} | ${displayName}` : displayName;
+    ctx.fillText(fullDisplayText, currentX, bY + 82);
     ctx.restore();
 
     // 5.5 ICONO CAPITÁN (Estilo Carnet - 400px a la derecha)
@@ -1483,6 +1505,8 @@ async function confirmCarouselFraming() {
     const realX = carouselState.x * renderScale;
     const realY = carouselState.y * renderScale;
 
+    const isClean = document.getElementById('cleanCarouselToggle')?.checked;
+
     [ctx1, ctx2].forEach((ctx, i) => {
         ctx.fillStyle = "#000";
         ctx.fillRect(0, 0, size, size);
@@ -1491,8 +1515,16 @@ async function confirmCarouselFraming() {
         ctx.rotate(carouselState.rotate * Math.PI / 180);
         ctx.drawImage(carouselState.img, -realW / 2, -realH / 2, realW, realH);
         ctx.restore();
-        drawPerimeterShadow(ctx, size, size);
+        
+        if (!isClean) {
+            drawPerimeterShadow(ctx, size, size);
+        }
     });
+
+    if (isClean) {
+        document.getElementById('tabCarouselPreview').classList.remove('hidden');
+        return;
+    }
 
     // Logo en Slide 1
     try {
@@ -1504,8 +1536,8 @@ async function confirmCarouselFraming() {
     if (selectedMatchTeamA && selectedMatchTeamB) {
         const teamA = allTeams[selectedMatchTeamA];
         const teamB = allTeams[selectedMatchTeamB];
-        const stage = (document.getElementById('matchStage') || {}).value || '';
-        const date = (document.getElementById('matchDate') || {}).value || '';
+        const stage = document.getElementById('matchStage')?.value || '';
+        const date = document.getElementById('matchDate')?.value || '';
         const sSize = 100;
         const totalW2 = (sSize * 2) + 20;
         const x2 = size - totalW2 - 80;
@@ -2309,9 +2341,9 @@ async function updateArtePreview(type) {
     const player = state.data;
     const teamA = selectedMatchTeamA ? allTeams[selectedMatchTeamA] : null;
     const teamB = selectedMatchTeamB ? allTeams[selectedMatchTeamB] : null;
-    const stage = document.getElementById('matchStage').value || '';
-    const date = document.getElementById('matchDate').value || '';
-    const shieldColorMode = document.getElementById('shieldColorMode').value || 'color';
+    const stage = document.getElementById('matchStage')?.value || '';
+    const date = document.getElementById('matchDate')?.value || '';
+    const shieldColorMode = document.getElementById('polaroidShieldColor')?.value || 'white';
 
     // Colores para el fondo exterior
     const c1 = player.color;
@@ -2468,38 +2500,46 @@ async function downloadFullCarousel() {
     ctx.rotate(carouselState.rotate * Math.PI / 180);
     ctx.drawImage(carouselState.img, -realW / 2, -realH / 2, realW, realH);
     ctx.restore();
-    drawPerimeterShadow(ctx, size * 2, size);
 
-    try {
-        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
-        drawImageProp(ctx, logoImg, 80, 80, 300, 140);
-    } catch (e) {}
+    // 4. Sombras y Overlays
+    const isClean = document.getElementById('cleanCarouselToggle')?.checked;
+    if (!isClean) {
+        drawPerimeterShadow(ctx, size * 2, size);
 
-    if (selectedMatchTeamA && selectedMatchTeamB) {
-        const teamA = allTeams[selectedMatchTeamA];
-        const teamB = allTeams[selectedMatchTeamB];
-        const stage = (document.getElementById('matchStage') || {}).value || '';
-        const date = (document.getElementById('matchDate') || {}).value || '';
-        const sSize = 100;
-        const totalW = (sSize * 2) + 20;
-        const x2 = (size * 2) - totalW - 80;
-        const y2 = 80;
+        // Logo (Slide 1)
         try {
-            const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
-            drawImageProp(ctx, imgA, x2, y2, sSize, sSize);
-            const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-            drawImageProp(ctx, imgB, x2 + sSize + 20, y2, sSize, sSize);
+            const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
+            drawImageProp(ctx, logoImg, 80, 80, 300, 140);
         } catch (e) {}
-        ctx.fillStyle = 'white';
-        ctx.textAlign = 'center';
-        const centerX2 = x2 + totalW / 2;
-        ctx.font = '900 30px Outfit';
-        ctx.fillText(stage, centerX2, y2 + sSize + 40);
-        ctx.font = '400 22px Outfit';
-        ctx.fillStyle = 'rgba(255,255,255,0.8)';
-        ctx.fillText(date, centerX2, y2 + sSize + 70);
+
+        // Info Partido (Slide 2)
+        if (selectedMatchTeamA && selectedMatchTeamB) {
+            const teamA = allTeams[selectedMatchTeamA];
+            const teamB = allTeams[selectedMatchTeamB];
+            const stage = (document.getElementById('matchStage') || {}).value || '';
+            const date = (document.getElementById('matchDate') || {}).value || '';
+            const sSize = 100;
+            const totalW = (sSize * 2) + 20;
+            const x2 = (size * 2) - totalW - 80;
+            const y2 = 80;
+            try {
+                const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
+                drawImageProp(ctx, imgA, x2, y2, sSize, sSize);
+                const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
+                drawImageProp(ctx, imgB, x2 + sSize + 20, y2, sSize, sSize);
+            } catch (e) {}
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            const centerX2 = x2 + totalW / 2;
+            ctx.font = '900 30px Outfit';
+            ctx.fillText(stage, centerX2, y2 + sSize + 40);
+            ctx.font = '400 22px Outfit';
+            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            ctx.fillText(date, centerX2, y2 + sSize + 70);
+        }
     }
 
+    // 5. Descargar
     const link = document.createElement('a');
     link.download = `carrusel_completo_${Date.now()}.png`;
     link.href = canvasFull.toDataURL('image/png');
