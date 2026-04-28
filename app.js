@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v2.7.2 - UPDATE OK");
+console.log("Sports Hub Pro v2.8.1 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -2704,7 +2704,9 @@ function saveAlbumLayout() {
         positions: albumPositions,
         overlays: albumOverlays,
         ticker: albumTickerPos,
-        matchday: albumMatchdayPos
+        matchday: albumMatchdayPos,
+        stickerScale: document.getElementById('albumStickerScale')?.value || 1.0,
+        brandingScale: document.getElementById('albumBrandingScale')?.value || 1.0
     };
     localStorage.setItem('sports_hub_album_layout', JSON.stringify(layout));
     console.log("Maquetación del Álbum guardada localmente... 💾");
@@ -2719,6 +2721,19 @@ function loadAlbumLayout() {
             if (layout.overlays) albumOverlays = layout.overlays;
             if (layout.ticker) albumTickerPos = layout.ticker;
             if (layout.matchday) albumMatchdayPos = layout.matchday;
+            
+            // Cargar Scales en UI
+            setTimeout(() => {
+                if (layout.stickerScale) {
+                    const s = document.getElementById('albumStickerScale');
+                    if (s) s.value = layout.stickerScale;
+                }
+                if (layout.brandingScale) {
+                    const s = document.getElementById('albumBrandingScale');
+                    if (s) s.value = layout.brandingScale;
+                }
+            }, 100);
+
             console.log("Maquetación del Álbum restaurada... 📂");
             return true;
         } catch (e) {
@@ -2762,7 +2777,7 @@ function initAlbumInteractions() {
     const onStart = (e) => {
         if (albumLocked) return; 
         const pos = getMousePos(e);
-        const HIT_RADIUS = 40;
+        const HIT_RADIUS = 60; // Aumentado para mejor manipulación
 
         const canEditCromos = document.getElementById('editCromos')?.checked;
         const canEditOverlays = document.getElementById('editOverlays')?.checked;
@@ -3063,10 +3078,13 @@ async function generateAlbum() {
     ctx.restore();
 
     // 3. CROMOS (Encima de Overlays)
+    const stickerScale = parseFloat(document.getElementById('albumStickerScale')?.value || 1.0);
     albumImages.forEach((img, i) => {
         if (!img) return;
         const p = albumPositions[i] || getDefaultAlbumPos(i);
-        const { x, y, w, h } = p;
+        const { x, y, w: baseW, h: baseH } = p;
+        const w = baseW * stickerScale;
+        const h = baseH * stickerScale;
         
         ctx.save();
         ctx.shadowColor = "rgba(0,0,0,0.5)";
@@ -3081,20 +3099,32 @@ async function generateAlbum() {
     });
 
     // 4. BRANDING (Encima de todo)
+    const brandingScale = parseFloat(document.getElementById('albumBrandingScale')?.value || 1.0);
+    
     // Ticker en Album (Interactivo)
     if (team) {
-        const { x: bX, y: bY, w: barW, h: barH } = albumTickerPos;
+        const { x: bX, y: bY, w: baseBarW, h: baseBarH } = albumTickerPos;
+        const barW = baseBarW * brandingScale;
+        const barH = baseBarH * brandingScale;
 
         ctx.save();
         ctx.fillStyle = "rgba(0,0,0,0.85)";
-        drawRoundedRect(ctx, bX, bY, barW, barH, 15, true, false);
+        drawRoundedRect(ctx, bX, bY, barW, barH, 15 * brandingScale, true, false);
         ctx.fillStyle = team.color1 || "#00ff88";
-        ctx.fillRect(bX, bY, 10, barH);
+        ctx.fillRect(bX, bY, 10 * brandingScale, barH);
         
+        if (team.shield) {
+            try {
+                const sImg = await loadImg(team.shield);
+                const sSize = 100 * brandingScale;
+                ctx.drawImage(sImg, bX + 20 * brandingScale, bY - 20 * brandingScale, sSize, sSize);
+            } catch(e) {}
+        }
+
         ctx.fillStyle = "white";
         ctx.textAlign = "left";
-        ctx.font = "900 35px Outfit";
-        ctx.fillText(team.name.toUpperCase(), bX + 40, bY + 48);
+        ctx.font = `900 ${35 * brandingScale}px Outfit`;
+        ctx.fillText(team.name.toUpperCase(), bX + (team.shield ? 130 : 40) * brandingScale, bY + (48 * brandingScale));
         ctx.restore();
 
         // Indicador visual de arrastre si está activo
@@ -3112,15 +3142,30 @@ async function generateAlbum() {
     if (selectedMatchTeamA && selectedMatchTeamB) {
         const stage = (document.getElementById('matchStage') || {}).value || '';
         const date = (document.getElementById('matchDate') || {}).value || '';
-        const { x, y, w, h } = albumMatchdayPos;
+        const { x: mX, y: mY, w: baseMW, h: baseMH } = albumMatchdayPos;
+        const mW = baseMW * brandingScale;
+        const mH = baseMH * brandingScale;
+
+        // Cargar Escudos Matchday
+        const teamA = allTeams[selectedMatchTeamA];
+        const teamB = allTeams[selectedMatchTeamB];
+        const sSize = 60 * brandingScale;
+
+        try {
+            const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
+            ctx.drawImage(imgA, mX + (mW/2) - sSize - 10, mY - sSize - 5, sSize, sSize);
+            const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
+            ctx.drawImage(imgB, mX + (mW/2) + 10, mY - sSize - 5, sSize, sSize);
+        } catch(e) {}
+
         ctx.save();
         ctx.fillStyle = "white";
         ctx.textAlign = "center";
-        ctx.font = "900 32px Outfit";
-        ctx.fillText(stage.toUpperCase(), x + w/2, y + 25);
-        ctx.font = "400 22px Outfit";
+        ctx.font = `900 ${32 * brandingScale}px Outfit`;
+        ctx.fillText(stage.toUpperCase(), mX + mW/2, mY + (25 * brandingScale));
+        ctx.font = `400 ${22 * brandingScale}px Outfit`;
         ctx.fillStyle = "rgba(255,255,255,0.8)";
-        ctx.fillText(date, x + w/2, y + 55);
+        ctx.fillText(date, mX + mW/2, mY + (55 * brandingScale));
         ctx.restore();
 
         // Indicador visual de arrastre si está activo
@@ -3129,13 +3174,13 @@ async function generateAlbum() {
             ctx.setLineDash([10, 10]);
             ctx.strokeStyle = "rgba(255,255,255,0.5)";
             ctx.lineWidth = 2;
-            ctx.strokeRect(x, y, w, h);
+            ctx.strokeRect(mX, mY, mW, mH);
             ctx.restore();
         }
     }
     
-    // 5. BORDE PANINI FINAL
-    addPaniniBorder(ctx, W, H);
+    // 5. BORDE PANINI FINAL (Desactivado por petición del usuario para Álbum)
+    // addPaniniBorder(ctx, W, H);
     
     try {
         const logo = await loadImg('https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0');
