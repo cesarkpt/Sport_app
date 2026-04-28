@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports Hub - Pro Card Generator</title>
     <script>
-        console.log("Sports Hub Pro v1.9.2 - UPDATE OK");
+        console.log("Sports Hub Pro v1.9.6 - UPDATE OK");
     </script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=1.9.6">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Oswald:wght@700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
     <!-- Librerías de IA -->
@@ -27,11 +27,14 @@
 </head>
 <body>
     <script>
-        /*
+        // Forzar la eliminación de cualquier Service Worker previo para asegurar la actualización
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js');
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                }
+            });
         }
-        */
     </script>
     <div class="app-container">
         <header>
@@ -39,7 +42,7 @@
                 <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v1.9.2 - OK</button>
+                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v1.9.6 - OK</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
             </div>
@@ -585,6 +588,22 @@
             </div>
             <div class="updates-list">
                 <div class="update-item">
+                    <span class="update-ver">v1.9.6</span>
+                    <p>Corrección TEAM: Se ha resuelto el problema de la pantalla negra en el editor de carrusel al detectar correctamente las dimensiones del contenedor al cambiar de pestaña.</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v1.9.5</span>
+                    <p>Lógica Inteligente: Al seleccionar la posición 'PRE', el sistema ahora rellena automáticamente el nombre como "LA PREVIA" y limpia el dorsal.</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v1.9.4</span>
+                    <p>Mejora Visual: Restaurado el borde blanco tipo "Sticker Panini" en todas las exportaciones (PTV, Cromo, RS, Arte, Álbum y TEAM).</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v1.9.3</span>
+                    <p>Actualización Crítica: Forzado de cache-busting en CSS/JS y eliminación de Service Workers residuales para garantizar sincronización con GitHub.</p>
+                </div>
+                <div class="update-item">
                     <span class="update-ver">v1.9.2</span>
                     <p>Corrección de errores: Eliminada dependencia de panel inexistente y ajustada la proporción del carrusel TEAM al ratio del cromo (3:2).</p>
                 </div>
@@ -677,6 +696,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=1.9.2"></script>
+    <script src="app.js?v=1.9.6"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v1.9.3 - UPDATE OK");
+console.log("Sports Hub Pro v1.9.6 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -238,6 +238,7 @@ function setPos(btn, pos) {
             }
         } else if (pos === 'PRE') {
             numInput.value = '';
+            nameInput.value = 'LA PREVIA';
         }
     }
 }
@@ -1533,8 +1534,9 @@ async function confirmCarouselFraming() {
     canvas1.width = w; canvas1.height = h;
     canvas2.width = w; canvas2.height = h;
 
-    // The container represents 2 panels side by side (total width = 2*w output)
-    const renderScale = (w * 2) / cW;
+    // El contenedor representa 2 paneles (810x2 = 1620 total en render)
+    const currentCW = cW || 800; // Evitar división por cero
+    const renderScale = (w * 2) / currentCW;
     const realW = carouselState.img.width  * carouselState.scale * renderScale;
     const realH = carouselState.img.height * carouselState.scale * renderScale;
     const realX = carouselState.x * renderScale;
@@ -2154,7 +2156,13 @@ function showResultTab(tabId, activeBtn = null) {
 
     // Mostrar el contenido seleccionado
     const tab = document.getElementById(tabId + 'Tab');
-    if (tab) tab.classList.remove('hidden');
+    if (tab) {
+        tab.classList.remove('hidden');
+        // Si entramos al carrusel, resetear posición para capturar dimensiones del contenedor
+        if (tabId === 'carousel') {
+            setTimeout(resetCarouselPosition, 50);
+        }
+    }
     
     // Marcar el botón como activo
     const btn = activeBtn || (window.event ? window.event.currentTarget : null);
