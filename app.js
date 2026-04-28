@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v2.6.0 - UPDATE OK");
+console.log("Sports Hub Pro v2.6.2 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -3029,13 +3029,22 @@ async function generateAlbum() {
     drawAlbumPolygon(ctx, albumOverlays[0]);
     drawAlbumPolygon(ctx, albumOverlays[1]);
 
-    // Dibujar puntos de control de Overlays si estamos editando (opcional visual)
-    if (draggedAlbumIdx >= 14) {
-        ctx.globalAlpha = 0.5;
+    // Dibujar puntos de control de Overlays si el diseño está libre
+    if (!albumLocked) {
+        ctx.save();
+        ctx.globalAlpha = 0.6;
         ctx.fillStyle = "white";
-        [...albumOverlays[0], ...albumOverlays[1]].forEach(p => {
-             // Esto es una simplificación, iterar albumOverlays propiamente
+        ctx.strokeStyle = "rgba(0,0,0,0.5)";
+        ctx.lineWidth = 2;
+        albumOverlays.forEach(ov => {
+            [ov.p1, ov.p2, ov.p3, ov.p4].forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            });
         });
+        ctx.restore();
     }
     ctx.restore();
 
@@ -3054,6 +3063,16 @@ async function generateAlbum() {
         ctx.font = "900 35px Outfit";
         ctx.fillText(team.name.toUpperCase(), bX + 40, bY + 48);
         ctx.restore();
+
+        // Indicador visual de arrastre
+        if (!albumLocked) {
+            ctx.save();
+            ctx.setLineDash([10, 10]);
+            ctx.strokeStyle = "rgba(255,255,255,0.5)";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(bX, bY, barW, barH);
+            ctx.restore();
+        }
     }
 
     // Match Day en Album (Interactivo)
@@ -3070,6 +3089,16 @@ async function generateAlbum() {
         ctx.fillStyle = "rgba(255,255,255,0.8)";
         ctx.fillText(date, x + w/2, y + 55);
         ctx.restore();
+
+        // Indicador visual de arrastre
+        if (!albumLocked) {
+            ctx.save();
+            ctx.setLineDash([10, 10]);
+            ctx.strokeStyle = "rgba(255,255,255,0.5)";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, w, h);
+            ctx.restore();
+        }
     }
     
     albumImages.forEach((img, i) => {
