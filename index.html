@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports Hub - Pro Card Generator</title>
     <script>
-        console.log("Sports Hub Pro v2.7.0 - UPDATE OK");
+        console.log("Sports Hub Pro v2.7.1 - UPDATE OK");
     </script>
-    <link rel="stylesheet" href="style.css?v=2.7.0">
+    <link rel="stylesheet" href="style.css?v=2.7.1">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Oswald:wght@700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
     <!-- Librerías de IA -->
@@ -42,7 +42,7 @@
                 <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v2.7.0 - OK</button>
+                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v2.7.1 - OK</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
             </div>
@@ -556,10 +556,10 @@
                                 <input type="checkbox" id="editCromos" checked onchange="generateAlbum()"> Cromos 🃏
                             </label>
                             <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                                <input type="checkbox" id="editOverlays" onchange="generateAlbum()"> Overlays 🎨
+                                <input type="checkbox" id="editOverlays" checked onchange="generateAlbum()"> Overlays 🎨
                             </label>
                             <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                                <input type="checkbox" id="editBranding" onchange="generateAlbum()"> Branding 📺
+                                <input type="checkbox" id="editBranding" checked onchange="generateAlbum()"> Branding 📺
                             </label>
                         </div>
 
@@ -606,6 +606,10 @@
                 <button onclick="toggleUpdates()" class="close-btn">&times;</button>
             </div>
             <div class="updates-list">
+                <div class="update-item">
+                    <span class="update-ver">v2.7.1</span>
+                    <p>Corrección Álbum: Todas las capas de edición están activas por defecto para asegurar la visibilidad inmediata de las guías al desbloquear el diseño.</p>
+                </div>
                 <div class="update-item">
                     <span class="update-ver">v2.7.0</span>
                     <p>Hito: Gestión de Capas en Álbum. Se han añadido checkboxes para elegir qué elementos editar (Cromos, Overlays o Branding), evitando interferencias al manipular objetos superpuestos.</p>
@@ -775,6 +779,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=2.7.0"></script>
+    <script src="app.js?v=2.7.1"></script>
 </body>
 </html>

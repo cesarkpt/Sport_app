@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v2.7.0 - UPDATE OK");
+console.log("Sports Hub Pro v2.7.1 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -2696,6 +2696,7 @@ function toggleAlbumLock() {
             btn.style.background = "";
         }
     }
+    generateAlbum();
 }
 
 function saveAlbumLayout() {
