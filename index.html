@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports Hub - Pro Card Generator</title>
     <script>
-        console.log("Sports Hub Pro v1.9.7 - UPDATE OK");
+        console.log("Sports Hub Pro v1.9.8 - UPDATE OK");
     </script>
-    <link rel="stylesheet" href="style.css?v=1.9.7">
+    <link rel="stylesheet" href="style.css?v=1.9.8">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Oswald:wght@700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
     <!-- Librerías de IA -->
@@ -42,7 +42,7 @@
                 <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v1.9.7 - OK</button>
+                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v1.9.8 - OK</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
             </div>
@@ -422,11 +422,15 @@
                                 </div>
                             </div>
                             
-                            <div class="zoom-control" style="margin-top: 15px; display: flex; align-items: center; gap: 12px;">
-                                <label for="tabCarouselZoom" style="font-size: 0.6rem; opacity: 0.7; white-space: nowrap;">ZOOM</label>
-                                <input type="range" id="tabCarouselZoom" min="0.25" max="1.75" step="0.01" value="1" style="flex: 3;">
-                                <label for="tabCarouselRotate" class="sr-only">Rotación</label>
-                                <input type="range" id="tabCarouselRotate" min="-20" max="20" step="1" value="0" style="flex: 1;">
+                            <div class="zoom-control" style="margin-top: 15px; display: flex; flex-direction: column; gap: 15px;">
+                                <div style="width: 100%; display: flex; align-items: center; gap: 10px;">
+                                    <label for="tabCarouselZoom" style="font-size: 0.6rem; opacity: 0.7; white-space: nowrap; width: 40px;">ZOOM</label>
+                                    <input type="range" id="tabCarouselZoom" min="0.25" max="1.75" step="0.01" value="1" style="flex: 1;">
+                                </div>
+                                <div style="width: 100%; display: flex; align-items: center; gap: 10px;">
+                                    <label for="tabCarouselRotate" style="font-size: 0.6rem; opacity: 0.7; white-space: nowrap; width: 40px;">GIRO</label>
+                                    <input type="range" id="tabCarouselRotate" min="-20" max="20" step="1" value="0" style="flex: 1;">
+                                </div>
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; background: rgba(255,255,255,0.05); padding: 8px 15px; border-radius: 10px;">
                                 <label for="cleanCarouselToggle" style="font-size: 0.6rem; opacity: 0.7;">MODO LIMPIAR (SIN BARRA NEGRA)</label>
@@ -588,6 +592,10 @@
             </div>
             <div class="updates-list">
                 <div class="update-item">
+                    <span class="update-ver">v1.9.8</span>
+                    <p>Mejoras UX: Separación de controles de zoom/giro en TEAM. Ajuste de proporción de descarga carrusel (1620x1080). Auto-ajuste de escala inicial en editor de Cromo.</p>
+                </div>
+                <div class="update-item">
                     <span class="update-ver">v1.9.7</span>
                     <p>Optimización TEAM: El Modo Limpiar ahora preserva siempre el logo, la información del partido y el borde Panini, ocultando únicamente los elementos decorativos del ticker.</p>
                 </div>
@@ -700,6 +708,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=1.9.7"></script>
+    <script src="app.js?v=1.9.8"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v1.9.7 - UPDATE OK");
+console.log("Sports Hub Pro v1.9.8 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -701,19 +701,26 @@ async function waitForManualCorrection(initialData, detectedNumber, playerImg) {
     const cropperBox = document.getElementById('cropperBox');
     const zoomSlider = document.getElementById('cropperZoom');
     cropperImg.src = playerImg.src || playerImg.toDataURL();
-    let drag1 = { isDragging: false, startY: 0, startX: 0, currY: -50, currX: -50, zoom: 1 };
+    
+    // Auto-ajuste inicial: que la imagen encaje al ancho del contenedor (200px)
+    const baseZoom1 = 200 / playerImg.width;
+    let drag1 = { isDragging: false, startY: 0, startX: 0, currY: 0, currX: 0, zoom: 1, base: baseZoom1 };
 
     // --- CROPPER 2: PRO HD ---
     const cropperImgHD = document.getElementById('cropperImgHD');
     const cropperBoxHD = document.getElementById('cropperBoxHD');
     const zoomSliderHD = document.getElementById('cropperZoomHD');
     cropperImgHD.src = playerImg.src || playerImg.toDataURL();
-    let drag2 = { isDragging: false, startY: 0, startX: 0, currY: -20, currX: -100, zoom: 0.4 };
+    
+    // Auto-ajuste inicial: que encaje al ancho (320px)
+    const baseZoom2 = 320 / playerImg.width;
+    let drag2 = { isDragging: false, startY: 0, startX: 0, currY: 0, currX: 0, zoom: 1, base: baseZoom2 };
 
-    const updateUI = (box, drag, img, zoomEl) => {
+    const updateUI = (box, drag, img) => {
         box.style.top = drag.currY + "px";
         box.style.left = drag.currX + "px";
-        img.style.width = (400 * drag.zoom) + "px";
+        // El ancho base es el que hace que encaje, multiplicado por el slider de zoom
+        img.style.width = (playerImg.width * drag.base * drag.zoom) + "px";
     };
 
     updateUI(cropperBox, drag1, cropperImg);
@@ -794,12 +801,12 @@ async function waitForManualCorrection(initialData, detectedNumber, playerImg) {
             const finalPos = activePosBtn ? activePosBtn.innerText : "DEL";
             const finalCap = editCapBtn.classList.contains('active');
 
-            // Calcular geometría CROP 1 (Carnet)
-            const s1 = playerImg.width / (400 * drag1.zoom);
+            // Calcular geometría CROP 1 (Carnet) - Contenedor 200px
+            const s1 = playerImg.width / (200 * drag1.zoom);
             const crop1 = { x: -drag1.currX * s1, y: -drag1.currY * s1, w: 200 * s1, h: 280 * s1 };
 
-            // Calcular geometría CROP 2 (Pro HD)
-            const s2 = playerImg.width / (400 * drag2.zoom);
+            // Calcular geometría CROP 2 (Pro HD) - Contenedor 320px
+            const s2 = playerImg.width / (320 * drag2.zoom);
             const crop2 = { x: -drag2.currX * s2, y: -drag2.currY * s2, w: 320 * s2, h: 180 * s2 };
 
             const updatedData = {
@@ -2522,21 +2529,22 @@ function setupArteEvents() {
 
 async function downloadFullCarousel() {
     if (!carouselState.img) return;
-    const size = 1080;
+    const h = 1080;
+    const w = 810; // Ratio 3:4
     const canvasFull = document.createElement('canvas');
-    canvasFull.width = size * 2;
-    canvasFull.height = size;
+    canvasFull.width = w * 2; // 1620 total
+    canvasFull.height = h;
     const ctx = canvasFull.getContext('2d');
     const container = document.getElementById('tabCarouselContainer');
     const cW = container.clientWidth;
-    const renderScale = (size * 2) / cW;
+    const renderScale = (w * 2) / cW;
     const realW = carouselState.img.width  * carouselState.scale * renderScale;
     const realH = carouselState.img.height * carouselState.scale * renderScale;
     const realX = carouselState.x * renderScale;
     const realY = carouselState.y * renderScale;
 
     ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, size * 2, size);
+    ctx.fillRect(0, 0, w * 2, h);
     ctx.save();
     ctx.translate(realX + realW / 2, realY + realH / 2);
     ctx.rotate(carouselState.rotate * Math.PI / 180);
@@ -2546,7 +2554,7 @@ async function downloadFullCarousel() {
     // 4. Sombras y Overlays
     const isClean = (document.getElementById('cleanCarouselToggle') || {}).checked;
     if (!isClean) {
-        drawPerimeterShadow(ctx, size * 2, size);
+        drawPerimeterShadow(ctx, w * 2, h);
 
         // Logo (Slide 1)
         try {
@@ -2582,7 +2590,7 @@ async function downloadFullCarousel() {
     }
     
     // Borde Panini Final (General)
-    addPaniniBorder(ctx, size * 2, size);
+    addPaniniBorder(ctx, w * 2, h);
 
     // 5. Descargar
     const teamA = allTeams[selectedMatchTeamA];
