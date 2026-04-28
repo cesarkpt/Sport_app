@@ -544,17 +544,28 @@ async function processPlayerPhoto(processingImg, originalImg) {
         lastPlayerData = finalData.data;
         currentPlayerData = finalData.data;
 
-        // Preparar carrusel en segundo plano (sin generar canvas aún)
+        // --- AUTORELLENO AUTOMÁTICO DE TODOS LOS CONTENEDORES ---
+        updateStep(3, "Generando previas...");
+        
+        // 1. Cromo y Plano TV
+        await generateLayouts(finalPlayerImg, finalData.data, shouldRemoveBg, finalData.crop, finalData.cropHD);
+        
+        // 2. Info RS (Postales)
+        await generateMatchPostals();
+        
+        // 3. Polaroid (Arte)
+        await generateArteLayouts(finalPlayerImg, finalData.data, finalData.cropHD);
+
+        // 4. Team (Preparar carrusel)
         initCarouselWithPhoto(finalPlayerImg);
 
-        updateStep(3, "¡Listo! Elige qué generar.");
+        updateStep(3, "¡Todo listo!");
 
-        // 4. Mostrar panel de acciones
+        // 4. Mostrar panel de resultados en la pestaña principal
         setTimeout(() => {
             elements.processingArea.classList.add('hidden');
             elements.resultArea.classList.remove('hidden');
-            // document.getElementById('actionPanel').classList.remove('hidden'); // Eliminado v1.9.1
-            showResultTab('previas');
+            showResultTab('plano'); 
         }, 400);
 
     } catch (error) {
@@ -568,11 +579,13 @@ async function processPlayerPhoto(processingImg, originalImg) {
         lastShouldRemoveBg = false;
         lastPlayerData = corrected.data;
         currentPlayerData = corrected.data;
+        // Generar lo básico en caso de error
+        await generateLayouts(originalImg, corrected.data, false, corrected.crop, corrected.cropHD);
         initCarouselWithPhoto(originalImg);
+
         elements.processingArea.classList.add('hidden');
         elements.resultArea.classList.remove('hidden');
-        document.getElementById('actionPanel').classList.remove('hidden');
-        showResultTab('previas');
+        showResultTab('plano');
     }
 }
 
@@ -1389,9 +1402,9 @@ function drawPerimeterShadow(ctx, w, h) {
 
 // Borde blanco estilo cromo Panini — se dibuja siempre ÚLTIMO, encima de todo
 function addPaniniBorder(ctx, w, h, excludeSides = []) {
-    const t = Math.round(Math.min(w, h) * 0.025); // 2.5% del lado menor
+    const t = Math.round(Math.min(w, h) * 0.02); // 2% del lado menor
     ctx.save();
-    return; // Desactivado
+    ctx.fillStyle = "white";
     if (!excludeSides.includes('top'))    ctx.fillRect(0, 0, w, t);           // Arriba
     if (!excludeSides.includes('bottom')) ctx.fillRect(0, h - t, w, t);       // Abajo
     if (!excludeSides.includes('left'))   ctx.fillRect(0, 0, t, h);           // Izquierda
@@ -2562,6 +2575,9 @@ async function downloadFullCarousel() {
             ctx.fillText(date, centerX2, y2 + sSize + 70);
         }
     }
+    
+    // Borde Panini Final (General)
+    addPaniniBorder(ctx, size * 2, size);
 
     // 5. Descargar
     const teamA = allTeams[selectedMatchTeamA];
@@ -2769,6 +2785,9 @@ async function generateAlbum() {
         drawImageProp(ctx, img, x, y, w, h);
         ctx.restore();
     });
+
+    // Borde Panini Final (General)
+    addPaniniBorder(ctx, W, H);
     
     try {
         const logo = await loadImg('https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0');
