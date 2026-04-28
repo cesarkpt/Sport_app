@@ -34,7 +34,7 @@
                 <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()">v1.5.5</button>
+                <button class="update-btn" onclick="toggleUpdates()">v1.6.0</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
             </div>
@@ -308,6 +308,13 @@
                 <!-- Navegación inferior eliminada por petición del usuario. Los botones superiores asumen este rol. -->
 
                 <div id="previasTab" class="tab-content">
+                    <div class="result-tabs">
+                        <button class="tab-btn active" onclick="showResultTab('plano', this)">PLANO TV</button>
+                        <button class="tab-btn" onclick="showResultTab('carnet', this)">CROMO</button>
+                        <button class="tab-btn" onclick="showResultTab('carousel', this)">TEAM</button>
+                        <button class="tab-btn" onclick="showResultTab('arte', this)">POLAROID</button>
+                        <button class="tab-btn" onclick="showResultTab('album', this)">ALBUM</button>
+                    </div>
                     <div class="results-grid">
                         <div class="result-card">
                             <h3>Plano TV</h3>
@@ -525,6 +532,28 @@
 
                     </div>
                 </div> <!-- /arteTab -->
+
+                <div id="albumTab" class="tab-content hidden">
+                    <div class="result-card">
+                        <h3 style="font-size: 0.8rem; color: var(--secondary); margin-bottom: 15px;">EDITOR DE ÁLBUM (14 FOTOS)</h3>
+                        
+                        <div class="album-controls" style="margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <button class="btn-primary" onclick="document.getElementById('albumBulkInput').click()" style="font-size: 0.7rem;">Cargar 14 fotos 📸</button>
+                            <input type="file" id="albumBulkInput" multiple accept="image/*" style="display:none" onchange="handleAlbumBulkUpload(this)">
+                            <button class="btn-secondary" onclick="generateAlbum()" style="font-size: 0.7rem;">Generar Álbum ✨</button>
+                        </div>
+
+                        <div id="albumPreviewContainer" class="carousel-container" style="height: auto; background: #111; overflow: hidden; position: relative; border-radius: 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1);">
+                            <canvas id="albumCanvas" style="width: 100%; height: auto; display: block;"></canvas>
+                        </div>
+
+                        <div id="albumSlotEditor" class="album-slot-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 15px;">
+                            <!-- 14 slots for individual replacement -->
+                        </div>
+
+                        <button class="btn-primary" onclick="downloadImage('albumCanvas', 'album_completo')" style="width: 100%; background: var(--secondary); color: black;">DESCARGAR ÁLBUM COMPLETO 📥</button>
+                    </div>
+                </div> <!-- /albumTab -->
                     <button class="btn-primary" onclick="resetApp()" style="background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); border: none; font-weight: 900;">OTRO JUGADOR 🔄</button>
             </section>
         </main>

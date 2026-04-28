@@ -2545,3 +2545,134 @@ async function downloadFullCarousel() {
     link.href = canvasFull.toDataURL('image/png');
     link.click();
 }
+
+let albumImages = new Array(14).fill(null);
+let albumTemplate = null;
+
+async function handleAlbumBulkUpload(input) {
+    if (!input.files || input.files.length === 0) return;
+    const files = Array.from(input.files).slice(0, 14);
+    
+    for (let i = 0; i < files.length; i++) {
+        const base64 = await imageToBase64(files[i]);
+        albumImages[i] = await loadImg(base64);
+    }
+    renderAlbumSlots();
+    generateAlbum();
+}
+
+function renderAlbumSlots() {
+    const grid = document.getElementById('albumSlotEditor');
+    if (!grid) return;
+    grid.innerHTML = '';
+    
+    albumImages.forEach((img, i) => {
+        const div = document.createElement('div');
+        div.className = 'album-slot';
+        div.dataset.index = i + 1;
+        if (img) {
+            const thumb = new Image();
+            thumb.src = img.src;
+            div.appendChild(thumb);
+        }
+        div.onclick = () => {
+            const inp = document.createElement('input');
+            inp.type = 'file';
+            inp.accept = 'image/*';
+            inp.onchange = async (e) => {
+                if (e.target.files[0]) {
+                    const base64 = await imageToBase64(e.target.files[0]);
+                    albumImages[i] = await loadImg(base64);
+                    renderAlbumSlots();
+                    generateAlbum();
+                }
+            };
+            inp.click();
+        };
+        grid.appendChild(div);
+    });
+}
+
+async function generateAlbum() {
+    const canvas = document.getElementById('albumCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    // Plantilla (URL del usuario)
+    const templateURL = 'https://lh3.googleusercontent.com/d/1vA...'; // REEMPLAZAR CON ID REAL
+    if (!albumTemplate) {
+        try { albumTemplate = await loadImg(templateURL); } catch(e) { console.error('Falta plantilla album'); }
+    }
+    
+    const W = 2000;
+    const H = 1414;
+    canvas.width = W;
+    canvas.height = H;
+    
+    // 1. Dibujar Plantilla
+    if (albumTemplate) {
+        ctx.drawImage(albumTemplate, 0, 0, W, H);
+    } else {
+        ctx.fillStyle = '#111';
+        ctx.fillRect(0, 0, W, H);
+    }
+    
+    // 2. Teñir con colores del equipo (Multiply)
+    const team = (selectedMatchTeamA && allTeams[selectedMatchTeamA]) ? allTeams[selectedMatchTeamA] : { color: '#00ff88', color2: '#00d4ff' };
+    const c1 = team.color;
+    const c2 = team.color2 || c1;
+    
+    ctx.save();
+    const grd = ctx.createLinearGradient(0, 0, W, H);
+    grd.addColorStop(0, c1);
+    grd.addColorStop(1, c2);
+    ctx.fillStyle = grd;
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.globalAlpha = 0.6;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+    
+    // 3. Dibujar Fotos
+    // IZQUIERDA (2 Grandes)
+    const leftCoords = [
+        [50, 100, 900, 600], // Slot 1 superior
+        [50, 750, 900, 600]  // Slot 2 inferior (ajustar según estadio)
+    ];
+    
+    // DERECHA (12 Grid 3x4)
+    const gridStartX = 1050;
+    const gridStartY = 100;
+    const cellW = 280;
+    const cellH = 280;
+    const gap = 25;
+    
+    albumImages.forEach((img, i) => {
+        if (!img) return;
+        let x, y, w, h;
+        if (i < 2) {
+            [x, y, w, h] = leftCoords[i];
+        } else {
+            const idx = i - 2;
+            const col = idx % 3;
+            const row = Math.floor(idx / 3);
+            x = gridStartX + (col * (cellW + gap));
+            y = gridStartY + (row * (cellH + gap));
+            w = cellW;
+            h = cellH;
+        }
+        
+        ctx.save();
+        // Recorte redondeado opcional o sombra
+        ctx.beginPath();
+        ctx.rect(x, y, w, h);
+        ctx.clip();
+        drawImageProp(ctx, img, x, y, w, h);
+        ctx.restore();
+    });
+    
+    // 4. Overlays (Logo, etc)
+    try {
+        const logo = await loadImg('https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0');
+        drawImageProp(ctx, logo, W - 350, 50, 300, 140);
+    } catch(e) {}
+}
