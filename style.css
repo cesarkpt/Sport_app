@@ -32,12 +32,9 @@
 
 body {
     font-family: 'Outfit', sans-serif;
-    background-color: var(--bg-dark);
+    background-color: midnightblue;
     color: var(--text-main);
     overflow-x: hidden;
-    background-image: 
-        radial-gradient(circle at 50% 0%, rgba(0, 255, 136, 0.08) 0%, transparent 50%),
-        radial-gradient(circle at 50% 100%, rgba(0, 212, 255, 0.08) 0%, transparent 50%);
     min-height: 100vh;
     display: flex;
     flex-direction: column;

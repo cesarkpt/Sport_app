@@ -1,4 +1,6 @@
-console.log("Sports Hub Pro v1.8.0 - UPDATE FORCED");
+alert("SISTEMA ACTUALIZADO A V1.9.0");
+console.log("Sports Hub Pro v1.9.0 - UPDATE EXTREME");
+
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
     maxProcessingSize: 800, // Tamaño máximo para procesar con IA (más rápido en móviles)
