@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v1.9.9 - UPDATE OK");
+console.log("Sports Hub Pro v2.0.0 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -2586,6 +2586,36 @@ async function downloadFullCarousel() {
             ctx.font = '400 22px Outfit';
             ctx.fillStyle = 'rgba(255,255,255,0.8)';
             ctx.fillText(date, centerX2, y2 + sSize + 70);
+        }
+
+        // 4.5 Ticker (Barra TV) en la descarga completa
+        const tickerTeamId = activeTeamId || selectedMatchTeamA;
+        const tickerTeam = tickerTeamId ? allTeams[tickerTeamId] : null;
+        if (tickerTeam) {
+            const barW = 1200;
+            const barH = 150;
+            const bX = (w * 2 - barW) / 2; // Centrado en el banner total (1620px)
+            const bY = h - 240;
+
+            ctx.save();
+            ctx.shadowColor = "rgba(0,0,0,0.6)"; ctx.shadowBlur = 25;
+            ctx.fillStyle = "rgba(0,0,0,0.92)";
+            ctx.beginPath();
+            ctx.roundRect(bX, bY, barW, barH, 25);
+            ctx.fill();
+            ctx.fillStyle = tickerTeam.color1 || tickerTeam.color || "#00ff88";
+            ctx.fillRect(bX, bY, 15, barH);
+            if (tickerTeam.shield) {
+                try {
+                    const sImg = await loadImg(tickerTeam.shield);
+                    ctx.drawImage(sImg, bX + 60, bY - 35, 200, 200);
+                } catch (e) {}
+            }
+            ctx.fillStyle = "white";
+            ctx.textAlign = "left";
+            ctx.font = "900 60px Outfit";
+            ctx.fillText(tickerTeam.name.toUpperCase(), bX + 280, bY + 95);
+            ctx.restore();
         }
     }
     
