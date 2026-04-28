@@ -563,7 +563,7 @@ async function runGenTarjetaHD() {
     const btn = document.getElementById('btnGenTarjeta');
     if (btn) { btn.innerHTML = '⏳ Generando...'; btn.disabled = true; }
     await generateLayouts(lastProcessedPlayerImg, lastPlayerData, lastShouldRemoveBg, lastProcessedCrop, lastProcessedCropHD);
-    showResultTab('previas');
+    showResultTab('previas', btn);
     if (btn) { btn.innerHTML = '📺 PLANO TV'; btn.disabled = false; }
 }
 
@@ -572,7 +572,7 @@ async function runGenCarnet() {
     const btn = document.getElementById('btnGenCarnet');
     if (btn) { btn.innerHTML = '⏳ Generando...'; btn.disabled = true; }
     await generateLayouts(lastProcessedPlayerImg, lastPlayerData, lastShouldRemoveBg, lastProcessedCrop, lastProcessedCropHD);
-    showResultTab('previas');
+    showResultTab('previas', btn);
     document.getElementById('carnetCanvas').scrollIntoView({ behavior: 'smooth' });
     if (btn) { btn.innerHTML = '🃏 CROMO'; btn.disabled = false; }
 }
@@ -582,7 +582,7 @@ async function runGenPostales() {
     const btn = document.getElementById('btnGenPostales');
     if (btn) { btn.innerHTML = '⏳ Generando...'; btn.disabled = true; }
     await generateMatchPostals();
-    showResultTab('postales');
+    showResultTab('postales', btn);
     if (btn) { btn.innerHTML = 'ℹ️ INFO RS'; btn.disabled = false; }
 }
 
@@ -591,13 +591,14 @@ async function runGenArte() {
     const btn = document.getElementById('btnGenArte');
     if (btn) { btn.innerHTML = '⏳ Generando...'; btn.disabled = true; }
     await generateArteLayouts(lastProcessedPlayerImg, lastPlayerData, lastProcessedCropHD);
-    showResultTab('arte');
+    showResultTab('arte', btn);
     if (btn) { btn.innerHTML = '📸 POLAROID'; btn.disabled = false; }
 }
 
 function runGenCarrusel() {
+    const btn = document.getElementById('btnGenCarrusel');
     document.getElementById('resultArea').classList.remove('hidden');
-    showResultTab('carousel');
+    showResultTab('carousel', btn);
     // Re-calcular posición ahora que el contenedor es visible
     setTimeout(() => {
         if (carouselState.img) {
@@ -1107,7 +1108,7 @@ async function drawCarnetOverlay(ctx, player) {
 
     // 6. NÚMERO CON DEGRADADO (Reducido a 140px)
     ctx.save();
-    const grdNum = ctx.createLinearGradient(w - 150, h - 150, w, h - 50);
+    const grdNum = ctx.createLinearGradient(w - 180, h - 150, w - 30, h - 50);
     const hexToRgba = (hex, alpha) => {
         const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
         return `rgba(${r},${g},${b},${alpha})`;
@@ -1118,21 +1119,20 @@ async function drawCarnetOverlay(ctx, player) {
     ctx.fillStyle = grdNum;
     ctx.font = "italic 900 140px Outfit";
     ctx.textAlign = "right";
-    ctx.fillText(player.number, w - 30, h - 50);
+    ctx.fillText(player.number, w - 60, h - 50);
     ctx.restore();
 
-    // 7. Icono Capitán (C) - Bajado otros 15px y 5px a la derecha
+    // 7. Icono Capitán (C) - Alineado con el nuevo margen del número
     if (player.name.includes("(C)")) {
         ctx.save();
         ctx.fillStyle = "#ff9800";
         ctx.beginPath();
-        // x previo: w-60+5, y previo: h-220+20
-        ctx.arc(w - 60 + 10, h - 220 + 35, 28, 0, Math.PI * 2);
+        ctx.arc(w - 80, h - 220 + 35, 28, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "black";
         ctx.font = "900 32px Outfit";
         ctx.textAlign = "center";
-        ctx.fillText("C", w - 60 + 10, h - 208 + 35);
+        ctx.fillText("C", w - 80, h - 208 + 35);
         ctx.restore();
     }
 }
@@ -2010,15 +2010,26 @@ function processBulkImport() {
         alert("No se reconoció el formato.\n\nUsa:\n1. Equipo, Numero, Nombre, Posicion\n2. Equipo: Jugador 1, Jugador 2");
     }
 }
-function showResultTab(tabId) {
+function showResultTab(tabId, activeBtn = null) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    
+    // Limpiar resaltado de todos los botones generadores
+    document.querySelectorAll('#actionPanel button').forEach(b => {
+        b.style.boxShadow = 'none';
+        b.style.border = 'none';
+        b.style.transform = 'scale(1)';
+    });
 
     const tab = document.getElementById(tabId + 'Tab');
     if (tab) tab.classList.remove('hidden');
     
-    if (event && event.currentTarget) {
-        event.currentTarget.classList.add('active');
+    // Resaltar el botón activo (o el que originó el evento)
+    const btn = activeBtn || (window.event ? window.event.currentTarget : null);
+    if (btn && btn.tagName === 'BUTTON') {
+        btn.style.boxShadow = '0 0 15px var(--primary)';
+        btn.style.border = '1px solid var(--primary)';
+        btn.style.transform = 'scale(1.05)';
+        btn.style.transition = 'all 0.3s ease';
     }
 }
 
