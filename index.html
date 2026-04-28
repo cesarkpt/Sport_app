@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports Hub - Pro Card Generator</title>
-    <script>console.log("Sports Hub Pro v1.7.9 - Carga Exitosa");</script>
+    <script>
+        console.clear();
+        console.log("Sports Hub Pro v1.8.0 - UPDATE FORCED");
+    </script>
     <link rel="stylesheet" href="style.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Oswald:wght@700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
@@ -25,9 +28,11 @@
 </head>
 <body>
     <script>
+        /*
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js');
         }
+        */
     </script>
     <div class="app-container">
         <header>
@@ -35,7 +40,7 @@
                 <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()">v1.7.9</button>
+                <button class="update-btn" onclick="toggleUpdates()" style="background: #ff0055; color: white;">v1.8.0 - NUEVO</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
             </div>
@@ -598,12 +603,12 @@
             </div>
             <div class="updates-list">
                 <div class="update-item">
-                    <span class="update-ver">v1.7.9</span>
-                    <p>Caché persistente: El fondo del álbum se guarda localmente para una carga instantánea sin gastar datos.</p>
+                    <span class="update-ver">v1.8.0</span>
+                    <p>Actualización forzada: Se ha desactivado temporalmente el Service Worker para asegurar que veas los últimos cambios del álbum.</p>
                 </div>
                 <div class="update-item">
-                    <span class="update-ver">v1.7.8</span>
-                    <p>Optimización de álbum: Fondos de estadio visibles, eliminación de bordes blancos y sombras.</p>
+                    <span class="update-ver">v1.7.9</span>
+                    <p>Caché persistente: El fondo del álbum se guarda localmente para una carga instantánea.</p>
                 </div>
                 <div class="update-item">
                     <span class="update-ver">v1.3</span>
@@ -687,6 +692,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=1.7.9"></script>
+    <script src="app.js?v=1.8.0"></script>
 </body>
 </html>
