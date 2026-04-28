@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v2.8.1 - UPDATE OK");
+console.log("Sports Hub Pro v2.9.0 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -2706,7 +2706,8 @@ function saveAlbumLayout() {
         ticker: albumTickerPos,
         matchday: albumMatchdayPos,
         stickerScale: document.getElementById('albumStickerScale')?.value || 1.0,
-        brandingScale: document.getElementById('albumBrandingScale')?.value || 1.0
+        tickerScale: document.getElementById('albumTickerScale')?.value || 1.0,
+        matchdayScale: document.getElementById('albumMatchdayScale')?.value || 1.0
     };
     localStorage.setItem('sports_hub_album_layout', JSON.stringify(layout));
     console.log("Maquetación del Álbum guardada localmente... 💾");
@@ -2728,10 +2729,12 @@ function loadAlbumLayout() {
                     const s = document.getElementById('albumStickerScale');
                     if (s) s.value = layout.stickerScale;
                 }
-                if (layout.brandingScale) {
-                    const s = document.getElementById('albumBrandingScale');
-                    if (s) s.value = layout.brandingScale;
-                }
+                // Retrocompatibilidad
+                const oldBrand = layout.brandingScale || 1.0;
+                const t = document.getElementById('albumTickerScale');
+                if (t) t.value = layout.tickerScale || oldBrand;
+                const m = document.getElementById('albumMatchdayScale');
+                if (m) m.value = layout.matchdayScale || oldBrand;
             }, 100);
 
             console.log("Maquetación del Álbum restaurada... 📂");
@@ -3099,32 +3102,34 @@ async function generateAlbum() {
     });
 
     // 4. BRANDING (Encima de todo)
-    const brandingScale = parseFloat(document.getElementById('albumBrandingScale')?.value || 1.0);
+    const tickerScale = parseFloat(document.getElementById('albumTickerScale')?.value || 1.0);
+    const matchdayScale = parseFloat(document.getElementById('albumMatchdayScale')?.value || 1.0);
     
     // Ticker en Album (Interactivo)
     if (team) {
         const { x: bX, y: bY, w: baseBarW, h: baseBarH } = albumTickerPos;
-        const barW = baseBarW * brandingScale;
-        const barH = baseBarH * brandingScale;
+        const barW = baseBarW * tickerScale;
+        const barH = baseBarH * tickerScale;
 
         ctx.save();
         ctx.fillStyle = "rgba(0,0,0,0.85)";
-        drawRoundedRect(ctx, bX, bY, barW, barH, 15 * brandingScale, true, false);
+        drawRoundedRect(ctx, bX, bY, barW, barH, 15 * tickerScale, true, false);
         ctx.fillStyle = team.color1 || "#00ff88";
-        ctx.fillRect(bX, bY, 10 * brandingScale, barH);
+        ctx.fillRect(bX, bY, 10 * tickerScale, barH);
         
         if (team.shield) {
             try {
                 const sImg = await loadImg(team.shield);
-                const sSize = 100 * brandingScale;
-                ctx.drawImage(sImg, bX + 20 * brandingScale, bY - 20 * brandingScale, sSize, sSize);
+                const sSize = 100 * tickerScale;
+                // Usar drawImageProp para no deformar
+                drawImageProp(ctx, sImg, bX + 20 * tickerScale, bY - 20 * tickerScale, sSize, sSize);
             } catch(e) {}
         }
 
         ctx.fillStyle = "white";
         ctx.textAlign = "left";
-        ctx.font = `900 ${35 * brandingScale}px Outfit`;
-        ctx.fillText(team.name.toUpperCase(), bX + (team.shield ? 130 : 40) * brandingScale, bY + (48 * brandingScale));
+        ctx.font = `900 ${35 * tickerScale}px Outfit`;
+        ctx.fillText(team.name.toUpperCase(), bX + (team.shield ? 130 : 40) * tickerScale, bY + (48 * tickerScale));
         ctx.restore();
 
         // Indicador visual de arrastre si está activo
@@ -3143,29 +3148,29 @@ async function generateAlbum() {
         const stage = (document.getElementById('matchStage') || {}).value || '';
         const date = (document.getElementById('matchDate') || {}).value || '';
         const { x: mX, y: mY, w: baseMW, h: baseMH } = albumMatchdayPos;
-        const mW = baseMW * brandingScale;
-        const mH = baseMH * brandingScale;
+        const mW = baseMW * matchdayScale;
+        const mH = baseMH * matchdayScale;
 
         // Cargar Escudos Matchday
         const teamA = allTeams[selectedMatchTeamA];
         const teamB = allTeams[selectedMatchTeamB];
-        const sSize = 60 * brandingScale;
+        const sSize = 60 * matchdayScale;
 
         try {
             const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
-            ctx.drawImage(imgA, mX + (mW/2) - sSize - 10, mY - sSize - 5, sSize, sSize);
+            drawImageProp(ctx, imgA, mX + (mW/2) - sSize - 10, mY - sSize - 5, sSize, sSize);
             const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-            ctx.drawImage(imgB, mX + (mW/2) + 10, mY - sSize - 5, sSize, sSize);
+            drawImageProp(ctx, imgB, mX + (mW/2) + 10, mY - sSize - 5, sSize, sSize);
         } catch(e) {}
 
         ctx.save();
         ctx.fillStyle = "white";
         ctx.textAlign = "center";
-        ctx.font = `900 ${32 * brandingScale}px Outfit`;
-        ctx.fillText(stage.toUpperCase(), mX + mW/2, mY + (25 * brandingScale));
-        ctx.font = `400 ${22 * brandingScale}px Outfit`;
+        ctx.font = `900 ${32 * matchdayScale}px Outfit`;
+        ctx.fillText(stage.toUpperCase(), mX + mW/2, mY + (25 * matchdayScale));
+        ctx.font = `400 ${22 * matchdayScale}px Outfit`;
         ctx.fillStyle = "rgba(255,255,255,0.8)";
-        ctx.fillText(date, mX + mW/2, mY + (55 * brandingScale));
+        ctx.fillText(date, mX + mW/2, mY + (55 * matchdayScale));
         ctx.restore();
 
         // Indicador visual de arrastre si está activo

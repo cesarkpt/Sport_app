@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports Hub - Pro Card Generator</title>
     <script>
-        console.log("Sports Hub Pro v2.8.1 - UPDATE OK");
+        console.log("Sports Hub Pro v2.9.0 - UPDATE OK");
     </script>
-    <link rel="stylesheet" href="style.css?v=2.8.1">
+    <link rel="stylesheet" href="style.css?v=2.9.0">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Oswald:wght@700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
     <!-- Librerías de IA -->
@@ -42,7 +42,7 @@
                 <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v2.8.1 - OK</button>
+                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v2.9.0 - OK</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
             </div>
@@ -563,14 +563,18 @@
                                     <input type="checkbox" id="editBranding" checked onchange="generateAlbum()"> Branding 📺
                                 </label>
                             </div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.05);">
                                 <div style="display: flex; flex-direction: column; gap: 3px;">
                                     <label style="font-size: 0.6rem; color: var(--secondary);">ESCALA CROMOS</label>
                                     <input type="range" id="albumStickerScale" min="0.5" max="1.5" step="0.01" value="1.0" oninput="generateAlbum()">
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 3px;">
-                                    <label style="font-size: 0.6rem; color: var(--primary);">ESCALA BRANDING</label>
-                                    <input type="range" id="albumBrandingScale" min="0.5" max="2.0" step="0.01" value="1.0" oninput="generateAlbum()">
+                                    <label style="font-size: 0.6rem; color: var(--primary);">ESCALA TICKER</label>
+                                    <input type="range" id="albumTickerScale" min="0.5" max="2.0" step="0.01" value="1.0" oninput="generateAlbum()">
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 3px;">
+                                    <label style="font-size: 0.6rem; color: var(--accent);">ESCALA MATCHDAY</label>
+                                    <input type="range" id="albumMatchdayScale" min="0.5" max="2.0" step="0.01" value="1.0" oninput="generateAlbum()">
                                 </div>
                             </div>
                         </div>
@@ -618,6 +622,10 @@
                 <button onclick="toggleUpdates()" class="close-btn">&times;</button>
             </div>
             <div class="updates-list">
+                <div class="update-item">
+                    <span class="update-ver">v2.9.0</span>
+                    <p>Optimización Branding Álbum: Escalas independientes para Ticker y Match Day. Corregida la deformación de escudos mediante renderizado con preservación de relación de aspecto.</p>
+                </div>
                 <div class="update-item">
                     <span class="update-ver">v2.8.1</span>
                     <p>Limpieza Álbum: Eliminado definitivamente el borde blanco (Efecto Panini) del álbum y sus exportaciones para un acabado más limpio sobre el estadio.</p>
@@ -803,6 +811,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=2.8.1"></script>
+    <script src="app.js?v=2.9.0"></script>
 </body>
 </html>
