@@ -2575,23 +2575,18 @@ async function downloadFullCarousel() {
     link.href = canvasFull.toDataURL('image/png');
     link.click();
 }
-
 // --- LOGICA DE ALBUM (v1.7.6) ---
 let albumImages = new Array(14).fill(null);
 let albumTemplate = null;
 
 function openAlbumEditor() {
     console.log("Abriendo Editor de Album...");
-    // 1. Limpieza total de vistas previas de jugador individual
     document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
     const actionPanel = document.getElementById('actionPanel');
     if (actionPanel) actionPanel.classList.add('hidden');
-    
-    // 2. Ocultar seccion de subida y procesamiento
     if (elements.uploadSection) elements.uploadSection.classList.add('hidden');
     if (elements.processingArea) elements.processingArea.classList.add('hidden');
     
-    // 3. Mostrar area de resultados y forzar pestaña album
     const resArea = document.getElementById('resultArea');
     if (resArea) {
         resArea.classList.remove('hidden');
@@ -2601,7 +2596,6 @@ function openAlbumEditor() {
     const albumBtn = document.querySelector('.tab-btn[onclick*="album"]');
     showResultTab('album', albumBtn);
     
-    // Cargar nombres de equipos en el selector
     const selector = document.getElementById('albumTeamSelector');
     if (selector) {
         selector.innerHTML = '';
@@ -2619,35 +2613,6 @@ function openAlbumEditor() {
                 selector.appendChild(opt);
             });
         }
-    }
-    renderAlbumSlots();
-    generateAlbum();
-}
-
-function uploadSingleAlbum(index) {
-    const inp = document.createElement('input');
-    inp.type = 'file';
-    inp.accept = 'image/*';
-    inp.onchange = async (e) => {
-        if (e.target.files[0]) {
-            const base64 = await imageToBase64(e.target.files[0]);
-            albumImages[index] = await loadImg(base64);
-            renderAlbumSlots();
-            generateAlbum();
-        }
-    };
-    inp.click();
-}
-
-async function handleAlbumBulkUpload(input) {
-    if (!input.files || input.files.length === 0) return;
-    // Las 12 fotos de los jugadores van del indice 3 al 14
-    const files = Array.from(input.files).slice(0, 11);
-    
-    console.log("Cargando 11 fotos de jugadores para el album...");
-    for (let i = 0; i < files.length; i++) {
-        const base64 = await imageToBase64(files[i]);
-        albumImages[i + 3] = await loadImg(base64);
     }
     renderAlbumSlots();
     generateAlbum();
@@ -2713,37 +2678,33 @@ async function generateAlbum() {
     const c1 = team.color1 || '#00ff88';
     const c2 = team.color2 || c1;
     
-    // COLORIZACIÓN ALINEADA CON LA LÍNEA CENTRAL
+    // COLORIZACIÓN ENCAPSULADA (Para no tapar el estadio)
     ctx.save();
-    // Gradiente para la página izquierda
-    const grdL = ctx.createLinearGradient(0, 0, 1000, 0);
+    ctx.globalCompositeOperation = 'soft-light';
+    ctx.globalAlpha = 0.5; // Menos opacidad para ver el fondo
+
+    // Gradiente Página Izquierda (Encapsulado en área Escudo/Team)
+    const grdL = ctx.createLinearGradient(100, 80, 950, 80);
     grdL.addColorStop(0, c1);
     grdL.addColorStop(1, c2);
     ctx.fillStyle = grdL;
-    ctx.globalCompositeOperation = 'soft-light';
-    ctx.globalAlpha = 0.7;
-    ctx.fillRect(0, 0, 1000, H);
+    // Dibujamos un rectángulo redondeado para la "cápsula" izquierda
+    drawRoundedRect(ctx, 100, 80, 850, 380, 30, true, false);
 
-    // Gradiente para la página derecha (espejo o continuo)
-    const grdR = ctx.createLinearGradient(1000, 0, 2000, 0);
+    // Gradiente Página Derecha (Encapsulado en área Grilla Jugadores)
+    const grdR = ctx.createLinearGradient(1030, 80, 1950, 80);
     grdR.addColorStop(0, c2);
     grdR.addColorStop(1, c1);
     ctx.fillStyle = grdR;
-    ctx.fillRect(1000, 0, 1000, H);
+    // Dibujamos un rectángulo redondeado para la "cápsula" derecha
+    drawRoundedRect(ctx, 1030, 80, 920, 1280, 30, true, false);
     
-    // Refuerzo de color
+    // Refuerzo de color suave
     ctx.globalCompositeOperation = 'color';
-    ctx.globalAlpha = 0.2;
-    ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 0.15;
+    drawRoundedRect(ctx, 100, 80, 850, 380, 30, true, false);
+    drawRoundedRect(ctx, 1030, 80, 920, 1280, 30, true, false);
     ctx.restore();
-    
-    // COORDENADAS (v1.8.1 - Nuevo Template Sin Estadio)
-    // Mapeo de 14 slots:
-    // 0: Escudo (Left Top)
-    // 1: Team (Left Top Right)
-    // 2: DT (Right Grid Bottom Right)
-    // 3-13: Jugadores 1-11 (Right Grid)
-
     
     const gridStartX = 1060;
     const gridStartY = 135;
@@ -2756,40 +2717,27 @@ async function generateAlbum() {
         if (!img) return;
         let x, y, w, h;
         
-        if (i === 0) { // ESCUDO
-            [x, y, w, h] = [155, 125, 200, 200];
-        } else if (i === 1) { // TEAM
-            [x, y, w, h] = [410, 125, 480, 280];
-
-
-        } else if (i === 2) { // DT (Posición específica en la grilla: col 2, row 3)
+        if (i === 0) { x = 155; y = 125; w = 200; h = 200; }
+        else if (i === 1) { x = 410; y = 125; w = 480; h = 280; }
+        else if (i === 2) {
             x = gridStartX + (2 * (cellW + gapX));
             y = gridStartY + (3 * (cellH + gapY));
-            w = cellW;
-            h = cellH;
+            w = cellW; h = cellH;
         } else {
-            // Jugadores 1-11 (índices 3 al 13)
             const idx = i - 3;
-            const col = idx % 3; // 3 columnas
-            const row = Math.floor(idx / 3); // 4 filas
-            
-            // Si el índice llegara a la posición del DT, lo saltamos (aunque con 11 jugadores no llega)
+            const col = idx % 3;
+            const row = Math.floor(idx / 3);
             x = gridStartX + (col * (cellW + gapX));
             y = gridStartY + (row * (cellH + gapY));
-            w = cellW;
-            h = cellH;
+            w = cellW; h = cellH;
         }
         
         ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,0.5)';
-        ctx.shadowBlur = 15;
-        ctx.shadowOffsetX = 5;
-        ctx.shadowOffsetY = 8;
+        // REMOVIDO: Sombra a petición del usuario
         
         // Efecto "Sticker" (Borde blanco fino)
         ctx.fillStyle = 'white';
         ctx.fillRect(x - 4, y - 4, w + 8, h + 8);
-        
         ctx.beginPath();
         ctx.rect(x, y, w, h);
         ctx.clip();
@@ -2801,4 +2749,99 @@ async function generateAlbum() {
         const logo = await loadImg('https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0');
         drawImageProp(ctx, logo, W - 350, H - 100, 300, 80);
     } catch(e) {}
+}
+
+async function uploadSingleAlbum(index) {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/*';
+    inp.onchange = async (e) => {
+        if (e.target.files[0]) {
+            try {
+                const optimizedBase64 = await optimizeFileForAlbum(e.target.files[0], 600);
+                albumImages[index] = await loadImg(optimizedBase64);
+                renderAlbumSlots();
+                generateAlbum();
+            } catch (err) {
+                console.error("Error optimizando imagen:", err);
+                alert("No se pudo procesar la imagen.");
+            }
+        }
+    };
+    inp.click();
+}
+
+async function optimizeFileForAlbum(file, maxSize = 600) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                if (width > height) {
+                    if (width > maxSize) { height *= maxSize / width; width = maxSize; }
+                } else {
+                    if (height > maxSize) { width *= maxSize / height; height = maxSize; }
+                }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', 0.7));
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+async function handleAlbumBulkUpload(input) {
+    if (!input.files || input.files.length === 0) return;
+    const files = Array.from(input.files).slice(0, 11);
+    const btn = document.querySelector('button[onclick*="albumBulkInput"]');
+    if (btn) {
+        btn.disabled = true;
+        btn.dataset.oldText = btn.innerText;
+        btn.innerText = "PROCESANDO... ⏳";
+    }
+    try {
+        for (let i = 0; i < files.length; i++) {
+            const optimizedBase64 = await optimizeFileForAlbum(files[i], 600);
+            albumImages[i + 3] = await loadImg(optimizedBase64);
+        }
+        renderAlbumSlots();
+        generateAlbum();
+    } catch (err) {
+        console.error(err);
+        alert("Error al cargar algunas imágenes.");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = btn.dataset.oldText || "CARGAR 12 JUGADORES 📸";
+        }
+    }
+}
+
+/**
+ * Dibuja un rectángulo con bordes redondeados en el canvas
+ */
+function drawRoundedRect(ctx, x, y, width, height, radius, fill = true, stroke = false) {
+    if (typeof radius === 'undefined') radius = 5;
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    if (fill) ctx.fill();
+    if (stroke) ctx.stroke();
 }
