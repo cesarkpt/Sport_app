@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports Hub - Pro Card Generator</title>
     <script>
-        console.log("Sports Hub Pro v2.6.2 - UPDATE OK");
+        console.log("Sports Hub Pro v2.7.0 - UPDATE OK");
     </script>
-    <link rel="stylesheet" href="style.css?v=2.6.2">
+    <link rel="stylesheet" href="style.css?v=2.7.0">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Oswald:wght@700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
     <!-- Librerías de IA -->
@@ -42,7 +42,7 @@
                 <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v2.6.2 - OK</button>
+                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v2.7.0 - OK</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
             </div>
@@ -543,11 +543,24 @@
                             <button class="btn-secondary" onclick="uploadSingleAlbum(1)" style="font-size: 0.6rem; background: rgba(0,212,255,0.1);">TEAM 👥</button>
                             <button class="btn-secondary" onclick="uploadSingleAlbum(2)" style="font-size: 0.6rem; background: rgba(156,39,176,0.1);">DT 👔</button>
                         </div>
-                        <div class="album-controls" style="margin-bottom: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                        <div class="album-controls" style="margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
                             <button class="btn-primary" onclick="document.getElementById('albumBulkInput').click()" style="font-size: 0.6rem;">CARGAR 12 JUGADORES 📸</button>
-                            <button id="btnLockAlbum" class="btn-secondary" onclick="toggleAlbumLock()" style="font-size: 0.6rem; border-color: var(--secondary); color: var(--secondary);">BLOQUEAR DISEÑO 🔓</button>
-                            <button class="btn-secondary" onclick="resetAlbumPositions()" style="font-size: 0.6rem; border-color: var(--primary); color: var(--primary);">AUTO-ALINEAR REJILLA 📐</button>
+                            <button id="btnLockAlbum" class="btn-secondary" onclick="toggleAlbumLock()" style="font-size: 0.6rem; border-color: var(--secondary); color: var(--secondary);">DISEÑO LIBRE 🔓</button>
+                            <button class="btn-secondary" onclick="resetAlbumPositions()" style="font-size: 0.6rem; border-color: var(--primary); color: var(--primary);">RESETEAR TODO 📐</button>
                             <input type="file" id="albumBulkInput" multiple accept="image/*" style="display:none" onchange="handleAlbumBulkUpload(this)">
+                        </div>
+
+                        <!-- PANEL DE CAPAS INTERACTIVAS -->
+                        <div id="albumEditLayers" style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-around; font-size: 0.7rem; border: 1px solid rgba(255,255,255,0.1);">
+                            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                <input type="checkbox" id="editCromos" checked onchange="generateAlbum()"> Cromos 🃏
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                <input type="checkbox" id="editOverlays" onchange="generateAlbum()"> Overlays 🎨
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                <input type="checkbox" id="editBranding" onchange="generateAlbum()"> Branding 📺
+                            </label>
                         </div>
 
                         <div id="albumPreviewContainer" class="carousel-container" style="height: auto; background: #111; overflow: hidden; position: relative; border-radius: 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1);">
@@ -593,6 +606,10 @@
                 <button onclick="toggleUpdates()" class="close-btn">&times;</button>
             </div>
             <div class="updates-list">
+                <div class="update-item">
+                    <span class="update-ver">v2.7.0</span>
+                    <p>Hito: Gestión de Capas en Álbum. Se han añadido checkboxes para elegir qué elementos editar (Cromos, Overlays o Branding), evitando interferencias al manipular objetos superpuestos.</p>
+                </div>
                 <div class="update-item">
                     <span class="update-ver">v2.6.2</span>
                     <p>Branding Álbum: Añadido marco punteado visual para Ticker y Match Day cuando el diseño está libre. Ahora es más fácil identificar que estos elementos también se pueden mover.</p>
@@ -758,6 +775,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=2.6.2"></script>
+    <script src="app.js?v=2.7.0"></script>
 </body>
 </html>

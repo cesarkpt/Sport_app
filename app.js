@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v2.6.2 - UPDATE OK");
+console.log("Sports Hub Pro v2.7.0 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -2759,32 +2759,29 @@ function initAlbumInteractions() {
     };
 
     const onStart = (e) => {
-        if (albumLocked) return; // NO permitir arrastre si está bloqueado
+        if (albumLocked) return; 
         const pos = getMousePos(e);
         const HIT_RADIUS = 40;
 
-        // 1. Detectar Puntos de Control de Overlays (Alta Prioridad)
-        for (let i = 0; i < albumOverlays.length; i++) {
-            const ov = albumOverlays[i];
-            for (let j = 1; j <= 4; j++) {
-                const p = ov['p'+j];
-                if (Math.hypot(pos.x - p.x, pos.y - p.y) < HIT_RADIUS) {
-                    draggedAlbumIdx = 14 + (i * 4) + (j - 1); // IDs 14-21
+        const canEditCromos = document.getElementById('editCromos')?.checked;
+        const canEditOverlays = document.getElementById('editOverlays')?.checked;
+        const canEditBranding = document.getElementById('editBranding')?.checked;
+
+        // 1. Detectar Ticker y Matchday (Si está activo)
+        if (canEditBranding) {
+            const items = [albumTickerPos, albumMatchdayPos];
+            for (let i = 0; i < items.length; i++) {
+                const box = items[i];
+                if (pos.x >= box.x && pos.x <= box.x + box.w && pos.y >= box.y && pos.y <= box.y + box.h) {
+                    draggedAlbumIdx = 22 + i;
+                    albumDragOffset = { x: pos.x - box.x, y: pos.y - box.y };
                     return;
                 }
             }
         }
 
-        // 3. Detectar Ticker y Matchday
-        [albumTickerPos, albumMatchdayPos].forEach((box, i) => {
-            if (pos.x >= box.x && pos.x <= box.x + box.w && pos.y >= box.y && pos.y <= box.y + box.h) {
-                draggedAlbumIdx = 22 + i; // IDs 22 (Ticker), 23 (Matchday)
-                albumDragOffset = { x: pos.x - box.x, y: pos.y - box.y };
-            }
-        });
-
-        // 2. Detectar Cromos (Si no hemos pillado branding)
-        if (draggedAlbumIdx === -1) {
+        // 2. Detectar Cromos (Si está activo)
+        if (canEditCromos) {
             for (let i = 13; i >= 0; i--) {
                 const p = albumPositions[i];
                 if (!p) continue;
@@ -2793,6 +2790,20 @@ function initAlbumInteractions() {
                     albumDragOffset = { x: pos.x - p.x, y: pos.y - p.y };
                     e.preventDefault();
                     return;
+                }
+            }
+        }
+
+        // 3. Detectar Puntos de Control de Overlays (Si está activo)
+        if (canEditOverlays) {
+            for (let i = 0; i < albumOverlays.length; i++) {
+                const ov = albumOverlays[i];
+                for (let j = 1; j <= 4; j++) {
+                    const p = ov['p'+j];
+                    if (Math.hypot(pos.x - p.x, pos.y - p.y) < HIT_RADIUS) {
+                        draggedAlbumIdx = 14 + (i * 4) + (j - 1);
+                        return;
+                    }
                 }
             }
         }
@@ -3029,8 +3040,8 @@ async function generateAlbum() {
     drawAlbumPolygon(ctx, albumOverlays[0]);
     drawAlbumPolygon(ctx, albumOverlays[1]);
 
-    // Dibujar puntos de control de Overlays si el diseño está libre
-    if (!albumLocked) {
+    // Dibujar puntos de control de Overlays si el diseño está libre y activo
+    if (!albumLocked && document.getElementById('editOverlays')?.checked) {
         ctx.save();
         ctx.globalAlpha = 0.6;
         ctx.fillStyle = "white";
@@ -3064,8 +3075,8 @@ async function generateAlbum() {
         ctx.fillText(team.name.toUpperCase(), bX + 40, bY + 48);
         ctx.restore();
 
-        // Indicador visual de arrastre
-        if (!albumLocked) {
+        // Indicador visual de arrastre si está activo
+        if (!albumLocked && document.getElementById('editBranding')?.checked) {
             ctx.save();
             ctx.setLineDash([10, 10]);
             ctx.strokeStyle = "rgba(255,255,255,0.5)";
@@ -3090,8 +3101,8 @@ async function generateAlbum() {
         ctx.fillText(date, x + w/2, y + 55);
         ctx.restore();
 
-        // Indicador visual de arrastre
-        if (!albumLocked) {
+        // Indicador visual de arrastre si está activo
+        if (!albumLocked && document.getElementById('editBranding')?.checked) {
             ctx.save();
             ctx.setLineDash([10, 10]);
             ctx.strokeStyle = "rgba(255,255,255,0.5)";
