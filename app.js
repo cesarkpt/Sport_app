@@ -8,7 +8,7 @@ const CONFIG = {
     carnetHeight: 800
 };
 
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzYBhBQSZzSI5qj9cRgLhjQ-YGonuqnNBTmMRXJH6OllT3XpO0KTXBZP0wOPWv1i4nk/exec";
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw4DCVCopUXpvX4gsSu-X3gZmIoz4TaZN5OGTpCMpUCyYvMgx-fIuPzIcZOTPUXqwrT/exec";
 
 // --- GESTIÓN DE EQUIPOS ---
 let allTeams = JSON.parse(localStorage.getItem('sportshub_all_teams')) || {};
