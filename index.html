@@ -34,7 +34,7 @@
                 <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()">v1.5.1</button>
+                <button class="update-btn" onclick="toggleUpdates()">v1.5.2</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
             </div>
@@ -448,9 +448,12 @@
                                     <canvas id="tabCarouselCanvas2"></canvas>
                                 </div>
                             </div>
-                            <div style="display: flex; gap: 10px;">
-                                <button class="btn-secondary" onclick="downloadImage('tabCarouselCanvas1', 'carrusel_p1')" style="flex: 1;">DESCARGAR P1</button>
-                                <button class="btn-secondary" onclick="downloadImage('tabCarouselCanvas2', 'carrusel_p2')" style="flex: 1;">DESCARGAR P2</button>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <div style="display: flex; gap: 10px;">
+                                    <button class="btn-secondary" onclick="downloadImage('tabCarouselCanvas1', 'carrusel_p1')" style="flex: 1;">DESCARGAR P1</button>
+                                    <button class="btn-secondary" onclick="downloadImage('tabCarouselCanvas2', 'carrusel_p2')" style="flex: 1;">DESCARGAR P2</button>
+                                </div>
+                                <button class="btn-primary" onclick="downloadFullCarousel()" style="width: 100%; background: var(--secondary); color: black;">DESCARGAR COMPLETA (2160x1080) 📥</button>
                             </div>
                         </div>
                     </div>

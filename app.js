@@ -2263,7 +2263,80 @@ function resetArtePosition(type) {
     if (rotSl) rotSl.value = 0;
 }
 
-async function updateArtePreview(type) {
+async async function downloadFullCarousel() {
+    if (!carouselState.img) return;
+    
+    const size = 1080;
+    const canvasFull = document.createElement('canvas');
+    canvasFull.width = size * 2;
+    canvasFull.height = size;
+    const ctx = canvasFull.getContext('2d');
+    
+    // 1. Obtener dimensiones reales del encuadre
+    const container = document.getElementById('tabCarouselContainer');
+    const cW = container.clientWidth;
+    const renderScale = (size * 2) / cW;
+    const realW = carouselState.img.width  * carouselState.scale * renderScale;
+    const realH = carouselState.img.height * carouselState.scale * renderScale;
+    const realX = carouselState.x * renderScale;
+    const realY = carouselState.y * renderScale;
+
+    // 2. Dibujar Fondo
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, size * 2, size);
+
+    // 3. Dibujar Imagen
+    ctx.save();
+    ctx.translate(realX + realW / 2, realY + realH / 2);
+    ctx.rotate(carouselState.rotate * Math.PI / 180);
+    ctx.drawImage(carouselState.img, -realW / 2, -realH / 2, realW, realH);
+    ctx.restore();
+
+    // 4. Sombras y Overlays
+    drawPerimeterShadow(ctx, size * 2, size);
+
+    // Logo (Slide 1)
+    try {
+        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
+        drawImageProp(ctx, logoImg, 80, 80, 300, 140);
+    } catch (e) {}
+
+    // Info Partido (Slide 2)
+    if (selectedMatchTeamA && selectedMatchTeamB) {
+        const teamA = allTeams[selectedMatchTeamA];
+        const teamB = allTeams[selectedMatchTeamB];
+        const stage = (document.getElementById('matchStage') || {}).value || '';
+        const date = (document.getElementById('matchDate') || {}).value || '';
+        const sSize = 100;
+        const totalW = (sSize * 2) + 20;
+        const x2 = (size * 2) - totalW - 80;
+        const y2 = 80;
+
+        try {
+            const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
+            drawImageProp(ctx, imgA, x2, y2, sSize, sSize);
+            const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
+            drawImageProp(ctx, imgB, x2 + sSize + 20, y2, sSize, sSize);
+        } catch (e) {}
+
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
+        const centerX2 = x2 + totalW / 2;
+        ctx.font = "900 30px Outfit";
+        ctx.fillText(stage, centerX2, y2 + sSize + 40);
+        ctx.font = "400 22px Outfit";
+        ctx.fillStyle = "rgba(255,255,255,0.8)";
+        ctx.fillText(date, centerX2, y2 + sSize + 70);
+    }
+
+    // 5. Descargar
+    const link = document.createElement('a');
+    link.download = `carrusel_completo_${Date.now()}.png`;
+    link.href = canvasFull.toDataURL('image/png');
+    link.click();
+}
+
+function updateArtePreview(type) {
     const state = type === 'Sq' ? arteStateSq : arteStateVer;
     const canvas = document.getElementById(type === 'Sq' ? 'arteCanvasSquare' : 'arteCanvasVertical');
     if (!canvas || !state.img) return;
@@ -2492,3 +2565,76 @@ function setupArteEvents() {
 }
 
 
+
+async function downloadFullCarousel() {
+    if (!carouselState.img) return;
+    
+    const size = 1080;
+    const canvasFull = document.createElement('canvas');
+    canvasFull.width = size * 2;
+    canvasFull.height = size;
+    const ctx = canvasFull.getContext('2d');
+    
+    // 1. Obtener dimensiones reales del encuadre
+    const container = document.getElementById('tabCarouselContainer');
+    const cW = container.clientWidth;
+    const renderScale = (size * 2) / cW;
+    const realW = carouselState.img.width  * carouselState.scale * renderScale;
+    const realH = carouselState.img.height * carouselState.scale * renderScale;
+    const realX = carouselState.x * renderScale;
+    const realY = carouselState.y * renderScale;
+
+    // 2. Dibujar Fondo
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, size * 2, size);
+
+    // 3. Dibujar Imagen
+    ctx.save();
+    ctx.translate(realX + realW / 2, realY + realH / 2);
+    ctx.rotate(carouselState.rotate * Math.PI / 180);
+    ctx.drawImage(carouselState.img, -realW / 2, -realH / 2, realW, realH);
+    ctx.restore();
+
+    // 4. Sombras y Overlays
+    drawPerimeterShadow(ctx, size * 2, size);
+
+    // Logo (Slide 1)
+    try {
+        const logoImg = await loadImg('https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0');
+        drawImageProp(ctx, logoImg, 80, 80, 300, 140);
+    } catch (e) {}
+
+    // Info Partido (Slide 2)
+    if (selectedMatchTeamA && selectedMatchTeamB) {
+        const teamA = allTeams[selectedMatchTeamA];
+        const teamB = allTeams[selectedMatchTeamB];
+        const stage = (document.getElementById('matchStage') || {}).value || '';
+        const date = (document.getElementById('matchDate') || {}).value || '';
+        const sSize = 100;
+        const totalW = (sSize * 2) + 20;
+        const x2 = (size * 2) - totalW - 80;
+        const y2 = 80;
+
+        try {
+            const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
+            drawImageProp(ctx, imgA, x2, y2, sSize, sSize);
+            const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
+            drawImageProp(ctx, imgB, x2 + sSize + 20, y2, sSize, sSize);
+        } catch (e) {}
+
+        ctx.fillStyle = 'white';
+        ctx.textAlign = 'center';
+        const centerX2 = x2 + totalW / 2;
+        ctx.font = '900 30px Outfit';
+        ctx.fillText(stage, centerX2, y2 + sSize + 40);
+        ctx.font = '400 22px Outfit';
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.fillText(date, centerX2, y2 + sSize + 70);
+    }
+
+    // 5. Descargar
+    const link = document.createElement('a');
+    link.download = carrusel_completo_.png;
+    link.href = canvasFull.toDataURL('image/png');
+    link.click();
+}
