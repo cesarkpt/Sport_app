@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v2.2.0 - UPDATE OK");
+console.log("Sports Hub Pro v2.2.1 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -2712,8 +2712,38 @@ function initAlbumInteractions() {
     const onMove = (e) => {
         if (draggedAlbumIdx === -1) return;
         const pos = getMousePos(e);
-        albumPositions[draggedAlbumIdx].x = pos.x - albumDragOffset.x;
-        albumPositions[draggedAlbumIdx].y = pos.y - albumDragOffset.y;
+        let newX = pos.x - albumDragOffset.x;
+        let newY = pos.y - albumDragOffset.y;
+        
+        const current = albumPositions[draggedAlbumIdx];
+        const SNAP_THRESHOLD = 20;
+
+        // Snapping inteligente con otros cromos
+        for (let i = 0; i < 14; i++) {
+            if (i === draggedAlbumIdx) continue;
+            const other = albumPositions[i];
+            if (!other) continue;
+
+            // Snap Horizontal (Izquierda con Izquierda)
+            if (Math.abs(newX - other.x) < SNAP_THRESHOLD) {
+                newX = other.x;
+            }
+            // Snap Horizontal (Derecha con Derecha)
+            if (Math.abs((newX + current.w) - (other.x + other.w)) < SNAP_THRESHOLD) {
+                newX = other.x + other.w - current.w;
+            }
+            // Snap Vertical (Top con Top)
+            if (Math.abs(newY - other.y) < SNAP_THRESHOLD) {
+                newY = other.y;
+            }
+            // Snap Vertical (Bottom con Bottom)
+            if (Math.abs((newY + current.h) - (other.y + other.h)) < SNAP_THRESHOLD) {
+                newY = other.y + other.h - current.h;
+            }
+        }
+
+        albumPositions[draggedAlbumIdx].x = newX;
+        albumPositions[draggedAlbumIdx].y = newY;
         generateAlbum();
         e.preventDefault();
     };
