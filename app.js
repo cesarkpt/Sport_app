@@ -2153,7 +2153,7 @@ async function generateArteLayouts(playerImg, data, crop) {
     }
 
     // Cargar madera si no está
-    const woodUrl = "https://images.unsplash.com/photo-1541123439599-431bb538283e?auto=format&fit=crop&q=80&w=1920";
+    const woodUrl = "https://drive.google.com/uc?export=view&id=11DBLJqtGBSjNq5ZU1ONWr_PXV9crwuqv";
     let wood;
     try { wood = await loadImg(woodUrl); } catch(e) {}
 
@@ -2326,16 +2326,18 @@ async function updateArtePreview(type) {
         } catch(e){} 
     }
 
-    // Textos debajo de los escudos (Alineados a la derecha)
+    // Textos debajo de los escudos (Centrados con respecto al grupo de escudos)
     const textY = sY + sSz + (polaroidH * 0.15);
-    tCtx.textAlign = "right";
+    const groupCenterX = width - pad - (shieldsW / 2);
+    
+    tCtx.textAlign = "center";
     tCtx.fillStyle = "#111";
     tCtx.font = `900 ${Math.round(polaroidH * 0.14)}px Outfit`;
-    tCtx.fillText(stage.toUpperCase(), width - pad, textY);
+    tCtx.fillText(stage.toUpperCase(), groupCenterX, textY);
     
     tCtx.fillStyle = "#666";
     tCtx.font = `400 ${Math.round(polaroidH * 0.12)}px Outfit`;
-    tCtx.fillText(date, width - pad, textY + (polaroidH * 0.12));
+    tCtx.fillText(date, groupCenterX, textY + (polaroidH * 0.12));
 
     addPaniniBorder(tCtx, width, height);
 
@@ -2350,8 +2352,19 @@ async function updateArtePreview(type) {
 
     if (state.woodImg) {
         drawImageProp(ctx, state.woodImg, 0, 0, finalW, finalH);
-        ctx.fillStyle = "rgba(0,0,0,0.3)";
+        
+        // Degradado lineal con colores del equipo encima del fondo
+        const pTeam = Object.values(allTeams).find(t => t.name === state.data.team) || {};
+        const c1 = pTeam.color1 || state.data.color || "#00ff88";
+        const c2 = pTeam.color2 || state.data.color2 || "#00d4ff";
+        
+        const bgGrd = ctx.createLinearGradient(0, 0, finalW, finalH);
+        bgGrd.addColorStop(0, c1);
+        bgGrd.addColorStop(1, c2);
+        ctx.fillStyle = bgGrd;
+        ctx.globalAlpha = 0.85; // Opacidad para mezclar degradado con la textura de fondo
         ctx.fillRect(0, 0, finalW, finalH);
+        ctx.globalAlpha = 1.0;
     } else {
         ctx.fillStyle = "#222";
         ctx.fillRect(0, 0, finalW, finalH);
