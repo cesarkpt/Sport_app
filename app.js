@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v2.3.0 - UPDATE OK");
+console.log("Sports Hub Pro v2.6.0 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -2632,13 +2632,6 @@ async function downloadFullCarousel() {
     link.href = canvasFull.toDataURL('image/png');
     link.click();
 }
-// --- LOGICA DE ALBUM (v2.2.0 - INTERACTIVO) ---
-let albumImages = new Array(14).fill(null);
-let albumPositions = new Array(14).fill(null); // {x, y, w, h}
-let albumTemplate = null;
-let draggedAlbumIdx = -1;
-let albumDragOffset = { x: 0, y: 0 };
-
 function getDefaultAlbumPos(i) {
     const stickerH = 300;
     const playerW = 225;
@@ -2672,10 +2665,81 @@ function getDefaultAlbumPos(i) {
     return { x, y, w, h };
 }
 
+// --- LOGICA DE ALBUM (v2.4.0 - OVERLAYS DINAMICOS) ---
+let albumImages = new Array(14).fill(null);
+let albumPositions = new Array(14).fill(null);
+let albumOverlays = [
+    { p1: {x:100, y:110}, p2: {x:1000, y:110}, p3: {x:1000, y:530}, p4: {x:100, y:530} }, // Izquierda
+    { p1: {x:1000, y:140}, p2: {x:1920, y:140}, p3: {x:1920, y:1360}, p4: {x:1000, y:1360} } // Derecha
+];
+let albumTemplate = null;
+let draggedAlbumIdx = -1; // 0-13 cromos, 14-21 puntos de overlay
+let albumDragOffset = { x: 0, y: 0 };
+
+let albumTickerPos = { x: 125, y: 30, w: 850, h: 70 };
+let albumMatchdayPos = { x: 800, y: 40, w: 400, h: 60 }; // Centrado relativo
+let albumLocked = false;
+
+function toggleAlbumLock() {
+    albumLocked = !albumLocked;
+    const btn = document.getElementById('btnLockAlbum');
+    if (btn) {
+        if (albumLocked) {
+            btn.innerHTML = "DISEÑO BLOQUEADO 🔒";
+            btn.style.borderColor = "var(--accent)";
+            btn.style.color = "var(--accent)";
+            btn.style.background = "rgba(255, 0, 85, 0.1)";
+        } else {
+            btn.innerHTML = "DISEÑO LIBRE 🔓";
+            btn.style.borderColor = "var(--secondary)";
+            btn.style.color = "var(--secondary)";
+            btn.style.background = "";
+        }
+    }
+}
+
+function saveAlbumLayout() {
+    const layout = {
+        positions: albumPositions,
+        overlays: albumOverlays,
+        ticker: albumTickerPos,
+        matchday: albumMatchdayPos
+    };
+    localStorage.setItem('sports_hub_album_layout', JSON.stringify(layout));
+    console.log("Maquetación del Álbum guardada localmente... 💾");
+}
+
+function loadAlbumLayout() {
+    const saved = localStorage.getItem('sports_hub_album_layout');
+    if (saved) {
+        try {
+            const layout = JSON.parse(saved);
+            if (layout.positions) albumPositions = layout.positions;
+            if (layout.overlays) albumOverlays = layout.overlays;
+            if (layout.ticker) albumTickerPos = layout.ticker;
+            if (layout.matchday) albumMatchdayPos = layout.matchday;
+            console.log("Maquetación del Álbum restaurada... 📂");
+            return true;
+        } catch (e) {
+            console.error("Error cargando maquetación:", e);
+        }
+    }
+    return false;
+}
+
 function resetAlbumPositions() {
     for (let i = 0; i < 14; i++) {
         albumPositions[i] = getDefaultAlbumPos(i);
     }
+    // Reset Overlays
+    albumOverlays = [
+        { p1: {x:100, y:110}, p2: {x:1000, y:110}, p3: {x:1000, y:530}, p4: {x:100, y:530} },
+        { p1: {x:1000, y:140}, p2: {x:1920, y:140}, p3: {x:1920, y:1360}, p4: {x:1000, y:1360} }
+    ];
+    // Reset Branding
+    albumTickerPos = { x: 125, y: 30, w: 850, h: 70 };
+    albumMatchdayPos = { x: 800, y: 40, w: 400, h: 60 };
+    saveAlbumLayout(); 
     generateAlbum();
 }
 
@@ -2695,16 +2759,41 @@ function initAlbumInteractions() {
     };
 
     const onStart = (e) => {
+        if (albumLocked) return; // NO permitir arrastre si está bloqueado
         const pos = getMousePos(e);
-        // Hit test de atrás hacia adelante (los últimos dibujados están arriba)
-        for (let i = 13; i >= 0; i--) {
-            const p = albumPositions[i];
-            if (!p) continue;
-            if (pos.x >= p.x && pos.x <= p.x + p.w && pos.y >= p.y && pos.y <= p.y + p.h) {
-                draggedAlbumIdx = i;
-                albumDragOffset = { x: pos.x - p.x, y: pos.y - p.y };
-                e.preventDefault();
-                return;
+        const HIT_RADIUS = 40;
+
+        // 1. Detectar Puntos de Control de Overlays (Alta Prioridad)
+        for (let i = 0; i < albumOverlays.length; i++) {
+            const ov = albumOverlays[i];
+            for (let j = 1; j <= 4; j++) {
+                const p = ov['p'+j];
+                if (Math.hypot(pos.x - p.x, pos.y - p.y) < HIT_RADIUS) {
+                    draggedAlbumIdx = 14 + (i * 4) + (j - 1); // IDs 14-21
+                    return;
+                }
+            }
+        }
+
+        // 3. Detectar Ticker y Matchday
+        [albumTickerPos, albumMatchdayPos].forEach((box, i) => {
+            if (pos.x >= box.x && pos.x <= box.x + box.w && pos.y >= box.y && pos.y <= box.y + box.h) {
+                draggedAlbumIdx = 22 + i; // IDs 22 (Ticker), 23 (Matchday)
+                albumDragOffset = { x: pos.x - box.x, y: pos.y - box.y };
+            }
+        });
+
+        // 2. Detectar Cromos (Si no hemos pillado branding)
+        if (draggedAlbumIdx === -1) {
+            for (let i = 13; i >= 0; i--) {
+                const p = albumPositions[i];
+                if (!p) continue;
+                if (pos.x >= p.x && pos.x <= p.x + p.w && pos.y >= p.y && pos.y <= p.y + p.h) {
+                    draggedAlbumIdx = i;
+                    albumDragOffset = { x: pos.x - p.x, y: pos.y - p.y };
+                    e.preventDefault();
+                    return;
+                }
             }
         }
     };
@@ -2712,44 +2801,47 @@ function initAlbumInteractions() {
     const onMove = (e) => {
         if (draggedAlbumIdx === -1) return;
         const pos = getMousePos(e);
-        let newX = pos.x - albumDragOffset.x;
-        let newY = pos.y - albumDragOffset.y;
         
-        const current = albumPositions[draggedAlbumIdx];
-        const SNAP_THRESHOLD = 20;
+        if (draggedAlbumIdx === 22) {
+            albumTickerPos.x = pos.x - albumDragOffset.x;
+            albumTickerPos.y = pos.y - albumDragOffset.y;
+        } else if (draggedAlbumIdx === 23) {
+            albumMatchdayPos.x = pos.x - albumDragOffset.x;
+            albumMatchdayPos.y = pos.y - albumDragOffset.y;
+        } else if (draggedAlbumIdx >= 14) {
+            // Mover punto de overlay
+            const ovIdx = Math.floor((draggedAlbumIdx - 14) / 4);
+            const pIdx = ((draggedAlbumIdx - 14) % 4) + 1;
+            albumOverlays[ovIdx]['p'+pIdx].x = pos.x;
+            albumOverlays[ovIdx]['p'+pIdx].y = pos.y;
+        } else {
+            // Mover cromo con snapping
+            let newX = pos.x - albumDragOffset.x;
+            let newY = pos.y - albumDragOffset.y;
+            const current = albumPositions[draggedAlbumIdx];
+            const SNAP_THRESHOLD = 20;
 
-        // Snapping inteligente con otros cromos
-        for (let i = 0; i < 14; i++) {
-            if (i === draggedAlbumIdx) continue;
-            const other = albumPositions[i];
-            if (!other) continue;
-
-            // Snap Horizontal (Izquierda con Izquierda)
-            if (Math.abs(newX - other.x) < SNAP_THRESHOLD) {
-                newX = other.x;
+            for (let i = 0; i < 14; i++) {
+                if (i === draggedAlbumIdx) continue;
+                const other = albumPositions[i];
+                if (!other) continue;
+                if (Math.abs(newX - other.x) < SNAP_THRESHOLD) newX = other.x;
+                if (Math.abs((newX + current.w) - (other.x + other.w)) < SNAP_THRESHOLD) newX = other.x + other.w - current.w;
+                if (Math.abs(newY - other.y) < SNAP_THRESHOLD) newY = other.y;
+                if (Math.abs((newY + current.h) - (other.y + other.h)) < SNAP_THRESHOLD) newY = other.y + other.h - current.h;
             }
-            // Snap Horizontal (Derecha con Derecha)
-            if (Math.abs((newX + current.w) - (other.x + other.w)) < SNAP_THRESHOLD) {
-                newX = other.x + other.w - current.w;
-            }
-            // Snap Vertical (Top con Top)
-            if (Math.abs(newY - other.y) < SNAP_THRESHOLD) {
-                newY = other.y;
-            }
-            // Snap Vertical (Bottom con Bottom)
-            if (Math.abs((newY + current.h) - (other.y + other.h)) < SNAP_THRESHOLD) {
-                newY = other.y + other.h - current.h;
-            }
+            albumPositions[draggedAlbumIdx].x = newX;
+            albumPositions[draggedAlbumIdx].y = newY;
         }
-
-        albumPositions[draggedAlbumIdx].x = newX;
-        albumPositions[draggedAlbumIdx].y = newY;
         generateAlbum();
         e.preventDefault();
     };
 
-    const onEnd = () => {
-        draggedAlbumIdx = -1;
+    const onEnd = () => { 
+        if (draggedAlbumIdx !== -1) {
+            saveAlbumLayout();
+        }
+        draggedAlbumIdx = -1; 
     };
 
     canvas.addEventListener('mousedown', onStart);
@@ -2760,9 +2852,21 @@ function initAlbumInteractions() {
     window.addEventListener('touchend', onEnd);
 }
 
-// Inicializar posiciones la primera vez
-for (let i = 0; i < 14; i++) {
-    albumPositions[i] = getDefaultAlbumPos(i);
+function drawAlbumPolygon(ctx, ov) {
+    ctx.beginPath();
+    ctx.moveTo(ov.p1.x, ov.p1.y);
+    ctx.lineTo(ov.p2.x, ov.p2.y);
+    ctx.lineTo(ov.p3.x, ov.p3.y);
+    ctx.lineTo(ov.p4.x, ov.p4.y);
+    ctx.closePath();
+    ctx.fill();
+}
+
+// Inicializar posiciones: Intentar cargar, si no hay, usar default
+if (!loadAlbumLayout()) {
+    for (let i = 0; i < 14; i++) {
+        albumPositions[i] = getDefaultAlbumPos(i);
+    }
 }
 
 function openAlbumEditor() {
@@ -2900,38 +3004,44 @@ async function generateAlbum() {
     ctx.globalCompositeOperation = 'soft-light';
     ctx.globalAlpha = 0.3; // Mucho más bajo para asegurar que el estadio se vea
 
-    // COLORIZACIÓN UNIDA (v2.3.0)
+    // COLORIZACIÓN UNIDA (v2.4.0 - Dinámica)
     ctx.save();
     ctx.globalCompositeOperation = 'soft-light';
     ctx.globalAlpha = 0.3;
 
-    // Overlay Página Izquierda (Escudo/Team) - Bajado 30px (y=110) y unido al centro (x=1000)
-    const grdL = ctx.createLinearGradient(100, 110, 1000, 110);
+    // Overlay Página Izquierda
+    const grdL = ctx.createLinearGradient(albumOverlays[0].p1.x, albumOverlays[0].p1.y, albumOverlays[0].p2.x, albumOverlays[0].p2.y);
     grdL.addColorStop(0, c1);
     grdL.addColorStop(1, c2);
     ctx.fillStyle = grdL;
-    drawRoundedRect(ctx, 100, 110, 900, 420, 30, true, false);
+    drawAlbumPolygon(ctx, albumOverlays[0]);
 
-    // Overlay Página Derecha (Jugadores) - Iniciando en el centro (x=1000) y bajado a y=140
-    const grdR = ctx.createLinearGradient(1000, 140, 1900, 140);
+    // Overlay Página Derecha
+    const grdR = ctx.createLinearGradient(albumOverlays[1].p1.x, albumOverlays[1].p1.y, albumOverlays[1].p2.x, albumOverlays[1].p2.y);
     grdR.addColorStop(0, c2);
     grdR.addColorStop(1, c1);
     ctx.fillStyle = grdR;
-    drawRoundedRect(ctx, 1000, 140, 920, 1220, 30, true, false);
+    drawAlbumPolygon(ctx, albumOverlays[1]);
     
     // Refuerzo de color suave unido
     ctx.globalCompositeOperation = 'color';
     ctx.globalAlpha = 0.15;
-    drawRoundedRect(ctx, 100, 110, 900, 420, 30, true, false);
-    drawRoundedRect(ctx, 1000, 140, 920, 1220, 30, true, false);
+    drawAlbumPolygon(ctx, albumOverlays[0]);
+    drawAlbumPolygon(ctx, albumOverlays[1]);
+
+    // Dibujar puntos de control de Overlays si estamos editando (opcional visual)
+    if (draggedAlbumIdx >= 14) {
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = "white";
+        [...albumOverlays[0], ...albumOverlays[1]].forEach(p => {
+             // Esto es una simplificación, iterar albumOverlays propiamente
+        });
+    }
     ctx.restore();
 
-    // Ticker en Album (Arriba de Escudo/Team)
+    // Ticker en Album (Interactivo)
     if (team) {
-        const barW = 850;
-        const barH = 70;
-        const bX = 125;
-        const bY = 30; 
+        const { x: bX, y: bY, w: barW, h: barH } = albumTickerPos;
 
         ctx.save();
         ctx.fillStyle = "rgba(0,0,0,0.85)";
@@ -2946,18 +3056,19 @@ async function generateAlbum() {
         ctx.restore();
     }
 
-    // Match Day en Album (Sobre el estadio, arriba centro)
+    // Match Day en Album (Interactivo)
     if (selectedMatchTeamA && selectedMatchTeamB) {
         const stage = (document.getElementById('matchStage') || {}).value || '';
         const date = (document.getElementById('matchDate') || {}).value || '';
+        const { x, y, w, h } = albumMatchdayPos;
         ctx.save();
         ctx.fillStyle = "white";
         ctx.textAlign = "center";
         ctx.font = "900 32px Outfit";
-        ctx.fillText(stage.toUpperCase(), 1000, 55);
+        ctx.fillText(stage.toUpperCase(), x + w/2, y + 25);
         ctx.font = "400 22px Outfit";
         ctx.fillStyle = "rgba(255,255,255,0.8)";
-        ctx.fillText(date, 1000, 85);
+        ctx.fillText(date, x + w/2, y + 55);
         ctx.restore();
     }
     
