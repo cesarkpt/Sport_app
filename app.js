@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v1.7.3 - Carga Exitosa");
+console.log("Sports Hub Pro v1.7.4 - Carga Exitosa");
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
     maxProcessingSize: 800, // Tamaño máximo para procesar con IA (más rápido en móviles)
