@@ -1,4 +1,4 @@
-console.log("🚀 Sports Hub Pro v1.6.8 cargado correctamente.");
+console.log("Sports Hub Pro v1.7.0 - Carga Exitosa");
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
     maxProcessingSize: 800, // Tamaño máximo para procesar con IA (más rápido en móviles)
@@ -1908,7 +1908,12 @@ function selectMatchTeam(id) {
 }
 function toggleMatchModal() {
     const modal = document.getElementById('matchDataModal');
-    modal.classList.toggle('hidden');
+    if (modal) modal.classList.toggle('hidden');
+}
+
+function toggleUpdates() {
+    const modal = document.getElementById('updatesModal');
+    if (modal) modal.classList.toggle('hidden');
 }
 // --- HELPERS GRÁFICOS ---
 function drawImageProp(ctx, img, x, y, w, h, offsetX = 0.5, offsetY = 0.5) {
@@ -2571,12 +2576,12 @@ async function downloadFullCarousel() {
     link.click();
 }
 
-// --- LÓGICA DE ÁLBUM (v1.6.7) ---
+// --- LOGICA DE ALBUM (v1.6.9) ---
 let albumImages = new Array(14).fill(null);
 let albumTemplate = null;
 
 function openAlbumEditor() {
-    console.log("Abriendo Editor de Álbum...");
+    console.log("Abriendo Editor de Album...");
     const resArea = document.getElementById('resultArea');
     if (resArea) resArea.classList.remove('hidden');
     
@@ -2609,7 +2614,7 @@ async function handleAlbumBulkUpload(input) {
     if (!input.files || input.files.length === 0) return;
     const files = Array.from(input.files).slice(0, 14);
     
-    console.log(`Cargando ${files.length} fotos para el álbum...`);
+    console.log("Cargando fotos para el album...");
     for (let i = 0; i < files.length; i++) {
         const base64 = await imageToBase64(files[i]);
         albumImages[i] = await loadImg(base64);
@@ -2654,7 +2659,7 @@ function renderAlbumSlots() {
         label.style.cssText = 'position:absolute; top:0; left:0; background:rgba(0,0,0,0.7); font-size:7px; padding:1px 4px; color:#fff; border-radius:0 0 4px 0; pointer-events:none;';
         if (i === 0) label.textContent = 'ESCUDO';
         else if (i === 1) label.textContent = 'TEAM';
-        else label.textContent = `JUG ${i-1}`;
+        else label.textContent = 'JUG ' + (i-1);
         div.appendChild(label);
         
         grid.appendChild(div);
@@ -2668,7 +2673,7 @@ async function generateAlbum() {
     
     const templateURL = 'https://lh3.googleusercontent.com/d/1b2E1qbrONtvdYQXyHJ-c8gtImy9rJZ9n?t=0';
     if (!albumTemplate) {
-        try { albumTemplate = await loadImg(templateURL); } catch(e) { console.warn("Usando fondo alternativo"); }
+        try { albumTemplate = await loadImg(templateURL); } catch(e) { console.warn("Fondo alternativo"); }
     }
     
     const W = 2000;
