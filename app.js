@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v2.9.5 - UPDATE OK");
+console.log("Sports Hub Pro v2.9.6 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -1088,12 +1088,10 @@ async function drawCarnetOverlay(ctx, player) {
 
     // 4. ESCUDO DEL EQUIPO 
     let textX = 140;
-    if (player.shield) {
         try {
             const sImg = await loadImg(player.shield);
-            ctx.drawImage(sImg, 10, h - 150, 100, 100);
+            drawImageProp(ctx, sImg, 10, h - 150, 100, 100);
         } catch (e) { }
-    }
 
     // 5. NOMBRE DEL JUGADOR (Dinamismo para evitar solapamiento)
     const finalX = 130 - 10;
@@ -1217,8 +1215,8 @@ async function drawSportsTicker(ctx, player) {
     if (player.shield) {
         try {
             const sImg = await loadImg(player.shield);
-            const shieldSize = 140; // Más grande que la barra (120)
-            ctx.drawImage(sImg, currentX, bY - 20, shieldSize, shieldSize);
+            const shieldSize = 140; 
+            drawImageProp(ctx, sImg, currentX, bY - 20, shieldSize, shieldSize);
             currentX += shieldSize + 10;
         } catch (e) { }
     }
@@ -3293,6 +3291,34 @@ async function handleAlbumBulkUpload(input) {
 }
 
 /**
+ * Helper para dibujar imágenes manteniendo relación de aspecto (Cover/Contain)
+ */
+function drawImageProp(ctx, img, x, y, w, h, offsetX, offsetY) {
+    if (arguments.length < 2) return;
+    if (typeof offsetX === "undefined") offsetX = 0.5;
+    if (typeof offsetY === "undefined") offsetY = 0.5;
+
+    let iw = img.width, ih = img.height,
+        r = Math.min(w / iw, h / ih),
+        nw = iw * r, nh = ih * r,
+        cx, cy, cw, ch, ar = 1;
+
+    if (nw < w) ar = w / nw;
+    if (Math.abs(ar - 1) < 1e-14 && nh < h) ar = h / nh;
+    nw *= ar; nh *= ar;
+
+    cw = iw / (nw / w);
+    ch = ih / (nh / h);
+    cx = (iw - cw) * offsetX;
+    cy = (ih - ch) * offsetY;
+
+    if (cx < 0) cx = 0; if (cy < 0) cy = 0;
+    if (cw > iw) cw = iw; if (ch > ih) ch = ih;
+
+    ctx.drawImage(img, cx, cy, cw, ch, x, y, w, h);
+}
+
+/**
  * Dibuja un rectángulo con bordes redondeados en el canvas
  */
 function drawRoundedRect(ctx, x, y, width, height, radius, fill = true, stroke = false) {
@@ -3334,31 +3360,43 @@ async function updateArtePreview(type) {
     const message = document.getElementById('polaroidMessage').value;
     const shieldColor = document.getElementById('polaroidShieldColor').value;
 
-    // 1. FONDO (Estadio con degradado suave)
-    ctx.fillStyle = "#050505";
+    // 1. FONDO (Estadio con degradado cinemático)
+    ctx.fillStyle = "#020202";
     ctx.fillRect(0, 0, W, H);
     
     try {
         const bgUrl = localStorage.getItem('album_bg_url') || 'https://lh3.googleusercontent.com/d/1XfK3V-5V3Z4Y6X7U8i9oP_Q_R_S_T_U_V'; 
         const bgImg = await loadImg(bgUrl);
         ctx.save();
-        ctx.globalAlpha = 0.5;
+        ctx.globalAlpha = 0.6;
         drawImageProp(ctx, bgImg, 0, 0, W, H);
         ctx.restore();
     } catch(e) {}
 
-    // Viñeta Cinematográfica (Mejorada: Radial masivo y central)
-    const grdV = ctx.createRadialGradient(W/2, H/2, W * 0.2, W/2, H/2, W * 0.9);
-    grdV.addColorStop(0, "transparent");
-    grdV.addColorStop(1, "rgba(0,0,0,0.85)");
-    ctx.fillStyle = grdV;
+    // Viñeta Cinematográfica (Linear + Radial para evitar barras)
+    const grdTop = ctx.createLinearGradient(0, 0, 0, H * 0.4);
+    grdTop.addColorStop(0, "rgba(0,0,0,0.95)");
+    grdTop.addColorStop(1, "transparent");
+    ctx.fillStyle = grdTop;
+    ctx.fillRect(0, 0, W, H * 0.4);
+
+    const grdBot = ctx.createLinearGradient(0, H, 0, H * 0.6);
+    grdBot.addColorStop(0, "rgba(0,0,0,0.95)");
+    grdBot.addColorStop(1, "transparent");
+    ctx.fillStyle = grdBot;
+    ctx.fillRect(0, H * 0.6, W, H * 0.4);
+
+    const grdR = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W);
+    grdR.addColorStop(0, "transparent");
+    grdR.addColorStop(1, "rgba(0,0,0,0.4)");
+    ctx.fillStyle = grdR;
     ctx.fillRect(0, 0, W, H);
 
-    // 2. MARCO POLAROID (Sin Sombra)
+    // 2. MARCO POLAROID
     const pW = W * 0.9;
-    const pH = type === 'Sq' ? H * 0.9 : H * 0.65;
+    const pH = type === 'Sq' ? H * 0.9 : H * 0.7; // Ajustado para 9:16
     const pX = (W - pW) / 2;
-    const pY = (H - pH) / 2.5;
+    const pY = (H - pH) / (type === 'Sq' ? 2.5 : 2.0); // Más centrado en vertical
 
     ctx.save();
     if (hasTilt) {
