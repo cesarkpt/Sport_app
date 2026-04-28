@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v2.9.2 - UPDATE OK");
+console.log("Sports Hub Pro v2.9.3 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -3335,69 +3335,31 @@ async function updateArtePreview(type) {
     const message = document.getElementById('polaroidMessage').value;
     const shieldColor = document.getElementById('polaroidShieldColor').value;
 
-    // 1. FONDO (Estadio con degradado)
+    // 1. FONDO (Estadio con degradado suave)
     ctx.fillStyle = "#050505";
     ctx.fillRect(0, 0, W, H);
     
-    // Intentar cargar fondo de estadio (el mismo del álbum o uno similar)
     try {
         const bgUrl = localStorage.getItem('album_bg_url') || 'https://lh3.googleusercontent.com/d/1XfK3V-5V3Z4Y6X7U8i9oP_Q_R_S_T_U_V'; 
         const bgImg = await loadImg(bgUrl);
         ctx.save();
-        ctx.globalAlpha = 0.4; // Oscurecer el estadio
+        ctx.globalAlpha = 0.5;
         drawImageProp(ctx, bgImg, 0, 0, W, H);
         ctx.restore();
     } catch(e) {}
 
-    // Degradados suaves (Vignette)
-    const grdV = ctx.createRadialGradient(W/2, H/2, W/4, W/2, H/2, W);
+    // Viñeta Cinematográfica (Radial grande)
+    const grdV = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W * 0.8);
     grdV.addColorStop(0, "transparent");
-    grdV.addColorStop(1, "rgba(0,0,0,0.8)");
+    grdV.addColorStop(1, "rgba(0,0,0,0.9)");
     ctx.fillStyle = grdV;
     ctx.fillRect(0, 0, W, H);
 
-    // 2. LOGO (Arriba Izquierda)
-    try {
-        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
-        ctx.save();
-        ctx.globalAlpha = 0.9;
-        drawImageProp(ctx, logoImg, 50, 50, 240, 100);
-        ctx.restore();
-    } catch(e) {}
-
-    // 3. INFO MATCH DAY (Top Right)
-    if (selectedMatchTeamA && selectedMatchTeamB) {
-        const teamA = allTeams[selectedMatchTeamA];
-        const teamB = allTeams[selectedMatchTeamB];
-        const stage = (document.getElementById('matchStage') || {}).value || '';
-        const date = (document.getElementById('matchDate') || {}).value || '';
-        const sSize = 80;
-        const mX = W - 280;
-        const mY = 50;
-
-        try {
-            const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
-            drawImageProp(ctx, imgA, mX, mY, sSize, sSize);
-            const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-            drawImageProp(ctx, imgB, mX + sSize + 20, mY, sSize, sSize);
-        } catch(e) {}
-
-        ctx.save();
-        ctx.fillStyle = "white";
-        ctx.textAlign = "center";
-        ctx.font = "900 24px Outfit";
-        ctx.fillText(stage.toUpperCase(), mX + sSize + 10, mY + sSize + 30);
-        ctx.font = "400 18px Outfit";
-        ctx.fillStyle = "rgba(255,255,255,0.7)";
-        ctx.fillText(date, mX + sSize + 10, mY + sSize + 55);
-        ctx.restore();
-    }
-
-    // 4. MARCO POLAROID
-    const pW = W * 0.85;
-    const pH = type === 'Sq' ? H * 0.85 : H * 0.6;
+    // 2. MARCO POLAROID (Sin Sombra)
+    const pW = W * 0.9;
+    const pH = type === 'Sq' ? H * 0.9 : H * 0.65;
     const pX = (W - pW) / 2;
-    const pY = (H - pH) / 2.2;
+    const pY = (H - pH) / 2.5;
 
     ctx.save();
     if (hasTilt) {
@@ -3406,20 +3368,14 @@ async function updateArtePreview(type) {
         ctx.translate(-W/2, -H/2);
     }
 
-    // Sombra suave (No agresiva)
-    ctx.shadowColor = "rgba(0,0,0,0.5)";
-    ctx.shadowBlur = 30;
-    ctx.shadowOffsetY = 15;
-    
     // El Marco Blanco
     ctx.fillStyle = "white";
     ctx.fillRect(pX, pY, pW, pH);
-    ctx.shadowBlur = 0; // Desactivar sombra para el resto
 
     // Hueco de la imagen
     const margin = pW * 0.05;
     const imgAreaW = pW - (margin * 2);
-    const imgAreaH = pH - (margin * 3.5);
+    const imgAreaH = pH - (margin * 4); // Más espacio abajo para el nuevo layout
     ctx.fillStyle = "#080808";
     ctx.fillRect(pX + margin, pY + margin, imgAreaW, imgAreaH);
     
@@ -3439,26 +3395,56 @@ async function updateArtePreview(type) {
     ctx.drawImage(targetImg, -pDrawW/2, -pDrawH/2, pDrawW, pDrawH);
     ctx.restore();
 
-    // 5. BRANDING INFERIOR (En el marco blanco)
-    const activeTeam = lastPlayerData ? allTeams[lastPlayerData.teamId || selectedMatchTeamA] : null;
-    if (activeTeam && activeTeam.shield) {
+    // 3. LOGO (Dentro de la Polaroid - Top Left del marco)
+    try {
+        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
+        ctx.save();
+        ctx.globalAlpha = 0.8;
+        // Posicionado arriba a la izquierda del hueco de imagen
+        drawImageProp(ctx, logoImg, pX + margin + 20, pY + margin + 20, 180, 70);
+        ctx.restore();
+    } catch(e) {}
+
+    // 4. FOOTER COMPLEJO (Match Day + Mensaje)
+    const footerY = pY + margin + imgAreaH + 20;
+    const footerContentX = pX + margin;
+    
+    // A. Match Day (Escudos + Info)
+    if (selectedMatchTeamA && selectedMatchTeamB) {
+        const teamA = allTeams[selectedMatchTeamA];
+        const teamB = allTeams[selectedMatchTeamB];
+        const stage = (document.getElementById('matchStage') || {}).value || '';
+        const date = (document.getElementById('matchDate') || {}).value || '';
+        const sSize = 65;
+
         try {
-            const sImg = await loadImg(shieldColor === 'white' ? (activeTeam.shieldWhite || activeTeam.shield) : activeTeam.shield);
-            const sSize = 90;
+            const imgA = await loadImg(shieldColor === 'white' ? (teamA.shieldWhite || teamA.shield) : teamA.shield);
+            const imgB = await loadImg(shieldColor === 'white' ? (teamB.shieldWhite || teamB.shield) : teamB.shield);
+            
             ctx.save();
             if (shieldColor === 'black') ctx.filter = "brightness(0)";
-            drawImageProp(ctx, sImg, pX + margin, pY + pH - margin - sSize + 10, sSize, sSize);
+            drawImageProp(ctx, imgA, footerContentX, footerY, sSize, sSize);
+            drawImageProp(ctx, imgB, footerContentX + sSize + 10, footerY, sSize, sSize);
             ctx.restore();
+            
+            // Textos Match Day a la derecha de los escudos
+            ctx.fillStyle = "#333";
+            ctx.textAlign = "left";
+            ctx.font = "900 22px Outfit";
+            ctx.fillText(stage.toUpperCase(), footerContentX + (sSize * 2) + 25, footerY + 28);
+            ctx.font = "400 16px Outfit";
+            ctx.fillStyle = "#666";
+            ctx.fillText(date, footerContentX + (sSize * 2) + 25, footerY + 52);
         } catch(e) {}
     }
 
-    // Texto Manuscrito
+    // B. Texto Manuscrito (A la derecha del todo)
     if (message || lastPlayerData) {
         const txt = message || lastPlayerData.name.toUpperCase();
         ctx.fillStyle = "#1a1a1a";
-        ctx.font = "700 55px 'Caveat', cursive";
+        ctx.font = "700 48px 'Caveat', cursive";
         ctx.textAlign = "right";
-        ctx.fillText(txt, pX + pW - margin, pY + pH - margin - 15);
+        ctx.fillText(txt, pX + pW - margin, footerY + 45);
     }
 
     ctx.restore();
