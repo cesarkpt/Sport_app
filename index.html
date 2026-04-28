@@ -34,7 +34,7 @@
                 <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()">v1.6.0</button>
+                <button class="update-btn" onclick="toggleUpdates()">v1.6.1</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
             </div>
@@ -176,7 +176,8 @@
                     <h2>Procesar Jugador</h2>
                     <p>Captura o sube la foto para generar la tarjeta pro.</p>
                     <input type="file" id="imageInput" accept="image/*" hidden>
-                    <button class="btn-primary" onclick="document.getElementById('imageInput').click()">SUBIR FOTO</button>
+                    <button class="btn-primary" onclick="document.getElementById('imageInput').click()">SUBIR FOTO JUGADOR</button>
+                    <button class="btn-secondary" onclick="openAlbumEditor()" style="margin-top: 10px; width: 100%; background: rgba(0,212,255,0.1); border-color: var(--secondary); color: var(--secondary);">GENERAR ÁLBUM EQUIPO 📖</button>
                 </div>
             </section>
 
@@ -535,12 +536,20 @@
 
                 <div id="albumTab" class="tab-content hidden">
                     <div class="result-card">
-                        <h3 style="font-size: 0.8rem; color: var(--secondary); margin-bottom: 15px;">EDITOR DE ÁLBUM (14 FOTOS)</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="font-size: 0.8rem; color: var(--secondary); margin: 0;">EDITOR DE ÁLBUM (14 FOTOS)</h3>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 0.6rem; opacity: 0.7;">EQUIPO:</span>
+                                <select id="albumTeamSelector" onchange="generateAlbum()" style="background: #000; border: 1px solid #333; color: white; padding: 5px; font-size: 0.7rem; border-radius: 5px; font-family: Outfit, sans-serif;">
+                                    <!-- Opciones de equipos se cargan dinámicamente -->
+                                </select>
+                            </div>
+                        </div>
                         
                         <div class="album-controls" style="margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                             <button class="btn-primary" onclick="document.getElementById('albumBulkInput').click()" style="font-size: 0.7rem;">Cargar 14 fotos 📸</button>
                             <input type="file" id="albumBulkInput" multiple accept="image/*" style="display:none" onchange="handleAlbumBulkUpload(this)">
-                            <button class="btn-secondary" onclick="generateAlbum()" style="font-size: 0.7rem;">Generar Álbum ✨</button>
+                            <button class="btn-secondary" onclick="generateAlbum()" style="font-size: 0.7rem;">Refrescar Álbum 🔄</button>
                         </div>
 
                         <div id="albumPreviewContainer" class="carousel-container" style="height: auto; background: #111; overflow: hidden; position: relative; border-radius: 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1);">

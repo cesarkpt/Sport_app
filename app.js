@@ -2618,7 +2618,8 @@ async function generateAlbum() {
     }
     
     // 2. Teñir con colores del equipo (Multiply)
-    const team = (selectedMatchTeamA && allTeams[selectedMatchTeamA]) ? allTeams[selectedMatchTeamA] : { color: '#00ff88', color2: '#00d4ff' };
+    const albumTeamName = document.getElementById('albumTeamSelector')?.value;
+    const team = Object.values(allTeams).find(t => t.name === albumTeamName) || { color: '#00ff88', color2: '#00d4ff' };
     const c1 = team.color;
     const c2 = team.color2 || c1;
     
@@ -2675,4 +2676,36 @@ async function generateAlbum() {
         const logo = await loadImg('https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0');
         drawImageProp(ctx, logo, W - 350, 50, 300, 140);
     } catch(e) {}
+}
+
+function openAlbumEditor() {
+    const resArea = document.getElementById('resultArea');
+    if (resArea) resArea.classList.remove('hidden');
+    
+    // Buscar el botón de la pestaña álbum para marcarlo como activo
+    const albumBtn = document.querySelector('.tab-btn[onclick*="album"]');
+    showResultTab('album', albumBtn);
+    
+    // Cargar selector de equipos dinámicamente
+    const selector = document.getElementById('albumTeamSelector');
+    if (selector) {
+        selector.innerHTML = '';
+        const teams = Object.values(allTeams);
+        if (teams.length === 0) {
+            const opt = document.createElement('option');
+            opt.textContent = 'SIN EQUIPOS';
+            selector.appendChild(opt);
+        } else {
+            teams.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.name;
+                opt.textContent = t.name.toUpperCase();
+                // Pre-seleccionar el equipo A del partido si existe
+                if (selectedMatchTeamA === t.name) opt.selected = true;
+                selector.appendChild(opt);
+            });
+        }
+    }
+    renderAlbumSlots();
+    generateAlbum();
 }
