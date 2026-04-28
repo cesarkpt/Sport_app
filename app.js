@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v2.2.1 - UPDATE OK");
+console.log("Sports Hub Pro v2.3.0 - UPDATE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -2648,7 +2648,7 @@ function getDefaultAlbumPos(i) {
     const gridStartY = 100;
     const gapX = 35;
     const gapY = 35;
-    const yBottomLeft = 400;
+    const yBottomLeft = 430; // Bajado 30px (antes 400)
 
     let x, y, w, h;
     if (i === 0) { // ESCUDO
@@ -2900,28 +2900,66 @@ async function generateAlbum() {
     ctx.globalCompositeOperation = 'soft-light';
     ctx.globalAlpha = 0.3; // Mucho más bajo para asegurar que el estadio se vea
 
-    // Gradiente Página Izquierda (Encapsulado en área Escudo/Team)
-    const grdL = ctx.createLinearGradient(100, 80, 950, 80);
+    // COLORIZACIÓN UNIDA (v2.3.0)
+    ctx.save();
+    ctx.globalCompositeOperation = 'soft-light';
+    ctx.globalAlpha = 0.3;
+
+    // Overlay Página Izquierda (Escudo/Team) - Bajado 30px (y=110) y unido al centro (x=1000)
+    const grdL = ctx.createLinearGradient(100, 110, 1000, 110);
     grdL.addColorStop(0, c1);
     grdL.addColorStop(1, c2);
     ctx.fillStyle = grdL;
-    // Dibujamos un rectángulo redondeado para la "cápsula" izquierda
-    drawRoundedRect(ctx, 100, 80, 850, 380, 30, true, false);
+    drawRoundedRect(ctx, 100, 110, 900, 420, 30, true, false);
 
-    // Gradiente Página Derecha (Encapsulado en área Grilla Jugadores)
-    const grdR = ctx.createLinearGradient(1030, 80, 1950, 80);
+    // Overlay Página Derecha (Jugadores) - Iniciando en el centro (x=1000) y bajado a y=140
+    const grdR = ctx.createLinearGradient(1000, 140, 1900, 140);
     grdR.addColorStop(0, c2);
     grdR.addColorStop(1, c1);
     ctx.fillStyle = grdR;
-    // Dibujamos un rectángulo redondeado para la "cápsula" derecha
-    drawRoundedRect(ctx, 1030, 80, 920, 1280, 30, true, false);
+    drawRoundedRect(ctx, 1000, 140, 920, 1220, 30, true, false);
     
-    // Refuerzo de color suave
+    // Refuerzo de color suave unido
     ctx.globalCompositeOperation = 'color';
     ctx.globalAlpha = 0.15;
-    drawRoundedRect(ctx, 100, 80, 850, 380, 30, true, false);
-    drawRoundedRect(ctx, 1030, 80, 920, 1280, 30, true, false);
+    drawRoundedRect(ctx, 100, 110, 900, 420, 30, true, false);
+    drawRoundedRect(ctx, 1000, 140, 920, 1220, 30, true, false);
     ctx.restore();
+
+    // Ticker en Album (Arriba de Escudo/Team)
+    if (team) {
+        const barW = 850;
+        const barH = 70;
+        const bX = 125;
+        const bY = 30; 
+
+        ctx.save();
+        ctx.fillStyle = "rgba(0,0,0,0.85)";
+        drawRoundedRect(ctx, bX, bY, barW, barH, 15, true, false);
+        ctx.fillStyle = team.color1 || "#00ff88";
+        ctx.fillRect(bX, bY, 10, barH);
+        
+        ctx.fillStyle = "white";
+        ctx.textAlign = "left";
+        ctx.font = "900 35px Outfit";
+        ctx.fillText(team.name.toUpperCase(), bX + 40, bY + 48);
+        ctx.restore();
+    }
+
+    // Match Day en Album (Sobre el estadio, arriba centro)
+    if (selectedMatchTeamA && selectedMatchTeamB) {
+        const stage = (document.getElementById('matchStage') || {}).value || '';
+        const date = (document.getElementById('matchDate') || {}).value || '';
+        ctx.save();
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
+        ctx.font = "900 32px Outfit";
+        ctx.fillText(stage.toUpperCase(), 1000, 55);
+        ctx.font = "400 22px Outfit";
+        ctx.fillStyle = "rgba(255,255,255,0.8)";
+        ctx.fillText(date, 1000, 85);
+        ctx.restore();
+    }
     
     albumImages.forEach((img, i) => {
         if (!img) return;
