@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sportshub-v1.9.0';
+const CACHE_NAME = 'sportshub-v3.0.1';
 const ASSETS = [
   './',
   './index.html',
