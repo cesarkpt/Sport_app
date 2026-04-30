@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports Hub - Pro Card Generator</title>
     <script>
-        console.log("Sports Hub Pro v3.0.1 - STABLE OK");
+        console.log("Sports Hub Pro v3.0.2 - STABLE OK");
     </script>
-    <link rel="stylesheet" href="style.css?v=3.0.1">
+    <link rel="stylesheet" href="style.css?v=3.0.2">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Oswald:wght@700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
     <!-- Librerías de IA -->
@@ -42,7 +42,7 @@
                 <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v2.9.5 - OK</button>
+                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v3.0.2 - OK</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
             </div>
@@ -699,6 +699,10 @@
                     <p>Mejoras UX: Separación de controles de zoom/giro en TEAM. Ajuste de proporción de descarga carrusel (1620x1080). Auto-ajuste de escala inicial en editor de Cromo.</p>
                 </div>
                 <div class="update-item">
+                    <span class="update-ver">v3.0.2</span>
+                    <p>Branding Total Fix: Corregida la proporción de todos los logos y escudos en Plano TV, Cromos y Polaroid. Actualización de versión visual en cabecera.</p>
+                </div>
+                <div class="update-item">
                     <span class="update-ver">v3.0.1</span>
                     <p>Branding Fix: Corregida la proporción de aspecto de escudos y logos (Contain) para evitar recortes. Limpieza profunda de funciones duplicadas.</p>
                 </div>
@@ -827,11 +831,11 @@
         </div>
     </div>
 
-    <script src="app.js?v=3.0.1"></script>
+    <script src="app.js?v=3.0.2"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=3.0.1')
+                navigator.serviceWorker.register('./sw.js?v=3.0.2')
                     .then(reg => {
                         console.log('SW Registered', reg);
                         reg.onupdatefound = () => {

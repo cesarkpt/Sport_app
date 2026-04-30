@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v3.0.1 - STABLE OK");
+console.log("Sports Hub Pro v3.0.2 - STABLE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -1012,7 +1012,7 @@ async function drawCarnetOverlay(ctx, player) {
     // 1. MI LOGO EN EL CARNET
     try {
         const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
-        drawImageProp(ctx, logoImg, 15, 20, 180, 90, 0, 0);
+        drawImageContain(ctx, logoImg, 15, 20, 180, 90, 0, 0);
     } catch (e) { }
 
     // 2. INFO PARTIDO EN CARNET (Match Day)
@@ -1029,9 +1029,9 @@ async function drawCarnetOverlay(ctx, player) {
 
         try {
             const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
-            drawImageProp(ctx, imgA, startX, my, ms, ms);
+            drawImageContain(ctx, imgA, startX, my, ms, ms);
             const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-            drawImageProp(ctx, imgB, startX + ms + 15, my, ms, ms);
+            drawImageContain(ctx, imgB, startX + ms + 15, my, ms, ms);
         } catch (e) { }
 
         ctx.fillStyle = "rgba(255,255,255,0.9)";
@@ -1062,7 +1062,7 @@ async function drawCarnetOverlay(ctx, player) {
     let textX = 140;
         try {
             const sImg = await loadImg(player.shield);
-            drawImageProp(ctx, sImg, 10, h - 150, 100, 100);
+            drawImageContain(ctx, sImg, 10, h - 150, 100, 100);
         } catch (e) { }
 
     // 5. NOMBRE DEL JUGADOR (Dinamismo para evitar solapamiento)
