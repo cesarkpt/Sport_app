@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v3.0.2 - STABLE OK");
+console.log("Sports Hub Pro v3.0.3 - STABLE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -2455,7 +2455,7 @@ async function updateArtePreview(type) {
     ctx.fillRect(0, 0, finalW, finalH);
     
     try {
-        const bgUrl = localStorage.getItem('album_bg_url') || 'https://lh3.googleusercontent.com/d/1fhmSEr6dh5nUP9BKIqH0Lwg3Ue8smkLL'; 
+        const bgUrl = 'https://lh3.googleusercontent.com/d/17n7VS8pK6lvu-Br_icp8nHAFaZNpbkN7'; 
         const bgImg = await loadImg(bgUrl);
         ctx.save();
         ctx.globalAlpha = 0.5;
