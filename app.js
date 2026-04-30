@@ -2478,7 +2478,11 @@ async function updateArtePreview(type) {
     ctx.restore();
 }
 
+let arteEventsInitialized = false;
 function setupArteEvents() {
+    if (arteEventsInitialized) return;
+    arteEventsInitialized = true;
+    
     ['Sq', 'Ver'].forEach(type => {
         const canvas = document.getElementById(type === 'Sq' ? 'arteCanvasSquare' : 'arteCanvasVertical');
         const state = type === 'Sq' ? arteStateSq : arteStateVer;

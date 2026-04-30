@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports Hub - Pro Card Generator</title>
     <script>
-        console.log("Sports Hub Pro v3.1.2 - STABLE OK");
+        console.log("Sports Hub Pro v3.1.3 - STABLE OK");
     </script>
-    <link rel="stylesheet" href="style.css?v=3.1.2">
+    <link rel="stylesheet" href="style.css?v=3.1.3">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Oswald:wght@700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
     <!-- Librerías de IA -->
@@ -43,7 +43,7 @@
                 <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v3.1.2 - OK</button>
+                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v3.1.3 - OK</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
             </div>
@@ -624,8 +624,64 @@
             </div>
             <div class="updates-list">
                 <div class="update-item">
+                    <span class="update-ver">v3.1.3</span>
+                    <p>Hotfix Polaroid: Corregida la acumulación de eventos de redibujado que causaba efectos duplicados y lentitud.</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v3.1.2</span>
+                    <p>Plano TV UI: Reducción adicional del módulo Matchday (40px) y escalado proporcional de textos informativos.</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v3.1.1</span>
+                    <p>Plano TV UI: Reducción del ticker a 2/3 (70px), escalado de logos y escudos matchday, y refinamiento de alineaciones para un look más limpio.</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v3.1.0</span>
+                    <p>Branding: Nuevo icono oficial de la aplicación (sobre de láminas). Configurado para PWA e instalación en móviles.</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v3.0.9</span>
+                    <p>Formatos Instagram: Plano TV ahora es Horizontal (1080x566) y Polaroid Vertical ahora es Post (1080x1350).</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v3.0.8</span>
+                    <p>Reversión de Formatos: Regreso a la relación de aspecto estándar (16:9 Plano TV y 2000x1414 Álbum) por solicitud del usuario.</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v3.0.6</span>
+                    <p>Plano TV Render: Ajuste de escala del jugador para mantener relación de aspecto exacta y alineación con el logo superior.</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v3.0.5</span>
+                    <p>Álbum Ticker Fix: Sincronizada la estética del ticker del álbum con Plano TV (Bicolor lateral y mejor centrado de marca).</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v3.0.4</span>
+                    <p>Plano TV Fix: Ajuste final de coordenadas y centrado del logo principal para evitar recortes en el margen superior izquierdo.</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v3.0.3</span>
+                    <p>Diseño Polaroid: Actualizado el fondo artístico exclusivo para el módulo Arte (Polaroid), separándolo del fondo del álbum.</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v3.0.2</span>
+                    <p>Branding Total Fix: Corregida la proporción de todos los logos y escudos en Plano TV, Cromos y Polaroid. Actualización de versión visual en cabecera.</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v3.0.1</span>
+                    <p>Branding Fix: Corregida la proporción de aspecto de escudos y logos (Contain) para evitar recortes. Limpieza profunda de funciones duplicadas.</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v3.0.0</span>
+                    <p>Estabilización Total: Código consolidado, corrección de arrastre en Polaroid y Match Day dinámico mejorado.</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v2.9.5</span>
+                    <p>Álbum: Degradados diagonales a 45° y colores intercambiados para mayor dinamismo. Polaroid: Logo interno y layout de Match Day integrado en la base.</p>
+                </div>
+                <div class="update-item">
                     <span class="update-ver">v2.9.0</span>
-                    <p>Optimización Branding Álbum: Escalas independientes para Ticker y Match Day. Corregida la deformación de escudos mediante renderizado con preservación de relación de aspecto.</p>
+                    <p>WYSIWYG: Control total por capas, escalas independientes para Ticker/Matchday y sistema de bloqueo de diseño.</p>
                 </div>
                 <div class="update-item">
                     <span class="update-ver">v2.8.1</span>
@@ -688,14 +744,6 @@
                     <p>Optimización Álbum: Altura unificada para todos los cromos (300px), alineación inferior de Escudo/Team y restauración del borde tipo sticker individual para cada elemento.</p>
                 </div>
                 <div class="update-item">
-                    <span class="update-ver">v3.1.2</span>
-                    <p>Plano TV UI: Reducción adicional del módulo Matchday (40px) y escalado proporcional de textos informativos.</p>
-                </div>
-                <div class="update-item">
-                    <span class="update-ver">v3.1.1</span>
-                    <p>Plano TV UI: Reducción del ticker a 2/3 (70px), escalado de logos y escudos matchday, y refinamiento de alineaciones para un look más limpio.</p>
-                </div>
-                <div class="update-item">
                     <span class="update-ver">v2.0.0</span>
                     <p>Milestone 2.0: Estabilización completa del módulo TEAM. Restauración de la Barra TV (Ticker) en descargas completas y optimización de renderizado 1620x1080.</p>
                 </div>
@@ -706,58 +754,6 @@
                 <div class="update-item">
                     <span class="update-ver">v1.9.8</span>
                     <p>Mejoras UX: Separación de controles de zoom/giro en TEAM. Ajuste de proporción de descarga carrusel (1620x1080). Auto-ajuste de escala inicial en editor de Cromo.</p>
-                </div>
-                <div class="update-item">
-                    <span class="update-ver">v3.1.0</span>
-                    <p>Branding: Nuevo icono oficial de la aplicación (sobre de láminas). Configurado para PWA e instalación en móviles.</p>
-                </div>
-                <div class="update-item">
-                    <span class="update-ver">v3.0.9</span>
-                    <p>Formatos Instagram: Plano TV ahora es Horizontal (1080x566) y Polaroid Vertical ahora es Post (1080x1350).</p>
-                </div>
-                <div class="update-item">
-                    <span class="update-ver">v3.0.9</span>
-                    <p>Formatos Instagram: Plano TV ahora es Horizontal (1080x566) y Polaroid Vertical ahora es Post (1080x1350).</p>
-                </div>
-                <div class="update-item">
-                    <span class="update-ver">v3.0.8</span>
-                    <p>Reversión de Formatos: Regreso a la relación de aspecto estándar (16:9 Plano TV y 2000x1414 Álbum) por solicitud del usuario.</p>
-                </div>
-                <div class="update-item">
-                    <span class="update-ver">v3.0.6</span>
-                    <p>Plano TV Render: Ajuste de escala del jugador para mantener relación de aspecto exacta y alineación con el logo superior.</p>
-                </div>
-                <div class="update-item">
-                    <span class="update-ver">v3.0.5</span>
-                    <p>Álbum Ticker Fix: Sincronizada la estética del ticker del álbum con Plano TV (Bicolor lateral y mejor centrado de marca).</p>
-                </div>
-                <div class="update-item">
-                    <span class="update-ver">v3.0.4</span>
-                    <p>Plano TV Fix: Ajuste final de coordenadas y centrado del logo principal para evitar recortes en el margen superior izquierdo.</p>
-                </div>
-                <div class="update-item">
-                    <span class="update-ver">v3.0.3</span>
-                    <p>Diseño Polaroid: Actualizado el fondo artístico exclusivo para el módulo Arte (Polaroid), separándolo del fondo del álbum.</p>
-                </div>
-                <div class="update-item">
-                    <span class="update-ver">v3.0.2</span>
-                    <p>Branding Total Fix: Corregida la proporción de todos los logos y escudos en Plano TV, Cromos y Polaroid. Actualización de versión visual en cabecera.</p>
-                </div>
-                <div class="update-item">
-                    <span class="update-ver">v3.0.1</span>
-                    <p>Branding Fix: Corregida la proporción de aspecto de escudos y logos (Contain) para evitar recortes. Limpieza profunda de funciones duplicadas.</p>
-                </div>
-                <div class="update-item">
-                    <span class="update-ver">v3.0.0</span>
-                    <p>Estabilización Total: Código consolidado, corrección de arrastre en Polaroid y Match Day dinámico mejorado.</p>
-                </div>
-                <div class="update-item">
-                    <span class="update-ver">v2.9.5</span>
-                    <p>Álbum: Degradados diagonales a 45° y colores intercambiados para mayor dinamismo. Polaroid: Logo interno y layout de Match Day integrado en la base.</p>
-                </div>
-                <div class="update-item">
-                    <span class="update-ver">v2.9.0</span>
-                    <p>WYSIWYG: Control total por capas, escalas independientes para Ticker/Matchday y sistema de bloqueo de diseño.</p>
                 </div>
                 <div class="update-item">
                     <span class="update-ver">v1.9.7</span>
@@ -802,7 +798,6 @@
                 <div class="update-item">
                     <span class="update-ver">v1.0</span>
                     <p>Diseño Mobile-First, soporte PWA y optimización de carga.</p>
-        <!-- Modal Carrusel Instagram ELIMINADO - Ahora es una pestaña -->
             </div>
         </div>
     </div>
@@ -872,11 +867,11 @@
         </div>
     </div>
 
-    <script src="app.js?v=3.1.2"></script>
+    <script src="app.js?v=3.1.3"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=3.1.2')
+                navigator.serviceWorker.register('./sw.js?v=3.1.3')
                     .then(reg => {
                         console.log('SW Registered', reg);
                         reg.onupdatefound = () => {
