@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v2.9.7 - UPDATE OK");
+console.log("Sports Hub Pro v3.0.0 - STABLE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -330,35 +330,7 @@ async function saveTeam() {
     }
 }
 
-function syncWithCloud() {
-    if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run
-            .withSuccessHandler((response) => {
-                if (Object.keys(response.data).length === 0) {
-                    alert("La nube está vacía ☁️. Asegúrate de haber guardado el equipo en el otro dispositivo primero.");
-                } else {
-                    allTeams = response.data;
-                    localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
-                    renderTeamsList();
-                    alert("Sincronización completa 🔄 (" + Object.keys(allTeams).length + " equipos)");
-                }
-            })
-            .getAllTeamsData();
-    } else {
-        // Fallback vía API fetch
-        fetch(`${GAS_WEB_APP_URL}?action=getAllTeamsData`)
-            .then(res => res.json())
-            .then(response => {
-                if (response.success && response.data) {
-                    allTeams = response.data;
-                    localStorage.setItem('sportshub_all_teams', JSON.stringify(allTeams));
-                    renderTeamsList();
-                    alert("Sincronización vía API completa 🔄");
-                }
-            })
-            .catch(err => alert("Error al sincronizar: " + err.message));
-    }
-}
+
 
 async function imageToBase64(file) {
     return new Promise((resolve) => {
@@ -1291,14 +1263,14 @@ async function drawMatchInfo(ctx, teamA, teamB) {
     if (teamA.shieldWhite || teamA.shield) {
         try {
             const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
-            drawImageProp(ctx, imgA, x, y, sSize, sSize);
+            drawImageContain(ctx, imgA, x, y, sSize, sSize);
         } catch (e) { }
     }
 
     if (teamB.shieldWhite || teamB.shield) {
         try {
             const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-            drawImageProp(ctx, imgB, x + sSize + 20, y, sSize, sSize);
+            drawImageContain(ctx, imgB, x + sSize + 20, y, sSize, sSize);
         } catch (e) { }
     }
     ctx.restore();
@@ -1594,7 +1566,7 @@ async function confirmCarouselFraming() {
     // Logo en Slide 1
     try {
         const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
-        drawImageProp(ctx1, logoImg, 80, 80, 300, 140);
+        drawImageContain(ctx1, logoImg, 80, 80, 300, 140);
     } catch (e) {}
 
     // Info partido en Slide 2
@@ -1609,9 +1581,9 @@ async function confirmCarouselFraming() {
         const y2 = 80;
         try {
             const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
-            drawImageProp(ctx2, imgA, x2, y2, sSize, sSize);
+            drawImageContain(ctx2, imgA, x2, y2, sSize, sSize);
             const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-            drawImageProp(ctx2, imgB, x2 + sSize + 20, y2, sSize, sSize);
+            drawImageContain(ctx2, imgB, x2 + sSize + 20, y2, sSize, sSize);
         } catch (e) {}
         ctx2.save();
         ctx2.shadowColor = "black"; ctx2.shadowBlur = 20;
@@ -1647,7 +1619,7 @@ async function confirmCarouselFraming() {
             if (tickerTeam.shield) {
                 try {
                     const sImg = await loadImg(tickerTeam.shield);
-                    ctx.drawImage(sImg, relX + 60, bY - 35, 200, 200);
+                    drawImageContain(ctx, sImg, relX + 60, bY - 35, 200, 200);
                 } catch (e) {}
             }
             ctx.fillStyle = "white";
@@ -1960,17 +1932,7 @@ function toggleUpdates() {
     if (modal) modal.classList.toggle('hidden');
 }
 // --- HELPERS GRÁFICOS ---
-function drawImageProp(ctx, img, x, y, w, h, offsetX = 0.5, offsetY = 0.5) {
-    const iw = img.width, ih = img.height;
-    const r = Math.min(w / iw, h / ih);
-    let nw = iw * r, nh = ih * r;
-    let cx, cy, cw, ch, ar = 1;
 
-    // contain
-    cx = (w - nw) * offsetX;
-    cy = (h - nh) * offsetY;
-    ctx.drawImage(img, x + cx, y + cy, nw, nh);
-}
 
 function loadImg(url) {
     return new Promise((resolve, reject) => {
@@ -2277,9 +2239,9 @@ async function generateMatchPostals() {
 
                 try {
                     const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
-                    drawImageProp(ctx, imgA, startX, sY, sSize, sSize);
+                    drawImageContain(ctx, imgA, startX, sY, sSize, sSize);
                     const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-                    drawImageProp(ctx, imgB, startX + sSize + (100 * gScale), sY, sSize, sSize);
+                    drawImageContain(ctx, imgB, startX + sSize + (100 * gScale), sY, sSize, sSize);
                 } catch (e) {}
 
                 // C. STAGE Y FECHA
@@ -2298,7 +2260,7 @@ async function generateMatchPostals() {
             try {
                 const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
                 ctx.globalAlpha = 0.6;
-                drawImageProp(ctx, logoImg, 60, 60, 250, 100, 0, 0); 
+                drawImageContain(ctx, logoImg, 60, 60, 250, 100, 0, 0); 
                 ctx.globalAlpha = 1.0;
             } catch (e) {}
 
@@ -2328,14 +2290,9 @@ async function generateArteLayouts(playerImg, data, crop) {
         await new Promise(r => imgEl.onload = r);
     }
 
-    // Cargar fondo personalizado (Usando lh3.googleusercontent para CORS)
-    const woodUrl = "https://lh3.googleusercontent.com/d/1U1Vc4ccbJp-1rwYH3LVwZ-kv45v2nBK5";
-    let wood;
-    try { wood = await loadImg(woodUrl); } catch(e) {}
-
     // Inicializar estados
-    arteStateSq = { ...arteStateSq, img: imgEl, woodImg: wood, data: data, tilt: (Math.random() * 10 - 5) * Math.PI / 180 };
-    arteStateVer = { ...arteStateVer, img: imgEl, woodImg: wood, data: data, tilt: (Math.random() * 10 - 5) * Math.PI / 180 };
+    arteStateSq = { ...arteStateSq, img: imgEl, data: data, tilt: (Math.random() * 6 - 3) * Math.PI / 180 };
+    arteStateVer = { ...arteStateVer, img: imgEl, data: data, tilt: (Math.random() * 6 - 3) * Math.PI / 180 };
 
     resetArtePosition('Sq');
     resetArtePosition('Ver');
@@ -2352,10 +2309,14 @@ function resetArtePosition(type) {
     
     const width = 1080;
     const height = type === 'Sq' ? 1080 : 1920;
-    const photoH = height * 0.8;
+    const polaroidH = Math.round(height * 0.20);
+    const photoH = height - polaroidH;
+    const pad = Math.round(width * 0.05);
+    const imgAreaW = width - (pad * 2);
+    const imgAreaH = photoH - pad;
     
     // Escala inicial para cubrir el área de la foto
-    state.scale = Math.max(width / state.img.width, photoH / state.img.height) * 1.1;
+    state.scale = Math.max(imgAreaW / state.img.width, imgAreaH / state.img.height) * 1.1;
     state.x = 0;
     state.y = 0;
     state.rotate = 0;
@@ -2367,7 +2328,6 @@ function resetArtePosition(type) {
     if (rotSl) rotSl.value = 0;
 }
 
-
 async function updateArtePreview(type) {
     const state = type === 'Sq' ? arteStateSq : arteStateVer;
     const canvas = document.getElementById(type === 'Sq' ? 'arteCanvasSquare' : 'arteCanvasVertical');
@@ -2376,142 +2336,142 @@ async function updateArtePreview(type) {
     const ctx = canvas.getContext('2d');
     const width = 1080;
     const height = type === 'Sq' ? 1080 : 1920;
-    const polaroidH = Math.round(height * 0.20);
+    const polaroidH = Math.round(height * 0.22);
     const photoH = height - polaroidH;
 
-    // 1. Crear Polaroid en canvas temporal
+    // 1. Crear Polaroid en canvas temporal para aplicar tilt global después
     const temp = document.createElement('canvas');
     temp.width = width;
     temp.height = height;
     const tCtx = temp.getContext('2d');
 
-    // Fondo Blanco Polaroid
+    // Fondo Blanco Polaroid (Marco)
     tCtx.fillStyle = '#fff';
     tCtx.fillRect(0, 0, width, height);
 
-    // Foto Jugador
-    tCtx.save();
+    // Hueco de la imagen (Negro fondo)
     const pad = Math.round(width * 0.05);
     const photoW = width - (pad * 2);
+    const photoAreaH = photoH - pad;
+    tCtx.fillStyle = '#080808';
+    tCtx.fillRect(pad, pad, photoW, photoAreaH);
+
+    // Foto Jugador con Clipping y Transformaciones (Drag/Zoom/Rotate)
+    tCtx.save();
     tCtx.beginPath();
-    tCtx.rect(pad, pad, photoW, photoH - pad);
+    tCtx.rect(pad, pad, photoW, photoAreaH);
     tCtx.clip();
 
-    tCtx.translate(pad + photoW / 2 + state.x, pad + (photoH - pad) / 2 + state.y);
-    tCtx.rotate(state.rotate * Math.PI / 180);
-    const drawW = state.img.width * state.scale;
-    const drawH = state.img.height * state.scale;
+    const zoom = parseFloat(document.getElementById('arteZoom' + type).value) || 1;
+    const rotateSlider = parseFloat(document.getElementById('arteRotate' + type).value) || 0;
+    
+    tCtx.translate(pad + photoW / 2 + state.x, pad + photoAreaH / 2 + state.y);
+    tCtx.rotate((state.rotate + rotateSlider) * Math.PI / 180);
+    const drawW = state.img.width * state.scale * zoom;
+    const drawH = state.img.height * state.scale * zoom;
     tCtx.drawImage(state.img, -drawW / 2, -drawH / 2, drawW, drawH);
     tCtx.restore();
 
-    // Sombra interna foto
-    tCtx.strokeStyle = 'rgba(0,0,0,0.1)';
-    tCtx.lineWidth = 2;
-    tCtx.strokeRect(pad, pad, photoW, photoH - pad);
+    // Sombra interna sutil en la foto
+    tCtx.strokeStyle = 'rgba(0,0,0,0.15)';
+    tCtx.lineWidth = 4;
+    tCtx.strokeRect(pad, pad, photoW, photoAreaH);
 
-    // Info Polaroid
-    const player = state.data;
+    // 2. BRANDING INTERNO (Logo arriba a la izquierda del hueco)
+    try {
+        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
+        tCtx.save();
+        tCtx.globalAlpha = 0.8;
+        drawImageContain(tCtx, logoImg, pad + 25, pad + 25, 180, 70, 0, 0);
+        tCtx.restore();
+    } catch(e) {}
+
+    // 3. FOOTER (Match Day + Handwriting)
+    const footerY = photoAreaH + pad + 25;
+    const player = state.data || lastPlayerData || {};
     const teamA = selectedMatchTeamA ? allTeams[selectedMatchTeamA] : null;
     const teamB = selectedMatchTeamB ? allTeams[selectedMatchTeamB] : null;
     const stage = (document.getElementById('matchStage') || {}).value || '';
     const date = (document.getElementById('matchDate') || {}).value || '';
     const shieldColorMode = (document.getElementById('polaroidShieldColor') || {}).value || 'white';
+    const message = document.getElementById('polaroidMessage').value;
 
-    // Colores para el fondo exterior
-    const c1 = player.color;
-    const c2 = player.color2 || player.color;
-
-    const sSz = Math.round(polaroidH * 0.45);
-    const spacing = 15;
-    const vsW = Math.round(width * 0.06);
-    
-    let shieldsW = 0;
-    if (teamA) shieldsW += sSz;
-    if (teamA && teamB) shieldsW += spacing + vsW + spacing;
-    if (teamB) shieldsW += sSz;
-    
-    let nextX = width - pad - shieldsW;
-    const sY = photoH + (polaroidH * 0.15);
-
-    if (teamA) { 
-        try { 
-            const baseShield = (shieldColorMode === 'color') ? teamA.shield : (teamA.shieldWhite || teamA.shield);
-            const sImg = await loadImg(baseShield);
-            const sScale = Math.min(sSz / sImg.width, sSz / sImg.height);
-            const sW = sImg.width * sScale;
-            const sH = sImg.height * sScale;
-            if (shieldColorMode === 'black') tCtx.filter = 'brightness(0)';
-            else if (shieldColorMode === 'white' && !teamA.shieldWhite) tCtx.filter = 'brightness(0) invert(1)';
-            tCtx.drawImage(sImg, nextX + (sSz - sW)/2, sY + (sSz - sH)/2, sW, sH);
-            tCtx.filter = 'none';
-        } catch(e){} 
-        nextX += sSz;
-    }
-
+    // A. Match Day Section (Escudos + Info)
     if (teamA && teamB) {
-        nextX += spacing;
-        tCtx.fillStyle = (shieldColorMode === 'black') ? '#222' : '#aaa';
-        tCtx.font = `700 ${Math.round(polaroidH * 0.15)}px Outfit`;
-        tCtx.textAlign = 'center';
-        tCtx.fillText('VS', nextX + (vsW/2), sY + (sSz/2) + (polaroidH*0.05));
-        nextX += vsW + spacing;
-    }
-
-    if (teamB) { 
-        try { 
-            const baseShield = (shieldColorMode === 'color') ? teamB.shield : (teamB.shieldWhite || teamB.shield);
-            const sImg = await loadImg(baseShield);
-            const sScale = Math.min(sSz / sImg.width, sSz / sImg.height);
-            const sW = sImg.width * sScale;
-            const sH = sImg.height * sScale;
+        const sSize = 75;
+        try {
+            const sA = (shieldColorMode === 'white') ? (teamA.shieldWhite || teamA.shield) : teamA.shield;
+            const sB = (shieldColorMode === 'white') ? (teamB.shieldWhite || teamB.shield) : teamB.shield;
+            const imgA = await loadImg(sA);
+            const imgB = await loadImg(sB);
+            
+            tCtx.save();
             if (shieldColorMode === 'black') tCtx.filter = 'brightness(0)';
-            else if (shieldColorMode === 'white' && !teamB.shieldWhite) tCtx.filter = 'brightness(0) invert(1)';
-            tCtx.drawImage(sImg, nextX + (sSz - sW)/2, sY + (sSz - sH)/2, sW, sH);
-            tCtx.filter = 'none';
-        } catch(e){} 
+            drawImageContain(tCtx, imgA, pad, footerY, sSize, sSize);
+            drawImageContain(tCtx, imgB, pad + sSize + 15, footerY, sSize, sSize);
+            tCtx.restore();
+
+            tCtx.textAlign = 'left';
+            tCtx.fillStyle = '#333';
+            tCtx.font = '900 24px Outfit';
+            tCtx.fillText(stage.toUpperCase(), pad + (sSize * 2) + 35, footerY + 32);
+            tCtx.fillStyle = '#888';
+            tCtx.font = '400 18px Outfit';
+            tCtx.fillText(date, pad + (sSize * 2) + 35, footerY + 58);
+        } catch(e){}
     }
 
-    const textY = sY + sSz + (polaroidH * 0.15);
-    const groupCenterX = width - pad - (shieldsW / 2);
-    tCtx.textAlign = 'center';
-    tCtx.fillStyle = '#111';
-    tCtx.font = `900 ${Math.round(polaroidH * 0.14)}px Outfit`;
-    tCtx.fillText(stage.toUpperCase(), groupCenterX, textY);
-    tCtx.fillStyle = '#666';
-    tCtx.font = `400 ${Math.round(polaroidH * 0.12)}px Outfit`;
-    tCtx.fillText(date, groupCenterX, textY + (polaroidH * 0.12));
+    // B. Texto Manuscrito (A la derecha)
+    const txt = message || (player.name ? player.name.toUpperCase() : "");
+    if (txt) {
+        tCtx.save();
+        tCtx.fillStyle = "#111";
+        tCtx.font = "700 52px 'Caveat', cursive";
+        tCtx.textAlign = "right";
+        tCtx.fillText(txt, width - pad, footerY + 50);
+        tCtx.restore();
+    }
 
     addPaniniBorder(tCtx, width, height);
 
-    // 2. Renderizar en Canvas Final
+    // 4. RENDER FINAL (Fondo con Sombra Perimetral y Polaroid con Tilt)
     const applyTilt = (document.getElementById('polaroidTiltToggle') || {}).checked;
     const tilt = applyTilt ? (state.tilt || 0) : 0;
     const absTilt = Math.abs(tilt);
+    
+    // Dimensiones finales con margen para rotación
     const finalW = width + (height * Math.sin(absTilt)) + 150;
     const finalH = height + (width * Math.sin(absTilt)) + 150;
     canvas.width = finalW;
     canvas.height = finalH;
 
+    // Fondo (Estadio + Gradient Vignette)
+    const c1 = player.color || "#00ff88";
+    const c2 = player.color2 || c1;
     const bgGrd = ctx.createLinearGradient(0, 0, finalW, finalH);
     bgGrd.addColorStop(0, c1);
     bgGrd.addColorStop(1, c2);
     ctx.fillStyle = bgGrd;
     ctx.fillRect(0, 0, finalW, finalH);
-
-    if (state.woodImg) {
+    
+    try {
+        const bgUrl = localStorage.getItem('album_bg_url') || 'https://lh3.googleusercontent.com/d/1fhmSEr6dh5nUP9BKIqH0Lwg3Ue8smkLL'; 
+        const bgImg = await loadImg(bgUrl);
         ctx.save();
-        ctx.globalCompositeOperation = 'multiply';
-        ctx.globalAlpha = 0.8;
-        ctx.drawImage(state.woodImg, 0, 0, finalW, finalH);
+        ctx.globalAlpha = 0.5;
+        drawImageProp(ctx, bgImg, 0, 0, finalW, finalH);
         ctx.restore();
-    }
+    } catch(e) {}
+    
+    drawPerimeterShadow(ctx, finalW, finalH);
 
+    // Polaroid con sombra
     ctx.save();
     ctx.translate(finalW / 2, finalH / 2);
     ctx.rotate(tilt);
     ctx.translate(-width / 2, -height / 2);
-    ctx.shadowColor = 'rgba(0,0,0,0.8)';
-    ctx.shadowBlur = 50;
+    ctx.shadowColor = 'rgba(0,0,0,0.6)';
+    ctx.shadowBlur = 40;
     ctx.shadowOffsetX = 10;
     ctx.shadowOffsetY = 15;
     ctx.drawImage(temp, 0, 0);
@@ -3119,7 +3079,11 @@ async function generateAlbum() {
         ctx.beginPath();
         ctx.rect(x, y, w, h);
         ctx.clip();
-        drawImageProp(ctx, img, x, y, w, h);
+        if (i === 0) { // ESCUDO
+            drawImageContain(ctx, img, x, y, w, h);
+        } else {
+            drawImageProp(ctx, img, x, y, w, h);
+        }
         ctx.restore();
     });
 
@@ -3139,14 +3103,12 @@ async function generateAlbum() {
         ctx.fillStyle = team.color1 || "#00ff88";
         ctx.fillRect(bX, bY, 10 * tickerScale, barH);
         
-        if (team.shield) {
             try {
                 const sImg = await loadImg(team.shield);
                 const sSize = 100 * tickerScale;
-                // Usar drawImageProp para no deformar
-                drawImageProp(ctx, sImg, bX + 20 * tickerScale, bY - 20 * tickerScale, sSize, sSize);
+                // Usar drawImageContain para no deformar escudos
+                drawImageContain(ctx, sImg, bX + 20 * tickerScale, bY - 20 * tickerScale, sSize, sSize);
             } catch(e) {}
-        }
 
         ctx.fillStyle = "white";
         ctx.textAlign = "left";
@@ -3180,9 +3142,9 @@ async function generateAlbum() {
 
         try {
             const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
-            drawImageProp(ctx, imgA, mX + (mW/2) - sSize - 10, mY - sSize - 5, sSize, sSize);
+            drawImageContain(ctx, imgA, mX + (mW/2) - sSize - 10, mY - sSize - 5, sSize, sSize);
             const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-            drawImageProp(ctx, imgB, mX + (mW/2) + 10, mY - sSize - 5, sSize, sSize);
+            drawImageContain(ctx, imgB, mX + (mW/2) + 10, mY - sSize - 5, sSize, sSize);
         } catch(e) {}
 
         ctx.save();
@@ -3211,7 +3173,7 @@ async function generateAlbum() {
     
     try {
         const logo = await loadImg('https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0');
-        drawImageProp(ctx, logo, W - 350, H - 100, 300, 80);
+        drawImageContain(ctx, logo, W - 350, H - 100, 300, 80);
     } catch(e) {}
 }
 
@@ -3293,11 +3255,8 @@ async function handleAlbumBulkUpload(input) {
 /**
  * Helper para dibujar imágenes manteniendo relación de aspecto (Cover/Contain)
  */
-function drawImageProp(ctx, img, x, y, w, h, offsetX, offsetY) {
+function drawImageProp(ctx, img, x, y, w, h, offsetX = 0.5, offsetY = 0.5) {
     if (arguments.length < 2) return;
-    if (typeof offsetX === "undefined") offsetX = 0.5;
-    if (typeof offsetY === "undefined") offsetY = 0.5;
-
     let iw = img.width, ih = img.height,
         r = Math.min(w / iw, h / ih),
         nw = iw * r, nh = ih * r,
@@ -3316,6 +3275,18 @@ function drawImageProp(ctx, img, x, y, w, h, offsetX, offsetY) {
     if (cw > iw) cw = iw; if (ch > ih) ch = ih;
 
     ctx.drawImage(img, cx, cy, cw, ch, x, y, w, h);
+}
+
+/**
+ * Helper para dibujar imágenes asegurando que se vean COMPLETAS (Contain)
+ */
+function drawImageContain(ctx, img, x, y, w, h, offsetX = 0.5, offsetY = 0.5) {
+    const iw = img.width, ih = img.height;
+    const r = Math.min(w / iw, h / ih);
+    const nw = iw * r, nh = ih * r;
+    const cx = (w - nw) * offsetX;
+    const cy = (h - nh) * offsetY;
+    ctx.drawImage(img, x + cx, y + cy, nw, nh);
 }
 
 /**
@@ -3338,135 +3309,4 @@ function drawRoundedRect(ctx, x, y, width, height, radius, fill = true, stroke =
     if (stroke) ctx.stroke();
 }
 
-// --- MÓDULO POLAROID (ARTE) ---
-async function generateArteLayouts(img, data, cropHD) {
-    // Solo disparamos la actualización de las previas
-    updateArtePreview('Sq');
-    updateArtePreview('Ver');
-}
 
-async function updateArtePreview(type) {
-    const canvas = document.getElementById(type === 'Sq' ? 'arteCanvasSquare' : 'arteCanvasVertical');
-    if (!canvas || !lastProcessedPlayerImg) return;
-    const ctx = canvas.getContext('2d');
-    
-    const W = type === 'Sq' ? 1080 : 1080;
-    const H = type === 'Sq' ? 1080 : 1920;
-    canvas.width = W; canvas.height = H;
-
-    const zoom = parseFloat(document.getElementById('arteZoom' + type).value);
-    const rotate = parseFloat(document.getElementById('arteRotate' + type).value);
-    const hasTilt = document.getElementById('polaroidTiltToggle').checked;
-    const message = document.getElementById('polaroidMessage').value;
-    const shieldColor = document.getElementById('polaroidShieldColor').value;
-
-    // 1. FONDO (Estadio con el sistema de sombras de Plano TV)
-    ctx.fillStyle = "#020202";
-    ctx.fillRect(0, 0, W, H);
-    
-    try {
-        const bgUrl = localStorage.getItem('album_bg_url') || 'https://lh3.googleusercontent.com/d/1XfK3V-5V3Z4Y6X7U8i9oP_Q_R_S_T_U_V'; 
-        const bgImg = await loadImg(bgUrl);
-        ctx.save();
-        ctx.globalAlpha = 0.6;
-        drawImageProp(ctx, bgImg, 0, 0, W, H);
-        ctx.restore();
-    } catch(e) {}
-
-    // Aplicar Sombras Perimetrales Profesionales (Mismo sistema que Plano TV)
-    drawPerimeterShadow(ctx, W, H);
-
-    // 2. MARCO POLAROID
-    const pW = W * 0.9;
-    const pH = type === 'Sq' ? H * 0.9 : H * 0.7; // Ajustado para 9:16
-    const pX = (W - pW) / 2;
-    const pY = (H - pH) / (type === 'Sq' ? 2.5 : 2.0); // Más centrado en vertical
-
-    ctx.save();
-    if (hasTilt) {
-        ctx.translate(W/2, H/2);
-        ctx.rotate(-2.5 * Math.PI / 180);
-        ctx.translate(-W/2, -H/2);
-    }
-
-    // El Marco Blanco
-    ctx.fillStyle = "white";
-    ctx.fillRect(pX, pY, pW, pH);
-
-    // Hueco de la imagen
-    const margin = pW * 0.05;
-    const imgAreaW = pW - (margin * 2);
-    const imgAreaH = pH - (margin * 4); // Más espacio abajo para el nuevo layout
-    ctx.fillStyle = "#080808";
-    ctx.fillRect(pX + margin, pY + margin, imgAreaW, imgAreaH);
-    
-    // Dibujar Jugador
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(pX + margin, pY + margin, imgAreaW, imgAreaH);
-    ctx.clip();
-    
-    const targetImg = lastProcessedPlayerImg;
-    const pZoom = zoom * 1.1;
-    const pDrawW = imgAreaW * pZoom;
-    const pDrawH = (targetImg.height * (pDrawW / targetImg.width));
-    
-    ctx.translate(pX + margin + imgAreaW/2, pY + margin + imgAreaH/2);
-    ctx.rotate(rotate * Math.PI / 180);
-    ctx.drawImage(targetImg, -pDrawW/2, -pDrawH/2, pDrawW, pDrawH);
-    ctx.restore();
-
-    // 3. LOGO (Dentro de la Polaroid - Top Left del marco)
-    try {
-        const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
-        ctx.save();
-        ctx.globalAlpha = 0.8;
-        // Posicionado arriba a la izquierda del hueco de imagen
-        drawImageProp(ctx, logoImg, pX + margin + 20, pY + margin + 20, 180, 70);
-        ctx.restore();
-    } catch(e) {}
-
-    // 4. FOOTER COMPLEJO (Match Day + Mensaje)
-    const footerY = pY + margin + imgAreaH + 20;
-    const footerContentX = pX + margin;
-    
-    // A. Match Day (Escudos + Info)
-    if (selectedMatchTeamA && selectedMatchTeamB) {
-        const teamA = allTeams[selectedMatchTeamA];
-        const teamB = allTeams[selectedMatchTeamB];
-        const stage = (document.getElementById('matchStage') || {}).value || '';
-        const date = (document.getElementById('matchDate') || {}).value || '';
-        const sSize = 65;
-
-        try {
-            const imgA = await loadImg(shieldColor === 'white' ? (teamA.shieldWhite || teamA.shield) : teamA.shield);
-            const imgB = await loadImg(shieldColor === 'white' ? (teamB.shieldWhite || teamB.shield) : teamB.shield);
-            
-            ctx.save();
-            if (shieldColor === 'black') ctx.filter = "brightness(0)";
-            drawImageProp(ctx, imgA, footerContentX, footerY, sSize, sSize);
-            drawImageProp(ctx, imgB, footerContentX + sSize + 10, footerY, sSize, sSize);
-            ctx.restore();
-            
-            // Textos Match Day a la derecha de los escudos
-            ctx.fillStyle = "#333";
-            ctx.textAlign = "left";
-            ctx.font = "900 22px Outfit";
-            ctx.fillText(stage.toUpperCase(), footerContentX + (sSize * 2) + 25, footerY + 28);
-            ctx.font = "400 16px Outfit";
-            ctx.fillStyle = "#666";
-            ctx.fillText(date, footerContentX + (sSize * 2) + 25, footerY + 52);
-        } catch(e) {}
-    }
-
-    // B. Texto Manuscrito (A la derecha del todo)
-    if (message || lastPlayerData) {
-        const txt = message || lastPlayerData.name.toUpperCase();
-        ctx.fillStyle = "#1a1a1a";
-        ctx.font = "700 48px 'Caveat', cursive";
-        ctx.textAlign = "right";
-        ctx.fillText(txt, pX + pW - margin, footerY + 45);
-    }
-
-    ctx.restore();
-}
