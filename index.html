@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports Hub - Pro Card Generator</title>
     <script>
-        console.log("Sports Hub Pro v3.1.5 - STABLE OK");
+        console.log("Sports Hub Pro v3.1.6 - STABLE OK");
     </script>
-    <link rel="stylesheet" href="style.css?v=3.1.5">
+    <link rel="stylesheet" href="style.css?v=3.1.6">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Oswald:wght@700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
     <!-- Librerías de IA -->
@@ -43,7 +43,7 @@
                 <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v3.1.5 - OK</button>
+                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v3.1.6 - OK</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
             </div>
@@ -688,6 +688,10 @@
                     <p>WYSIWYG: Control total por capas, escalas independientes para Ticker/Matchday y sistema de bloqueo de diseño.</p>
                 </div>
                 <div class="update-item">
+                    <span class="update-ver">v3.1.6</span>
+                    <p>Exportación TEAM: Resolución aumentada a 2160x1350 (Dos posts 4:5 de 1080x1350). Mayor calidad para carruseles de Instagram.</p>
+                </div>
+                <div class="update-item">
                     <span class="update-ver">v3.1.5</span>
                     <p>IA & Branding: Mejora del algoritmo OCR para dorsales de 2 dígitos. Escudos Polaroid en color por defecto y limpieza de bordes en el Álbum.</p>
                 </div>
@@ -875,11 +879,11 @@
         </div>
     </div>
 
-    <script src="app.js?v=3.1.5"></script>
+    <script src="app.js?v=3.1.6"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=3.1.5')
+                navigator.serviceWorker.register('./sw.js?v=3.1.6')
                     .then(reg => {
                         console.log('SW Registered', reg);
                         reg.onupdatefound = () => {

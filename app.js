@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v3.1.5 - STABLE OK");
+console.log("Sports Hub Pro v3.1.6 - STABLE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -2529,8 +2529,8 @@ function setupArteEvents() {
 
 async function downloadFullCarousel() {
     if (!carouselState.img) return;
-    const h = 1080;
-    const w = 810; // Ratio 3:4
+    const h = 1350;
+    const w = 1080; // Ratio 4:5 por slide
     const canvasFull = document.createElement('canvas');
     canvasFull.width = w * 2; // 1620 total
     canvasFull.height = h;
