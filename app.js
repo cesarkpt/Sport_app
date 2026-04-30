@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v3.1.1 - STABLE OK");
+console.log("Sports Hub Pro v3.1.2 - STABLE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -1251,8 +1251,8 @@ async function drawMatchInfo(ctx, teamA, teamB) {
     const stage = document.getElementById('matchStage').value;
     const date = document.getElementById('matchDate').value || new Date().toLocaleDateString();
 
-    const sSize = 60;
-    const totalW = (sSize * 2) + 15;
+    const sSize = 40;
+    const totalW = (sSize * 2) + 10;
     // Alineado con el final de la barra negra (50 + 980 = 1030)
     const x = 1010 - totalW;
     const y = 40; 
@@ -1280,12 +1280,12 @@ async function drawMatchInfo(ctx, teamA, teamB) {
     ctx.textAlign = "center";
     const centerX = x + totalW / 2;
 
-    ctx.font = "900 30px Outfit";
-    ctx.fillText(stage, centerX, y + sSize + 40);
+    ctx.font = "900 20px Outfit";
+    ctx.fillText(stage, centerX, y + sSize + 30);
 
-    ctx.font = "400 22px Outfit";
+    ctx.font = "400 16px Outfit";
     ctx.fillStyle = "rgba(255,255,255,0.8)";
-    ctx.fillText(date, centerX, y + sSize + 70);
+    ctx.fillText(date, centerX, y + sSize + 55);
 }
 
 function updateStep(num, text) {
