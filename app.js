@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v3.1.2 - STABLE OK");
+console.log("Sports Hub Pro v3.1.5 - STABLE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -440,13 +440,26 @@ async function resizeImage(img, maxSize) {
 
 function extractNumber(text) {
     if (!text) return "??";
-    // Limpiar caracteres extraños y buscar números
-    const match = text.replace(/[^0-9]/g, '').match(/\d+/);
-    if (!match) return "??";
-    let num = match[0];
-    // Quitar ceros a la izquierda si tiene más de 1 dígito (ej: 01 -> 1)
-    if (num.length > 1 && num.startsWith('0')) num = num.substring(1);
-    return num;
+    // 1. Normalización de errores comunes de OCR (O -> 0, I/l -> 1)
+    let normalized = text.toUpperCase()
+        .replace(/[OI]/g, (m) => m === 'O' ? '0' : '1')
+        .replace(/[L]/g, '1');
+    
+    // 2. Buscar todas las secuencias numéricas
+    const matches = normalized.match(/\d+/g);
+    if (!matches) return "??";
+    
+    // 3. Priorizar secuencias de 1-2 dígitos (dorsales típicos)
+    for (let num of matches) {
+        if (num.length >= 1 && num.length <= 2) {
+             // Quitar ceros a la izquierda si no es solo "0"
+             if (num.length > 1 && num.startsWith('0')) num = num.substring(1);
+             return num;
+        }
+    }
+    
+    // Fallback al primer número encontrado (truncado a 2 dígitos)
+    return matches[0].substring(0, 2);
 }
 
 async function processPlayerPhoto(processingImg, originalImg) {
@@ -937,7 +950,7 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
     } else {
         // Usar el canvas temporal generado por smart crop
         const cScale = cw / carnetCrop.width;
-        ctxCarnet.drawImage(carnetCrop, 0, 0, carnetCrop.width, carnetCrop.height, 0, 0, cw, carnetCrop.height * cScale);
+        ctxCarnet.drawImage(carnetCrop, 0, 0, carnetCrop.width, carnetCrop.height, 0, 0, carnetCrop.height * cScale);
     }
 
     // Barra lateral Degradada (50px) - Ocultar si está en modo LIMPIAR
@@ -2621,33 +2634,26 @@ async function downloadFullCarousel() {
 }
 function getDefaultAlbumPos(i) {
     const stickerH = 300;
-    const playerW = 225;
-    const teamW = 540;
-    const shieldW = 260;
+    const stickerW = 225;
     const gridStartX = 1100;
     const gridStartY = 100;
-    const gapX = 35;
-    const gapY = 35;
-    const yBottomLeft = 430; // Bajado 30px (antes 400)
+    const gap = 35;
+    const yBottomLeft = 1380; // Línea base inferior
 
-    let x, y, w, h;
+    let x, y, w = stickerW, h = stickerH;
+    
     if (i === 0) { // ESCUDO
-        w = shieldW; h = stickerH;
         x = 100; y = yBottomLeft - h;
     } else if (i === 1) { // TEAM
-        w = teamW; h = stickerH;
-        x = 100 + shieldW + 30; y = yBottomLeft - h;
+        x = 100 + (stickerW + gap); y = yBottomLeft - h;
     } else if (i === 2) { // DT
-        w = playerW; h = stickerH;
-        x = gridStartX + (2 * (playerW + gapX));
-        y = gridStartY + (3 * (h + gapY));
+        x = 100 + (stickerW + gap) * 2; y = yBottomLeft - h;
     } else { // JUGADORES
         const idx = i - 3;
         const col = idx % 3;
         const row = Math.floor(idx / 3);
-        x = gridStartX + (col * (playerW + gapX));
-        y = gridStartY + (row * (stickerH + gapY));
-        w = playerW; h = stickerH;
+        x = gridStartX + (col * (stickerW + gap));
+        y = gridStartY + (row * (stickerH + gap));
     }
     return { x, y, w, h };
 }

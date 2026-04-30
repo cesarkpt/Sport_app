@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports Hub - Pro Card Generator</title>
     <script>
-        console.log("Sports Hub Pro v3.1.3 - STABLE OK");
+        console.log("Sports Hub Pro v3.1.5 - STABLE OK");
     </script>
-    <link rel="stylesheet" href="style.css?v=3.1.3">
+    <link rel="stylesheet" href="style.css?v=3.1.5">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Oswald:wght@700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
     <!-- Librerías de IA -->
@@ -43,7 +43,7 @@
                 <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v3.1.3 - OK</button>
+                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v3.1.5 - OK</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
             </div>
@@ -479,9 +479,9 @@
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <label for="polaroidShieldColor" style="font-size: 0.6rem; opacity: 0.7;">COLOR ESCUDOS</label>
-                                <select id="polaroidShieldColor" onchange="updateArtePreview('Sq'); updateArtePreview('Ver');" style="background: #000; border: 1px solid #333; color: white; padding: 5px; font-size: 0.7rem; border-radius: 5px; font-family: Outfit, sans-serif;">
-                                    <option value="color">Original</option>
-                                    <option value="white" selected>Blanco</option>
+                                <select id="polaroidShieldColor" class="settings-select" onchange="updateArtePreview('Sq'); updateArtePreview('Ver');">
+                                    <option value="color" selected>Original</option>
+                                    <option value="white">Blanco</option>
                                     <option value="black">Negro</option>
                                 </select>
                             </div>
@@ -624,6 +624,10 @@
             </div>
             <div class="updates-list">
                 <div class="update-item">
+                    <span class="update-ver">v3.1.4</span>
+                    <p>Optimización Álbum: Altura y relación de aspecto unificada (225x300) para todos los cromos. Añadido borde de sticker individual y centrado mejorado.</p>
+                </div>
+                <div class="update-item">
                     <span class="update-ver">v3.1.3</span>
                     <p>Hotfix Polaroid: Corregida la acumulación de eventos de redibujado que causaba efectos duplicados y lentitud.</p>
                 </div>
@@ -682,6 +686,10 @@
                 <div class="update-item">
                     <span class="update-ver">v2.9.0</span>
                     <p>WYSIWYG: Control total por capas, escalas independientes para Ticker/Matchday y sistema de bloqueo de diseño.</p>
+                </div>
+                <div class="update-item">
+                    <span class="update-ver">v3.1.5</span>
+                    <p>IA & Branding: Mejora del algoritmo OCR para dorsales de 2 dígitos. Escudos Polaroid en color por defecto y limpieza de bordes en el Álbum.</p>
                 </div>
                 <div class="update-item">
                     <span class="update-ver">v2.8.1</span>
@@ -867,11 +875,11 @@
         </div>
     </div>
 
-    <script src="app.js?v=3.1.3"></script>
+    <script src="app.js?v=3.1.5"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=3.1.3')
+                navigator.serviceWorker.register('./sw.js?v=3.1.5')
                     .then(reg => {
                         console.log('SW Registered', reg);
                         reg.onupdatefound = () => {
