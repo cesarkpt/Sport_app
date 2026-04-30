@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v3.0.9 - STABLE OK");
+console.log("Sports Hub Pro v3.1.1 - STABLE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -898,8 +898,8 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
 
     try {
         const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
-        // Ajuste de área y centrado para evitar recortes por margen
-        drawImageContain(ctxOut, logoImg, 50, 50, 200, 100); 
+        // Ajuste de área y centrado para evitar recortes por margen (Reducido de 200x100 a 150x75)
+        drawImageContain(ctxOut, logoImg, 50, 40, 150, 75); 
     } catch (e) { }
 
     // --- 2.6 INFO DE PARTIDO ---
@@ -1168,20 +1168,21 @@ async function drawSportsTicker(ctx, player) {
     const isClean = (document.getElementById('cleanPlanoToggle') || {}).checked;
     if (isClean) return;
 
-    const bY = CONFIG.outputHeight - 150;
+    const bY = CONFIG.outputHeight - 120;
     const barW = 980;
+    const barH = 70; // 2/3 del tamaño anterior
 
     // 1. Fondo Glassmorphism
     ctx.fillStyle = "rgba(0,0,0,0.85)";
     ctx.beginPath();
-    ctx.roundRect(50, bY, barW, 100, 15);
+    ctx.roundRect(50, bY, barW, barH, 10);
     ctx.fill();
 
     // 2. Barras laterales de color (Bicolor)
     ctx.fillStyle = player.color;
-    ctx.fillRect(50, bY, 12, 50);
+    ctx.fillRect(50, bY, 10, barH/2);
     ctx.fillStyle = player.color2 || player.color;
-    ctx.fillRect(50, bY + 50, 12, 50);
+    ctx.fillRect(50, bY + barH/2, 10, barH/2);
 
     let currentX = 140;
 
@@ -1189,9 +1190,9 @@ async function drawSportsTicker(ctx, player) {
     if (player.shield) {
         try {
             const sImg = await loadImg(player.shield);
-            const shieldSize = 110; 
-            drawImageContain(ctx, sImg, currentX, bY - 15, shieldSize, shieldSize);
-            currentX += shieldSize + 10;
+            const shieldSize = 85; 
+            drawImageContain(ctx, sImg, currentX, bY - 10, shieldSize, shieldSize);
+            currentX += shieldSize + 15;
         } catch (e) { }
     }
 
@@ -1199,13 +1200,13 @@ async function drawSportsTicker(ctx, player) {
     if (player.position) {
         ctx.fillStyle = player.color;
         ctx.beginPath();
-        ctx.roundRect(currentX, bY + 35, 90, 50, 8);
+        ctx.roundRect(currentX, bY + 20, 65, 35, 6);
         ctx.fill();
         ctx.fillStyle = "#000";
-        ctx.font = "900 30px Outfit";
+        ctx.font = "900 22px Outfit";
         ctx.textAlign = "center";
-        ctx.fillText(player.position, currentX + 45, bY + 72);
-        currentX += 110;
+        ctx.fillText(player.position, currentX + 32, bY + 46);
+        currentX += 80;
     }
 
     // 5. Nombre y Número (CON SOMBRA AGRESIVA)
@@ -1217,47 +1218,44 @@ async function drawSportsTicker(ctx, player) {
     ctx.shadowOffsetY = 5;
 
     ctx.fillStyle = "#FFF";
-    ctx.font = "900 45px Outfit";
+    ctx.font = "900 32px Outfit";
     const displayName = player.name.replace(" (C)", "");
     const fullDisplayText = (player.number && player.number !== "") ? `${player.number} | ${displayName}` : displayName;
-    ctx.fillText(fullDisplayText, currentX, bY + 65);
+    ctx.fillText(fullDisplayText, currentX, bY + 46);
     ctx.restore();
 
     // 5.5 ICONO CAPITÁN (Estilo Carnet - 400px a la derecha)
     if (player.name.includes("(C)")) {
         const nameW = ctx.measureText(`${player.number} | ${displayName}`).width;
-        const capX = currentX + nameW + 400; // Movido 400px a la derecha
+        const capX = currentX + nameW + 15; 
         ctx.save();
-        // Sombra propia para el icono
-        ctx.shadowColor = "rgba(0,0,0,0.5)";
-        ctx.shadowBlur = 10;
         ctx.fillStyle = "#ff9800";
         ctx.beginPath();
-        ctx.arc(capX + 24, bY + 58, 28, 0, Math.PI * 2);
+        ctx.arc(capX + 15, bY + 35, 18, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "black";
-        ctx.font = "900 32px Outfit";
+        ctx.font = "900 22px Outfit";
         ctx.textAlign = "center";
-        ctx.fillText("C", capX + 24, bY + 70);
+        ctx.fillText("C", capX + 15, bY + 43);
         ctx.restore();
     }
 
     // 6. Nombre del Equipo (Derecha)
     ctx.textAlign = "right";
-    ctx.font = "700 25px Outfit";
+    ctx.font = "700 20px Outfit";
     ctx.fillStyle = "rgba(255,255,255,0.5)";
-    ctx.fillText(player.team.toUpperCase(), 1030, bY + 65);
+    ctx.fillText(player.team.toUpperCase(), 1010, bY + 45);
 }
 
 async function drawMatchInfo(ctx, teamA, teamB) {
     const stage = document.getElementById('matchStage').value;
     const date = document.getElementById('matchDate').value || new Date().toLocaleDateString();
 
-    const sSize = 80;
-    const totalW = (sSize * 2) + 20;
+    const sSize = 60;
+    const totalW = (sSize * 2) + 15;
     // Alineado con el final de la barra negra (50 + 980 = 1030)
-    const x = 1030 - totalW;
-    const y = 50; 
+    const x = 1010 - totalW;
+    const y = 40; 
 
     ctx.save();
     ctx.globalAlpha = 1.0;
