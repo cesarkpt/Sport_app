@@ -1,10 +1,10 @@
-console.log("Sports Hub Pro v3.0.6 - STABLE OK");
+console.log("Sports Hub Pro v3.0.9 - STABLE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
-    maxProcessingSize: 800, // Tamaño máximo para procesar con IA (más rápido en móviles)
-    outputWidth: 1920,
-    outputHeight: 1080,
+    maxProcessingSize: 800, 
+    outputWidth: 1080,  // Instagram Landscape (1.91:1)
+    outputHeight: 566,
     carnetWidth: 600,
     carnetHeight: 800
 };
@@ -850,10 +850,10 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
     }
 
     // --- RENDERIZADO DEL JUGADOR (PLANO TV) ---
-    // Requisito: Ancho de la barra (1720px), Mantener relación de aspecto, Alineado con Logo (y=90)
-    const finalX = 100;
-    const finalY = 90;
-    const barWidth = 1720;
+    // Requisito: Ancho de la barra (980px para 1080 total), Mantener relación de aspecto, Alineado con Logo (y=50)
+    const finalX = 50;
+    const finalY = 50;
+    const barWidth = 980; 
 
     if (manualCropHD) {
         const scale = barWidth / manualCropHD.w;
@@ -899,7 +899,7 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
     try {
         const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
         // Ajuste de área y centrado para evitar recortes por margen
-        drawImageContain(ctxOut, logoImg, 100, 90, 320, 150); 
+        drawImageContain(ctxOut, logoImg, 50, 50, 200, 100); 
     } catch (e) { }
 
     // --- 2.6 INFO DE PARTIDO ---
@@ -1168,19 +1168,20 @@ async function drawSportsTicker(ctx, player) {
     const isClean = (document.getElementById('cleanPlanoToggle') || {}).checked;
     if (isClean) return;
 
-    const bY = 1080 - 180;
+    const bY = CONFIG.outputHeight - 150;
+    const barW = 980;
 
     // 1. Fondo Glassmorphism
     ctx.fillStyle = "rgba(0,0,0,0.85)";
     ctx.beginPath();
-    ctx.roundRect(100, bY, 1720, 120, 15);
+    ctx.roundRect(50, bY, barW, 100, 15);
     ctx.fill();
 
     // 2. Barras laterales de color (Bicolor)
     ctx.fillStyle = player.color;
-    ctx.fillRect(100, bY, 15, 60);
+    ctx.fillRect(50, bY, 12, 50);
     ctx.fillStyle = player.color2 || player.color;
-    ctx.fillRect(100, bY + 60, 15, 60);
+    ctx.fillRect(50, bY + 50, 12, 50);
 
     let currentX = 140;
 
@@ -1188,8 +1189,8 @@ async function drawSportsTicker(ctx, player) {
     if (player.shield) {
         try {
             const sImg = await loadImg(player.shield);
-            const shieldSize = 140; 
-            drawImageContain(ctx, sImg, currentX, bY - 20, shieldSize, shieldSize);
+            const shieldSize = 110; 
+            drawImageContain(ctx, sImg, currentX, bY - 15, shieldSize, shieldSize);
             currentX += shieldSize + 10;
         } catch (e) { }
     }
@@ -1216,10 +1217,10 @@ async function drawSportsTicker(ctx, player) {
     ctx.shadowOffsetY = 5;
 
     ctx.fillStyle = "#FFF";
-    ctx.font = "900 65px Outfit";
+    ctx.font = "900 45px Outfit";
     const displayName = player.name.replace(" (C)", "");
     const fullDisplayText = (player.number && player.number !== "") ? `${player.number} | ${displayName}` : displayName;
-    ctx.fillText(fullDisplayText, currentX, bY + 82);
+    ctx.fillText(fullDisplayText, currentX, bY + 65);
     ctx.restore();
 
     // 5.5 ICONO CAPITÁN (Estilo Carnet - 400px a la derecha)
@@ -1243,20 +1244,20 @@ async function drawSportsTicker(ctx, player) {
 
     // 6. Nombre del Equipo (Derecha)
     ctx.textAlign = "right";
-    ctx.font = "700 35px Outfit";
+    ctx.font = "700 25px Outfit";
     ctx.fillStyle = "rgba(255,255,255,0.5)";
-    ctx.fillText(player.team.toUpperCase(), 1780, bY + 75);
+    ctx.fillText(player.team.toUpperCase(), 1030, bY + 65);
 }
 
 async function drawMatchInfo(ctx, teamA, teamB) {
     const stage = document.getElementById('matchStage').value;
     const date = document.getElementById('matchDate').value || new Date().toLocaleDateString();
 
-    const sSize = 100;
+    const sSize = 80;
     const totalW = (sSize * 2) + 20;
-    // Alineado con el final de la barra negra (100 + 1720 = 1820)
-    const x = 1820 - totalW;
-    const y = 90; // Bajado otros 15px (total 90)
+    // Alineado con el final de la barra negra (50 + 980 = 1030)
+    const x = 1030 - totalW;
+    const y = 50; 
 
     ctx.save();
     ctx.globalAlpha = 1.0;
@@ -2309,7 +2310,7 @@ function resetArtePosition(type) {
     if (!state.img) return;
     
     const width = 1080;
-    const height = type === 'Sq' ? 1080 : 1920;
+    const height = type === 'Sq' ? 1080 : 1350;
     const polaroidH = Math.round(height * 0.20);
     const photoH = height - polaroidH;
     const pad = Math.round(width * 0.05);
@@ -2336,7 +2337,7 @@ async function updateArtePreview(type) {
 
     const ctx = canvas.getContext('2d');
     const width = 1080;
-    const height = type === 'Sq' ? 1080 : 1920;
+    const height = type === 'Sq' ? 1080 : 1350;
     const polaroidH = Math.round(height * 0.22);
     const photoH = height - polaroidH;
 
