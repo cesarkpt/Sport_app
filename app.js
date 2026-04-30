@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v3.0.3 - STABLE OK");
+console.log("Sports Hub Pro v3.0.6 - STABLE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -849,13 +849,16 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
         ctxOut.drawImage(playerCanvas, (CONFIG.outputWidth - w) / 2, (CONFIG.outputHeight - h) / 2, w, h);
     }
 
-    // Jugador — escalar para cubrir el ancho de la barra (1720) y alinearlo con el logo (y=90)
+    // --- RENDERIZADO DEL JUGADOR (PLANO TV) ---
+    // Requisito: Ancho de la barra (1720px), Mantener relación de aspecto, Alineado con Logo (y=90)
+    const finalX = 100;
+    const finalY = 90;
+    const barWidth = 1720;
+
     if (manualCropHD) {
-        const finalY = 90;
-        const finalW = 1720;
-        const scale = finalW / manualCropHD.w;
+        const scale = barWidth / manualCropHD.w;
+        const finalW = barWidth;
         const finalH = manualCropHD.h * scale;
-        const finalX = 100;
 
         ctxOut.save();
         if (shouldRemoveBg) {
@@ -868,11 +871,9 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
         );
         ctxOut.restore();
     } else if (shouldRemoveBg) {
-        const finalW = 1720;
-        const scale = finalW / playerCanvas.width;
+        const scale = barWidth / playerCanvas.width;
+        const finalW = barWidth;
         const finalH = playerCanvas.height * scale;
-        const finalX = 100;
-        const finalY = 90;
 
         ctxOut.save();
         ctxOut.shadowColor = "rgba(0,0,0,0.6)";
@@ -895,10 +896,10 @@ async function generateLayouts(playerCanvas, player, shouldRemoveBg = true, manu
 
     await drawSportsTicker(ctxOut, player);
 
-    // 2.5 LOGO DE LA APP (Arriba Izquierda - Bajado otros 15px de 75 a 90)
     try {
         const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
-        drawImageProp(ctxOut, logoImg, 100, 90, 300, 140, 0, 0);
+        // Ajuste de área y centrado para evitar recortes por margen
+        drawImageContain(ctxOut, logoImg, 100, 90, 320, 150); 
     } catch (e) { }
 
     // --- 2.6 INFO DE PARTIDO ---
@@ -996,7 +997,7 @@ async function drawShield(ctx, shieldUrl) {
         ctx.save();
         ctx.shadowColor = "rgba(0,0,0,0.3)";
         ctx.shadowBlur = 20;
-        ctx.drawImage(shieldImg, 80, 80, 180, 180); // Lado Izquierdo
+        drawImageContain(ctx, shieldImg, 80, 80, 180, 180); // Lado Izquierdo
         ctx.restore();
     } catch (e) {
         console.warn("No se pudo cargar el escudo:", shieldUrl);
@@ -1188,7 +1189,7 @@ async function drawSportsTicker(ctx, player) {
         try {
             const sImg = await loadImg(player.shield);
             const shieldSize = 140; 
-            drawImageProp(ctx, sImg, currentX, bY - 20, shieldSize, shieldSize);
+            drawImageContain(ctx, sImg, currentX, bY - 20, shieldSize, shieldSize);
             currentX += shieldSize + 10;
         } catch (e) { }
     }
@@ -2542,7 +2543,7 @@ async function downloadFullCarousel() {
         // Logo (Slide 1)
         try {
             const logoImg = await loadImg("https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0");
-            drawImageProp(ctx, logoImg, 80, 80, 300, 140);
+            drawImageContain(ctx, logoImg, 80, 80, 300, 140);
         } catch (e) {}
 
         // Info Partido (Slide 2)
@@ -2557,9 +2558,9 @@ async function downloadFullCarousel() {
             const y2 = 80;
             try {
                 const imgA = await loadImg(teamA.shieldWhite || teamA.shield);
-                drawImageProp(ctx, imgA, x2, y2, sSize, sSize);
+                drawImageContain(ctx, imgA, x2, y2, sSize, sSize);
                 const imgB = await loadImg(teamB.shieldWhite || teamB.shield);
-                drawImageProp(ctx, imgB, x2 + sSize + 20, y2, sSize, sSize);
+                drawImageContain(ctx, imgB, x2 + sSize + 20, y2, sSize, sSize);
             } catch (e) {}
             ctx.fillStyle = 'white';
             ctx.textAlign = 'center';
@@ -3100,20 +3101,27 @@ async function generateAlbum() {
         ctx.save();
         ctx.fillStyle = "rgba(0,0,0,0.85)";
         drawRoundedRect(ctx, bX, bY, barW, barH, 15 * tickerScale, true, false);
-        ctx.fillStyle = team.color1 || "#00ff88";
-        ctx.fillRect(bX, bY, 10 * tickerScale, barH);
         
+        // Barra Bicolor lateral (igual que Plano TV)
+        ctx.fillStyle = team.color1 || "#00ff88";
+        ctx.fillRect(bX, bY, 12 * tickerScale, barH / 2);
+        ctx.fillStyle = team.color2 || team.color1 || "#00d4ff";
+        ctx.fillRect(bX, bY + (barH / 2), 12 * tickerScale, barH / 2);
+        
+        if (team.shield) {
             try {
                 const sImg = await loadImg(team.shield);
                 const sSize = 100 * tickerScale;
-                // Usar drawImageContain para no deformar escudos
-                drawImageContain(ctx, sImg, bX + 20 * tickerScale, bY - 20 * tickerScale, sSize, sSize);
+                // Escudo sobresaliendo ligeramente como en Plano TV
+                drawImageContain(ctx, sImg, bX + 35 * tickerScale, bY - 15 * tickerScale, sSize, sSize);
             } catch(e) {}
+        }
 
         ctx.fillStyle = "white";
         ctx.textAlign = "left";
-        ctx.font = `900 ${35 * tickerScale}px Outfit`;
-        ctx.fillText(team.name.toUpperCase(), bX + (team.shield ? 130 : 40) * tickerScale, bY + (48 * tickerScale));
+        ctx.font = `900 ${38 * tickerScale}px Outfit`;
+        // Centrado vertical del texto en la barra
+        ctx.fillText(team.name.toUpperCase(), bX + (team.shield ? 150 : 50) * tickerScale, bY + (barH / 2) + (13 * tickerScale));
         ctx.restore();
 
         // Indicador visual de arrastre si está activo
