@@ -1,4 +1,4 @@
-/* Sports Hub Pro - v3.2.0 */
+/* Sports Hub Pro - v3.2.2 */
 /* --- UTILIDADES ACCESIBILIDAD --- */
 .sr-only {
     position: absolute;
@@ -1700,6 +1700,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .roster-item-editable {
     display: flex;
+    flex-wrap: wrap;
     gap: 4px;
     align-items: center;
     background: rgba(255, 255, 255, 0.03);
@@ -1723,9 +1724,12 @@ input[type="range"]::-webkit-slider-thumb {
 
 .edit-name { 
     flex: 1; 
-    padding: 6px 8px !important;
-    font-size: 0.8rem !important;
-    min-width: 0; /* Permite que el flex-item se encoja correctamente */
+    padding: 8px 10px !important;
+    font-size: 0.9rem !important;
+    background: rgba(0,0,0,0.5) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    min-width: 100px; /* Asegurar un mínimo de espacio */
 }
 
 .edit-pos { 

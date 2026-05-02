@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v3.2.0 - STABLE OK");
+console.log("Sports Hub Pro v3.2.2 - STABLE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
