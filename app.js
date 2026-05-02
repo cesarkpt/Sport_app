@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v3.3.5 - NEW STADIUM");
+console.log("Sports Hub Pro v3.3.6 - UNIFORM & ALIGNED");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -3636,32 +3636,32 @@ function setupMatchdayEvents() {
 }
 
 function changeMatchdayFormation(val) {
-    // Escala 2/3 (aprox 0.66) aplicada a las bases
+    const W_U = 133; 
+    const H_U = 166;
     const formations = {
         '4-3-3': [
-            { x: 470, y: 1050, w: 133, h: 166 }, // POR
-            { x: 100, y: 820, w: 120, h: 146 }, { x: 350, y: 850, w: 120, h: 146 }, { x: 600, y: 850, w: 120, h: 146 }, { x: 850, y: 820, w: 120, h: 146 }, // DEF
-            { x: 250, y: 600, w: 120, h: 146 }, { x: 480, y: 630, w: 120, h: 146 }, { x: 710, y: 600, w: 120, h: 146 }, // VOL
-            { x: 180, y: 350, w: 146, h: 186 }, { x: 470, y: 280, w: 146, h: 186 }, { x: 760, y: 350, w: 146, h: 186 }  // DEL
+            { x: 474, y: 1030, w: W_U, h: H_U }, // POR
+            { x: 100, y: 800, w: W_U, h: H_U }, { x: 320, y: 830, w: W_U, h: H_U }, { x: 640, y: 830, w: W_U, h: H_U }, { x: 860, y: 800, w: W_U, h: H_U }, // DEF
+            { x: 250, y: 600, w: W_U, h: H_U }, { x: 474, y: 630, w: W_U, h: H_U }, { x: 700, y: 600, w: W_U, h: H_U }, // VOL
+            { x: 200, y: 350, w: W_U, h: H_U }, { x: 474, y: 300, w: W_U, h: H_U }, { x: 750, y: 350, w: W_U, h: H_U }  // DEL
         ],
         '4-4-2': [
-            { x: 470, y: 1050, w: 133, h: 166 }, // POR
-            { x: 100, y: 820, w: 120, h: 146 }, { x: 350, y: 850, w: 120, h: 146 }, { x: 600, y: 850, w: 120, h: 146 }, { x: 850, y: 820, w: 120, h: 146 }, // DEF
-            { x: 100, y: 600, w: 120, h: 146 }, { x: 350, y: 620, w: 120, h: 146 }, { x: 600, y: 620, w: 120, h: 146 }, { x: 850, y: 600, w: 120, h: 146 }, // VOL
-            { x: 350, y: 320, w: 146, h: 186 }, { x: 600, y: 320, w: 146, h: 186 }, // DEL
-            { x: 0, y: 0, w: 0, h: 0 } // Filler for index safety
+            { x: 474, y: 1030, w: W_U, h: H_U }, // POR
+            { x: 100, y: 800, w: W_U, h: H_U }, { x: 320, y: 830, w: W_U, h: H_U }, { x: 640, y: 830, w: W_U, h: H_U }, { x: 860, y: 800, w: W_U, h: H_U }, // DEF
+            { x: 100, y: 600, w: W_U, h: H_U }, { x: 320, y: 620, w: W_U, h: H_U }, { x: 640, y: 620, w: W_U, h: H_U }, { x: 860, y: 600, w: W_U, h: H_U }, // VOL
+            { x: 350, y: 320, w: W_U, h: H_U }, { x: 600, y: 320, w: W_U, h: H_U } // DEL
         ],
         '3-5-2': [
-            { x: 470, y: 1050, w: 133, h: 166 }, // POR
-            { x: 250, y: 850, w: 120, h: 146 }, { x: 480, y: 870, w: 120, h: 146 }, { x: 710, y: 850, w: 120, h: 146 }, // DEF
-            { x: 80, y: 600, w: 120, h: 146 }, { x: 280, y: 630, w: 120, h: 146 }, { x: 480, y: 650, w: 120, h: 146 }, { x: 680, y: 630, w: 120, h: 146 }, { x: 880, y: 600, w: 120, h: 146 }, // VOL
-            { x: 350, y: 320, w: 146, h: 186 }, { x: 600, y: 320, w: 146, h: 186 } // DEL
+            { x: 474, y: 1030, w: W_U, h: H_U }, // POR
+            { x: 250, y: 830, w: W_U, h: H_U }, { x: 474, y: 850, w: W_U, h: H_U }, { x: 700, y: 830, w: W_U, h: H_U }, // DEF
+            { x: 80, y: 600, w: W_U, h: H_U }, { x: 280, y: 630, w: W_U, h: H_U }, { x: 474, y: 650, w: W_U, h: H_U }, { x: 670, y: 630, w: W_U, h: H_U }, { x: 870, y: 600, w: W_U, h: H_U }, // VOL
+            { x: 350, y: 320, w: W_U, h: H_U }, { x: 600, y: 320, w: W_U, h: H_U } // DEL
         ],
         '5-4-1': [
-            { x: 470, y: 1050, w: 133, h: 166 }, // POR
-            { x: 80, y: 820, w: 120, h: 146 }, { x: 280, y: 850, w: 120, h: 146 }, { x: 480, y: 870, w: 120, h: 146 }, { x: 680, y: 850, w: 120, h: 146 }, { x: 880, y: 820, w: 120, h: 146 }, // DEF
-            { x: 150, y: 600, w: 120, h: 146 }, { x: 370, y: 630, w: 120, h: 146 }, { x: 590, y: 630, w: 120, h: 146 }, { x: 810, y: 600, w: 120, h: 146 }, // VOL
-            { x: 470, y: 320, w: 146, h: 186 } // DEL
+            { x: 474, y: 1030, w: W_U, h: H_U }, // POR
+            { x: 80, y: 800, w: W_U, h: H_U }, { x: 280, y: 830, w: W_U, h: H_U }, { x: 474, y: 850, w: W_U, h: H_U }, { x: 670, y: 830, w: W_U, h: H_U }, { x: 870, y: 800, w: W_U, h: H_U }, // DEF
+            { x: 150, y: 600, w: W_U, h: H_U }, { x: 370, y: 630, w: W_U, h: H_U }, { x: 580, y: 630, w: W_U, h: H_U }, { x: 800, y: 600, w: W_U, h: H_U }, // VOL
+            { x: 474, y: 320, w: W_U, h: H_U } // DEL
         ]
     };
     
