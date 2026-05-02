@@ -5,15 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports Hub - Pro Card Generator</title>
     <script>
-        console.log("Sports Hub Pro v3.2.2 - EMERGENCY UPDATE");
-        // Forzar limpieza de caché
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(registrations => {
-                for(let registration of registrations) registration.unregister();
-            });
-        }
+        console.log("Sports Hub Pro v3.3.0 - MATCHDAY POSTER");
     </script>
-    <link rel="stylesheet" href="style.css?v=3.2.2">
+    <link rel="stylesheet" href="style.css?v=3.3.0">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Oswald:wght@700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
     <!-- Librerías de IA -->
@@ -49,7 +43,7 @@
                 <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v3.2.2 - OK</button>
+                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v3.3.0 - OK</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
             </div>
@@ -199,6 +193,7 @@
                     <input type="file" id="imageInput" accept="image/*" hidden>
                     <button class="btn-primary" onclick="document.getElementById('imageInput').click()">SUBIR FOTO JUGADOR</button>
                     <button class="btn-secondary" onclick="openAlbumEditor()" style="margin-top: 10px; width: 100%; background: rgba(0,212,255,0.1); border-color: var(--secondary); color: var(--secondary);">GENERAR ÁLBUM EQUIPO 📖</button>
+                    <button class="btn-secondary" onclick="openMatchdayEditor()" style="margin-top: 10px; width: 100%; background: rgba(0,255,136,0.1); border-color: var(--primary); color: var(--primary);">POSTER DE PARTIDO 🏟️</button>
                 </div>
             </section>
 
@@ -636,6 +631,10 @@
             </div>
             <div class="updates-list">
                 <div class="update-item">
+                    <span class="update-ver">v3.3.0</span>
+                    <p>Matchday Poster: Nuevo módulo para generar el póster oficial del partido con titulares (fotos), suplentes (texto) y escudos duales (Color y B&N).</p>
+                </div>
+                <div class="update-item">
                     <span class="update-ver">v3.2.2</span>
                     <p>Hotfix Visual: Corrección de visibilidad de nombres y script de limpieza de caché forzada.</p>
                 </div>
@@ -907,11 +906,45 @@
         </div>
     </div>
 
-    <script src="app.js?v=3.2.2"></script>
+    <!-- Modal de Matchday Poster (Póster de Partido) -->
+    <div id="matchdayModal" class="modal hidden" style="z-index: 1100;">
+        <div class="modal-content" style="max-width: 95%; height: 90vh; display: flex; flex-direction: column;">
+            <div class="modal-header">
+                <h3>POSTER OFICIAL DE PARTIDO</h3>
+                <button class="close-btn" onclick="closeMatchdayEditor()">×</button>
+            </div>
+            
+            <div class="modal-body" style="flex: 1; overflow-y: auto; padding: 10px;">
+                <div class="album-controls" style="margin-bottom: 15px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                    <button class="btn-primary" onclick="document.getElementById('matchdayBulkInput').click()" style="font-size: 0.7rem;">CARGAR 11 TITULARES 📸</button>
+                    <button id="btnLockMatchday" class="btn-secondary" onclick="toggleMatchdayLock()" style="font-size: 0.7rem; border-color: var(--primary); color: var(--primary);">DISEÑO LIBRE 🔓</button>
+                    <input type="file" id="matchdayBulkInput" multiple accept="image/*" style="display:none" onchange="handleMatchdayBulkUpload(this)">
+                </div>
+
+                <!-- Canvas del Póster -->
+                <div id="matchdayPreviewContainer" class="carousel-container" style="height: auto; background: #000; overflow: hidden; position: relative; border-radius: 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1);">
+                    <canvas id="matchdayCanvas" style="width: 100%; height: auto; display: block;"></canvas>
+                </div>
+
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label style="font-size: 0.6rem; color: var(--secondary);">LISTA DE SUPLENTES</label>
+                    <input type="text" id="substitutesInput" placeholder="Ej: Perez, Gomez, Rodriguez..." oninput="generateMatchdayPoster()" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: white; padding: 10px; border-radius: 8px; width: 100%;">
+                </div>
+
+                <div id="matchdaySlotEditor" class="album-slot-grid" style="margin-bottom: 20px;">
+                    <!-- 11 slots for individual replacement -->
+                </div>
+
+                <button class="btn-primary" onclick="downloadImage('matchdayCanvas', 'poster_partido')" style="width: 100%; background: var(--primary); color: black;">DESCARGAR PÓSTER HD 📥</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js?v=3.3.0"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=3.2.2')
+                navigator.serviceWorker.register('./sw.js?v=3.3.0')
                     .then(reg => {
                         console.log('SW Registered', reg);
                         reg.onupdatefound = () => {

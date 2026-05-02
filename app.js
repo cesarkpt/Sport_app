@@ -3359,4 +3359,265 @@ function drawRoundedRect(ctx, x, y, width, height, radius, fill = true, stroke =
     if (stroke) ctx.stroke();
 }
 
+// --- MATCHDAY POSTER (v3.3.0) ---
+let matchdayImages = Array(11).fill(null);
+let matchdayPositions = []; 
+let matchdayTemplate = null;
+let matchdayLocked = true;
+let matchdayDrag = { isDragging: false, targetIndex: -1, startX: 0, startY: 0 };
+
+function openMatchdayEditor() {
+    document.getElementById('matchdayModal').classList.remove('hidden');
+    
+    // Inicializar posiciones si están vacías (Formación 4-3-3 adaptada al fondo)
+    if (matchdayPositions.length === 0) {
+        matchdayPositions = [
+            { x: 440, y: 1000, w: 200, h: 250 }, // POR
+            { x: 100, y: 780, w: 180, h: 220 },  // DEF L
+            { x: 320, y: 820, w: 180, h: 220 },  // DEF C1
+            { x: 580, y: 820, w: 180, h: 220 },  // DEF C2
+            { x: 800, y: 780, w: 180, h: 220 },  // DEF R
+            { x: 220, y: 550, w: 180, h: 220 },  // VOL L
+            { x: 450, y: 580, w: 180, h: 220 },  // VOL C
+            { x: 680, y: 550, w: 180, h: 220 },  // VOL R
+            { x: 150, y: 280, w: 220, h: 280 },  // DEL L
+            { x: 430, y: 220, w: 220, h: 280 },  // DEL C
+            { x: 710, y: 280, w: 220, h: 280 }   // DEL R
+        ];
+    }
+    
+    // Auto-completar suplentes
+    const team = allTeams[activeTeamId];
+    if (team && team.roster) {
+        const subs = Object.values(team.roster)
+            .filter(p => p.isCalled && !p.isStarter)
+            .map(p => getLastName(p.name))
+            .join(', ');
+        document.getElementById('substitutesInput').value = subs;
+    }
+
+    renderMatchdaySlots();
+    generateMatchdayPoster();
+    setupMatchdayEvents();
+}
+
+function closeMatchdayEditor() {
+    document.getElementById('matchdayModal').classList.add('hidden');
+}
+
+function getLastName(fullName) {
+    if (!fullName) return "";
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length <= 1) return fullName;
+    
+    const particles = ['de', 'la', 'del', 'dos', 'da', 'di', 'el', 'los', 'las'];
+    const last = parts[parts.length - 1];
+    const prev = parts[parts.length - 2].toLowerCase();
+    const antepenult = parts[parts.length - 3] ? parts[parts.length - 3].toLowerCase() : "";
+
+    if (particles.includes(prev)) {
+        if (antepenult && particles.includes(antepenult)) {
+             return parts[parts.length - 3] + " " + parts[parts.length - 2] + " " + last;
+        }
+        return parts[parts.length - 2] + " " + last;
+    }
+    return last;
+}
+
+function toggleMatchdayLock() {
+    matchdayLocked = !matchdayLocked;
+    const btn = document.getElementById('btnLockMatchday');
+    btn.innerText = matchdayLocked ? "DISEÑO LIBRE 🔓" : "DISEÑO BLOQUEADO 🔒";
+    btn.classList.toggle('active', !matchdayLocked);
+    generateMatchdayPoster();
+}
+
+async function handleMatchdayBulkUpload(input) {
+    if (!input.files || input.files.length === 0) return;
+    const files = Array.from(input.files).slice(0, 11);
+    const btn = document.querySelector('button[onclick*="matchdayBulkInput"]');
+    if (btn) btn.innerText = "PROCESANDO... ⏳";
+    
+    try {
+        for (let i = 0; i < files.length; i++) {
+            const optimizedBase64 = await optimizeFileForAlbum(files[i], 600);
+            matchdayImages[i] = await loadImg(optimizedBase64);
+        }
+        renderMatchdaySlots();
+        generateMatchdayPoster();
+    } catch (err) {
+        console.error(err);
+    } finally {
+        if (btn) btn.innerText = "CARGAR 11 TITULARES 📸";
+    }
+}
+
+function renderMatchdaySlots() {
+    const grid = document.getElementById('matchdaySlotEditor');
+    if (!grid) return;
+    grid.innerHTML = '';
+    
+    matchdayImages.forEach((img, i) => {
+        const slot = document.createElement('div');
+        slot.className = 'album-slot';
+        slot.dataset.index = i + 1;
+        if (img) {
+            const preview = new Image();
+            preview.src = img.src;
+            slot.appendChild(preview);
+        }
+        slot.onclick = () => uploadSingleMatchday(i);
+        grid.appendChild(slot);
+    });
+}
+
+async function uploadSingleMatchday(index) {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/*';
+    inp.onchange = async (e) => {
+        if (e.target.files[0]) {
+            const optimizedBase64 = await optimizeFileForAlbum(e.target.files[0], 600);
+            matchdayImages[index] = await loadImg(optimizedBase64);
+            renderMatchdaySlots();
+            generateMatchdayPoster();
+        }
+    };
+    inp.click();
+}
+
+async function generateMatchdayPoster() {
+    const canvas = document.getElementById('matchdayCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    const bgURL = 'https://lh3.googleusercontent.com/d/176Jgu4rkMnys3_k1tPBdDGldWfoestTF';
+    if (!matchdayTemplate) {
+        matchdayTemplate = await loadImg(bgURL);
+    }
+    
+    const W = 1080;
+    const H = 1350; 
+    canvas.width = W;
+    canvas.height = H;
+    
+    if (matchdayTemplate) ctx.drawImage(matchdayTemplate, 0, 0, W, H);
+    
+    const team = allTeams[activeTeamId];
+    const starters = team ? Object.values(team.roster).filter(p => p.isStarter) : [];
+    const teamNums = team ? Object.keys(team.roster).filter(num => team.roster[num].isStarter) : [];
+
+    matchdayImages.forEach((img, i) => {
+        const p = matchdayPositions[i];
+        if (!p) return;
+        
+        ctx.save();
+        if (img) {
+            ctx.shadowColor = "rgba(0,0,0,0.6)";
+            ctx.shadowBlur = 20;
+            ctx.shadowOffsetY = 15;
+            drawImageProp(ctx, img, p.x, p.y, p.w, p.h);
+        } else if (!matchdayLocked) {
+            ctx.fillStyle = "rgba(255,255,255,0.1)";
+            ctx.fillRect(p.x, p.y, p.w, p.h);
+            ctx.strokeStyle = "rgba(255,255,255,0.3)";
+            ctx.setLineDash([5, 5]);
+            ctx.strokeRect(p.x, p.y, p.w, p.h);
+        }
+        
+        // Numero y Apellido
+        const pData = starters[i];
+        if (pData) {
+            const num = teamNums[i] || "";
+            const name = getLastName(pData.name);
+            ctx.shadowBlur = 5;
+            ctx.fillStyle = "white";
+            ctx.textAlign = "center";
+            ctx.font = "900 42px Oswald";
+            ctx.fillText(num, p.x + p.w/2, p.y + p.h + 45);
+            ctx.font = "700 28px Outfit";
+            ctx.fillText(name.toUpperCase(), p.x + p.w/2, p.y + p.h + 80);
+        }
+        ctx.restore();
+    });
+
+    // Escudos
+    if (selectedMatchTeamA && selectedMatchTeamB) {
+        const tA = allTeams[selectedMatchTeamA];
+        const tB = allTeams[selectedMatchTeamB];
+        try {
+            const imgA = await loadImg(tA.shield);
+            const imgB = await loadImg(tB.shield);
+            // Color arriba derecha
+            drawImageContain(ctx, imgA, W - 250, 40, 100, 100);
+            drawImageContain(ctx, imgB, W - 130, 40, 100, 100);
+            // B&N abajo
+            ctx.save();
+            ctx.filter = 'grayscale(1) brightness(2)';
+            ctx.globalAlpha = 0.8;
+            drawImageContain(ctx, imgA, 60, H - 110, 70, 70);
+            drawImageContain(ctx, imgB, 150, H - 110, 70, 70);
+            ctx.restore();
+        } catch(e) {}
+    }
+
+    const subsText = document.getElementById('substitutesInput').value;
+    if (subsText) {
+        ctx.save();
+        ctx.fillStyle = "white";
+        ctx.font = "700 22px Outfit";
+        ctx.textAlign = "left";
+        ctx.globalAlpha = 0.9;
+        ctx.fillText("SUPLENTES: " + subsText.toUpperCase(), 250, H - 65);
+        ctx.restore();
+    }
+
+    // Logo App
+    try {
+        const logo = await loadImg('https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0');
+        drawImageContain(ctx, logo, W - 220, H - 80, 180, 50);
+    } catch(e) {}
+}
+
+function setupMatchdayEvents() {
+    const canvas = document.getElementById('matchdayCanvas');
+    const startDrag = (e) => {
+        if (matchdayLocked) return;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = ((e.touches ? e.touches[0].clientX : e.clientX) - rect.left) * scaleX;
+        const y = ((e.touches ? e.touches[0].clientY : e.clientY) - rect.top) * scaleY;
+        
+        for (let i = matchdayPositions.length - 1; i >= 0; i--) {
+            const p = matchdayPositions[i];
+            if (x >= p.x && x <= p.x + p.w && y >= p.y && y <= p.y + p.h) {
+                matchdayDrag = { isDragging: true, targetIndex: i, startX: x - p.x, startY: y - p.y };
+                break;
+            }
+        }
+    };
+    const moveDrag = (e) => {
+        if (!matchdayDrag.isDragging) return;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = ((e.touches ? e.touches[0].clientX : e.clientX) - rect.left) * scaleX;
+        const y = ((e.touches ? e.touches[0].clientY : e.clientY) - rect.top) * scaleY;
+        
+        const p = matchdayPositions[matchdayDrag.targetIndex];
+        p.x = x - matchdayDrag.startX;
+        p.y = y - matchdayDrag.startY;
+        generateMatchdayPoster();
+    };
+    const endDrag = () => { matchdayDrag.isDragging = false; };
+    
+    canvas.onmousedown = startDrag;
+    canvas.ontouchstart = startDrag;
+    window.onmousemove = moveDrag;
+    window.ontouchmove = moveDrag;
+    window.onmouseup = endDrag;
+    window.ontouchend = endDrag;
+}
+
 
