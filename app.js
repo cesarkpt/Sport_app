@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v3.3.3 - PRO SCALE & SUBS");
+console.log("Sports Hub Pro v3.3.5 - NEW STADIUM");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -3477,8 +3477,8 @@ async function generateMatchdayPoster() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     
-    const bgURL = 'https://lh3.googleusercontent.com/d/176Jgu4rkMnys3_k1tPBdDGldWfoestTF';
-    if (!matchdayTemplate) {
+    const bgURL = 'https://lh3.googleusercontent.com/d/1zDarslEeb9F2Cu5ZkfMI3wiOjMqks2aj';
+    if (!matchdayTemplate || matchdayTemplate.src !== bgURL) {
         matchdayTemplate = await loadImg(bgURL);
     }
     
