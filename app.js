@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v3.3.2 - POSTER REFINED");
+console.log("Sports Hub Pro v3.3.3 - PRO SCALE & SUBS");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -3368,30 +3368,20 @@ function openMatchdayEditor() {
     // Inicializar posiciones si están vacías
     if (matchdayPositions.length === 0) {
         matchdayPositions = [
-            { x: 440, y: 1000, w: 200, h: 220 }, // POR (Alto reducido)
-            { x: 100, y: 780, w: 180, h: 190 },  
-            { x: 320, y: 820, w: 180, h: 190 },  
-            { x: 580, y: 820, w: 180, h: 190 },  
-            { x: 800, y: 780, w: 180, h: 190 },  
-            { x: 220, y: 550, w: 180, h: 190 },  
-            { x: 450, y: 580, w: 180, h: 190 },  
-            { x: 680, y: 550, w: 180, h: 190 },  
-            { x: 150, y: 300, w: 220, h: 230 },  
-            { x: 430, y: 240, w: 220, h: 230 },  
-            { x: 710, y: 300, w: 220, h: 230 }   
+            { x: 440, y: 1000, w: 133, h: 166 }, // POR (2/3 de 200x250)
+            { x: 100, y: 780, w: 120, h: 146 },  
+            { x: 320, y: 820, w: 120, h: 146 },  
+            { x: 580, y: 820, w: 120, h: 146 },  
+            { x: 800, y: 780, w: 120, h: 146 },  
+            { x: 220, y: 550, w: 120, h: 146 },  
+            { x: 450, y: 580, w: 120, h: 146 },  
+            { x: 680, y: 550, w: 120, h: 146 },  
+            { x: 150, y: 300, w: 146, h: 186 },  
+            { x: 430, y: 240, w: 146, h: 186 },  
+            { x: 710, y: 300, w: 146, h: 186 }   
         ];
     }
     
-    // Auto-completar suplentes desde el Equipo A del Matchday
-    const team = allTeams[selectedMatchTeamA];
-    if (team && team.roster) {
-        const subs = Object.values(team.roster)
-            .filter(p => p.isCalled && !p.isStarter)
-            .map(p => getLastName(p.name))
-            .join(', ');
-        document.getElementById('substitutesInput').value = subs;
-    }
-
     renderMatchdaySlots();
     generateMatchdayPoster();
     setupMatchdayEvents();
@@ -3558,15 +3548,25 @@ async function generateMatchdayPoster() {
         } catch(e) {}
     }
 
-    const subsText = document.getElementById('substitutesInput').value;
-    if (subsText) {
-        ctx.save();
-        ctx.fillStyle = "white";
-        ctx.font = "700 22px Outfit";
-        ctx.textAlign = "left";
-        ctx.globalAlpha = 0.9;
-        ctx.fillText("SUPLENTES: " + subsText.toUpperCase(), 250, H - 65);
-        ctx.restore();
+    // 3. Suplentes (Automático v3.3.3)
+    if (team && team.roster) {
+        const subsArray = Object.entries(team.roster)
+            .filter(([num, p]) => p.isCalled && !p.isStarter)
+            .map(([num, p]) => `#${num} ${getLastName(p.name).toUpperCase()}`);
+        
+        const subsText = subsArray.join("  -  ");
+        
+        if (subsText) {
+            ctx.save();
+            ctx.fillStyle = "white";
+            ctx.font = "700 24px Outfit";
+            ctx.textAlign = "center";
+            ctx.shadowBlur = 4;
+            ctx.shadowColor = "black";
+            // Dibujar en el centro horizontal, un poco más arriba del footer
+            ctx.fillText(subsText, W / 2, H - 75);
+            ctx.restore();
+        }
     }
 }
 

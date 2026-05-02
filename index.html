@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports Hub - Pro Card Generator</title>
     <script>
-        console.log("Sports Hub Pro v3.3.2 - POSTER REFINED");
+        console.log("Sports Hub Pro v3.3.3 - PRO SCALE & SUBS");
     </script>
-    <link rel="stylesheet" href="style.css?v=3.3.2">
+    <link rel="stylesheet" href="style.css?v=3.3.3">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Oswald:wght@700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
     <!-- Librerías de IA -->
@@ -43,7 +43,7 @@
                 <img src="https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0" alt="3 PAYARES TV" style="height: 40px; width: auto; display: block;">
             </div>
             <div class="header-actions">
-                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v3.3.2 - OK</button>
+                <button class="update-btn" onclick="toggleUpdates()" style="background: var(--primary); color: var(--bg-dark);">v3.3.3 - OK</button>
                 <button class="update-btn" onclick="toggleTeamManager()" style="color: var(--secondary)">EQUIPOS</button>
                 <div class="status-badge">PRO</div>
             </div>
@@ -930,11 +930,6 @@
                     <canvas id="matchdayCanvas" style="width: 100%; height: auto; display: block;"></canvas>
                 </div>
 
-                <div class="input-group" style="margin-bottom: 15px;">
-                    <label style="font-size: 0.6rem; color: var(--secondary);">LISTA DE SUPLENTES</label>
-                    <input type="text" id="substitutesInput" placeholder="Ej: Perez, Gomez, Rodriguez..." oninput="generateMatchdayPoster()" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: white; padding: 10px; border-radius: 8px; width: 100%;">
-                </div>
-
                 <div id="matchdaySlotEditor" class="album-slot-grid" style="margin-bottom: 20px;">
                     <!-- 11 slots for individual replacement -->
                 </div>
@@ -944,11 +939,11 @@
         </div>
     </div>
 
-    <script src="app.js?v=3.3.2"></script>
+    <script src="app.js?v=3.3.3"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=3.3.2')
+                navigator.serviceWorker.register('./sw.js?v=3.3.3')
                     .then(reg => {
                         console.log('SW Registered', reg);
                         reg.onupdatefound = () => {
