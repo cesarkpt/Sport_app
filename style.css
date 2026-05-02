@@ -1,4 +1,4 @@
-/* Sports Hub Pro - v3.1.7 */
+/* Sports Hub Pro - v3.2.0 */
 /* --- UTILIDADES ACCESIBILIDAD --- */
 .sr-only {
     position: absolute;
@@ -1678,3 +1678,83 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .album-slot img { width: 100%; height: 100%; object-fit: cover; }
 .album-slot::after { content: attr(data-index); position: absolute; bottom: 2px; right: 2px; font-size: 8px; opacity: 0.5; color: white; }
+
+/* --- GESTIÓN DE ALINEACIÓN (v3.2.0) --- */
+.roster-summary {
+    background: rgba(0, 255, 136, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 12px 15px;
+    margin-bottom: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 4px solid var(--primary);
+}
+
+.roster-summary b {
+    color: var(--primary);
+}
+
+.roster-item-editable {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    transition: all 0.2s ease;
+}
+
+.roster-item-editable:focus-within {
+    border-color: var(--secondary);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.edit-num { width: 50px; text-align: center; }
+.edit-name { flex: 1; }
+.edit-pos { width: 60px; }
+
+.status-toggle-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    color: var(--text-dim);
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.status-toggle-btn.is-called.active {
+    background: rgba(0, 212, 255, 0.2);
+    border-color: var(--secondary);
+    color: var(--secondary);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+}
+
+.status-toggle-btn.is-starter.active {
+    background: rgba(0, 255, 136, 0.2);
+    border-color: var(--primary);
+    color: var(--primary);
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+}
+
+.status-toggle-btn:disabled {
+    opacity: 0.1;
+    cursor: not-allowed;
+    filter: grayscale(1);
+    background: transparent;
+}
+
+.status-toggle-btn:hover:not(:disabled) {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.1);
+}

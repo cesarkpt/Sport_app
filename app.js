@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v3.1.8 - STABLE OK");
+console.log("Sports Hub Pro v3.2.0 - STABLE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -166,6 +166,7 @@ function openTeamEditor(team) {
     document.getElementById('shieldPreview').src = team.shield || 'https://cdn-icons-png.flaticon.com/512/5351/5351333.png';
     document.getElementById('shieldWhitePreview').src = team.shieldWhite || 'https://cdn-icons-png.flaticon.com/512/5351/5351333.png';
 
+    updateRosterStats(team.roster);
     renderRosterList(team.roster);
 }
 
@@ -184,6 +185,8 @@ function renderRosterList(roster) {
     Object.entries(roster).forEach(([num, player]) => {
         const name = typeof player === 'string' ? player : player.name;
         const pos = player.position || "DEL";
+        const isCalled = player.isCalled !== false; // Por defecto true si no existe
+        const isStarter = !!player.isStarter;
 
         const item = document.createElement('div');
         item.className = 'roster-item-editable';
@@ -196,10 +199,30 @@ function renderRosterList(roster) {
                 <option value="VOL" ${pos === 'VOL' ? 'selected' : ''}>VOL</option>
                 <option value="DEL" ${pos === 'DEL' ? 'selected' : ''}>DEL</option>
             </select>
+            <button class="status-toggle-btn is-called ${isCalled ? 'active' : ''}" 
+                    onclick="updatePlayerInRoster('${num}', 'isCalled', ${!isCalled})" title="Convocar">📢</button>
+            <button class="status-toggle-btn is-starter ${isStarter ? 'active' : ''}" 
+                    ${!isCalled ? 'disabled' : ''}
+                    onclick="updatePlayerInRoster('${num}', 'isStarter', ${!isStarter})" title="Titular">🏃</button>
             <button class="delete-btn" onclick="removePlayer('${num}')">×</button>
         `;
         list.appendChild(item);
     });
+}
+
+function updateRosterStats(roster) {
+    const statsDiv = document.getElementById('rosterStats');
+    if (!statsDiv) return;
+    
+    const total = Object.keys(roster).length;
+    const called = Object.values(roster).filter(p => p.isCalled !== false).length;
+    const starters = Object.values(roster).filter(p => p.isStarter).length;
+    
+    statsDiv.innerHTML = `
+        <span>Total: <b>${total}</b></span>
+        <span>Convocados: <b style="color:var(--secondary)">${called}</b></span>
+        <span>Titulares: <b style="${starters === 11 ? 'color:var(--primary)' : 'color:var(--accent)'}">${starters}/11</b></span>
+    `;
 }
 
 function updatePlayerInRoster(num, field, value) {
@@ -210,10 +233,17 @@ function updatePlayerInRoster(num, field, value) {
         const playerData = roster[num];
         delete roster[num];
         roster[value] = playerData;
-        renderRosterList(roster); // Re-render para actualizar referencias
+    } else if (field === 'isCalled') {
+        roster[num].isCalled = value;
+        if (!value) roster[num].isStarter = false; // Si no está convocado, no puede ser titular
+    } else if (field === 'isStarter') {
+        roster[num].isStarter = value;
     } else {
-        roster[num][field] = value.toUpperCase();
+        roster[num][field] = typeof value === 'string' ? value.toUpperCase() : value;
     }
+    
+    updateRosterStats(roster);
+    renderRosterList(roster);
 }
 
 function setPos(btn, pos) {
@@ -269,12 +299,14 @@ function addPlayerToRoster() {
     document.getElementById('playerName').value = '';
     const capBtn = document.getElementById('rosterCapBtn');
     if (capBtn) capBtn.classList.remove('active');
+    updateRosterStats(roster);
     renderRosterList(roster);
 }
 
 function removePlayer(num) {
     const tempRoster = document.getElementById('teamEditor')._tempRoster;
     delete tempRoster[num];
+    updateRosterStats(tempRoster);
     renderRosterList(tempRoster);
 }
 
