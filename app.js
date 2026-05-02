@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v3.2.2 - STABLE OK");
+console.log("Sports Hub Pro v3.3.1 - CLEAN & DRAG");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -3218,13 +3218,7 @@ async function generateAlbum() {
         }
     }
     
-    // 5. BORDE PANINI FINAL (Desactivado por petición del usuario para Álbum)
     // addPaniniBorder(ctx, W, H);
-    
-    try {
-        const logo = await loadImg('https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0');
-        drawImageContain(ctx, logo, W - 350, H - 100, 300, 80);
-    } catch(e) {}
 }
 
 async function uploadSingleAlbum(index) {
@@ -3362,32 +3356,34 @@ function drawRoundedRect(ctx, x, y, width, height, radius, fill = true, stroke =
 // --- MATCHDAY POSTER (v3.3.0) ---
 let matchdayImages = Array(11).fill(null);
 let matchdayPositions = []; 
+let matchdayColorPos = { x: 830, y: 40, w: 220, h: 100 };
+let matchdayBWPos = { x: 50, y: 1240, w: 200, h: 80 };
 let matchdayTemplate = null;
 let matchdayLocked = true;
-let matchdayDrag = { isDragging: false, targetIndex: -1, startX: 0, startY: 0 };
+let matchdayDrag = { isDragging: false, targetType: null, targetIndex: -1, startX: 0, startY: 0 };
 
 function openMatchdayEditor() {
     document.getElementById('matchdayModal').classList.remove('hidden');
     
-    // Inicializar posiciones si están vacías (Formación 4-3-3 adaptada al fondo)
+    // Inicializar posiciones si están vacías
     if (matchdayPositions.length === 0) {
         matchdayPositions = [
             { x: 440, y: 1000, w: 200, h: 250 }, // POR
-            { x: 100, y: 780, w: 180, h: 220 },  // DEF L
-            { x: 320, y: 820, w: 180, h: 220 },  // DEF C1
-            { x: 580, y: 820, w: 180, h: 220 },  // DEF C2
-            { x: 800, y: 780, w: 180, h: 220 },  // DEF R
-            { x: 220, y: 550, w: 180, h: 220 },  // VOL L
-            { x: 450, y: 580, w: 180, h: 220 },  // VOL C
-            { x: 680, y: 550, w: 180, h: 220 },  // VOL R
-            { x: 150, y: 280, w: 220, h: 280 },  // DEL L
-            { x: 430, y: 220, w: 220, h: 280 },  // DEL C
-            { x: 710, y: 280, w: 220, h: 280 }   // DEL R
+            { x: 100, y: 780, w: 180, h: 220 },  
+            { x: 320, y: 820, w: 180, h: 220 },  
+            { x: 580, y: 820, w: 180, h: 220 },  
+            { x: 800, y: 780, w: 180, h: 220 },  
+            { x: 220, y: 550, w: 180, h: 220 },  
+            { x: 450, y: 580, w: 180, h: 220 },  
+            { x: 680, y: 550, w: 180, h: 220 },  
+            { x: 150, y: 280, w: 220, h: 280 },  
+            { x: 430, y: 220, w: 220, h: 280 },  
+            { x: 710, y: 280, w: 220, h: 280 }   
         ];
     }
     
-    // Auto-completar suplentes
-    const team = allTeams[activeTeamId];
+    // Auto-completar suplentes desde el Equipo A del Matchday
+    const team = allTeams[selectedMatchTeamA];
     if (team && team.roster) {
         const subs = Object.values(team.roster)
             .filter(p => p.isCalled && !p.isStarter)
@@ -3503,7 +3499,7 @@ async function generateMatchdayPoster() {
     
     if (matchdayTemplate) ctx.drawImage(matchdayTemplate, 0, 0, W, H);
     
-    const team = allTeams[activeTeamId];
+    const team = allTeams[selectedMatchTeamA];
     const starters = team ? Object.values(team.roster).filter(p => p.isStarter) : [];
     const teamNums = team ? Object.keys(team.roster).filter(num => team.roster[num].isStarter) : [];
 
@@ -3541,23 +3537,38 @@ async function generateMatchdayPoster() {
         ctx.restore();
     });
 
-    // Escudos
+    // Escudos Draggable
     if (selectedMatchTeamA && selectedMatchTeamB) {
         const tA = allTeams[selectedMatchTeamA];
         const tB = allTeams[selectedMatchTeamB];
         try {
             const imgA = await loadImg(tA.shield);
             const imgB = await loadImg(tB.shield);
-            // Color arriba derecha
-            drawImageContain(ctx, imgA, W - 250, 40, 100, 100);
-            drawImageContain(ctx, imgB, W - 130, 40, 100, 100);
-            // B&N abajo
+            
+            // Color (Arriba)
+            const pc = matchdayColorPos;
+            drawImageContain(ctx, imgA, pc.x, pc.y, pc.w/2 - 5, pc.h);
+            drawImageContain(ctx, imgB, pc.x + pc.w/2 + 5, pc.y, pc.w/2 - 5, pc.h);
+            if (!matchdayLocked) {
+                ctx.strokeStyle = "rgba(255,255,255,0.3)";
+                ctx.setLineDash([5, 5]);
+                ctx.strokeRect(pc.x, pc.y, pc.w, pc.h);
+            }
+
+            // B&N (Abajo)
+            const pb = matchdayBWPos;
             ctx.save();
             ctx.filter = 'grayscale(1) brightness(2)';
             ctx.globalAlpha = 0.8;
-            drawImageContain(ctx, imgA, 60, H - 110, 70, 70);
-            drawImageContain(ctx, imgB, 150, H - 110, 70, 70);
+            drawImageContain(ctx, imgA, pb.x, pb.y, pb.w/2 - 5, pb.h);
+            drawImageContain(ctx, imgB, pb.x + pb.w/2 + 5, pb.y, pb.w/2 - 5, pb.h);
             ctx.restore();
+            
+            if (!matchdayLocked) {
+                ctx.strokeStyle = "rgba(255,255,255,0.3)";
+                ctx.setLineDash([5, 5]);
+                ctx.strokeRect(pb.x, pb.y, pb.w, pb.h);
+            }
         } catch(e) {}
     }
 
@@ -3571,12 +3582,6 @@ async function generateMatchdayPoster() {
         ctx.fillText("SUPLENTES: " + subsText.toUpperCase(), 250, H - 65);
         ctx.restore();
     }
-
-    // Logo App
-    try {
-        const logo = await loadImg('https://lh3.googleusercontent.com/d/1m2q_HDTJE1aClZFtqAJMoD5bE9cJNMI0?t=0');
-        drawImageContain(ctx, logo, W - 220, H - 80, 180, 50);
-    } catch(e) {}
 }
 
 function setupMatchdayEvents() {
@@ -3589,10 +3594,25 @@ function setupMatchdayEvents() {
         const x = ((e.touches ? e.touches[0].clientX : e.clientX) - rect.left) * scaleX;
         const y = ((e.touches ? e.touches[0].clientY : e.clientY) - rect.top) * scaleY;
         
+        // 1. Detectar Escudos Color
+        const pc = matchdayColorPos;
+        if (x >= pc.x && x <= pc.x + pc.w && y >= pc.y && y <= pc.y + pc.h) {
+            matchdayDrag = { isDragging: true, targetType: 'color', targetIndex: -1, startX: x - pc.x, startY: y - pc.y };
+            return;
+        }
+
+        // 2. Detectar Escudos B&N
+        const pb = matchdayBWPos;
+        if (x >= pb.x && x <= pb.x + pb.w && y >= pb.y && y <= pb.y + pb.h) {
+            matchdayDrag = { isDragging: true, targetType: 'bw', targetIndex: -1, startX: x - pb.x, startY: y - pb.y };
+            return;
+        }
+
+        // 3. Detectar Jugadores
         for (let i = matchdayPositions.length - 1; i >= 0; i--) {
             const p = matchdayPositions[i];
             if (x >= p.x && x <= p.x + p.w && y >= p.y && y <= p.y + p.h) {
-                matchdayDrag = { isDragging: true, targetIndex: i, startX: x - p.x, startY: y - p.y };
+                matchdayDrag = { isDragging: true, targetType: 'player', targetIndex: i, startX: x - p.x, startY: y - p.y };
                 break;
             }
         }
@@ -3605,9 +3625,17 @@ function setupMatchdayEvents() {
         const x = ((e.touches ? e.touches[0].clientX : e.clientX) - rect.left) * scaleX;
         const y = ((e.touches ? e.touches[0].clientY : e.clientY) - rect.top) * scaleY;
         
-        const p = matchdayPositions[matchdayDrag.targetIndex];
-        p.x = x - matchdayDrag.startX;
-        p.y = y - matchdayDrag.startY;
+        if (matchdayDrag.targetType === 'player') {
+            const p = matchdayPositions[matchdayDrag.targetIndex];
+            p.x = x - matchdayDrag.startX;
+            p.y = y - matchdayDrag.startY;
+        } else if (matchdayDrag.targetType === 'color') {
+            matchdayColorPos.x = x - matchdayDrag.startX;
+            matchdayColorPos.y = y - matchdayDrag.startY;
+        } else if (matchdayDrag.targetType === 'bw') {
+            matchdayBWPos.x = x - matchdayDrag.startX;
+            matchdayBWPos.y = y - matchdayDrag.startY;
+        }
         generateMatchdayPoster();
     };
     const endDrag = () => { matchdayDrag.isDragging = false; };
