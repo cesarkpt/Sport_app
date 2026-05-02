@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v3.3.1 - CLEAN & DRAG");
+console.log("Sports Hub Pro v3.3.2 - POSTER REFINED");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -3356,7 +3356,7 @@ function drawRoundedRect(ctx, x, y, width, height, radius, fill = true, stroke =
 // --- MATCHDAY POSTER (v3.3.0) ---
 let matchdayImages = Array(11).fill(null);
 let matchdayPositions = []; 
-let matchdayColorPos = { x: 830, y: 40, w: 220, h: 100 };
+let matchdayColorPos = { x: 730, y: 40, w: 320, h: 150 };
 let matchdayBWPos = { x: 50, y: 1240, w: 200, h: 80 };
 let matchdayTemplate = null;
 let matchdayLocked = true;
@@ -3368,17 +3368,17 @@ function openMatchdayEditor() {
     // Inicializar posiciones si están vacías
     if (matchdayPositions.length === 0) {
         matchdayPositions = [
-            { x: 440, y: 1000, w: 200, h: 250 }, // POR
-            { x: 100, y: 780, w: 180, h: 220 },  
-            { x: 320, y: 820, w: 180, h: 220 },  
-            { x: 580, y: 820, w: 180, h: 220 },  
-            { x: 800, y: 780, w: 180, h: 220 },  
-            { x: 220, y: 550, w: 180, h: 220 },  
-            { x: 450, y: 580, w: 180, h: 220 },  
-            { x: 680, y: 550, w: 180, h: 220 },  
-            { x: 150, y: 280, w: 220, h: 280 },  
-            { x: 430, y: 220, w: 220, h: 280 },  
-            { x: 710, y: 280, w: 220, h: 280 }   
+            { x: 440, y: 1000, w: 200, h: 220 }, // POR (Alto reducido)
+            { x: 100, y: 780, w: 180, h: 190 },  
+            { x: 320, y: 820, w: 180, h: 190 },  
+            { x: 580, y: 820, w: 180, h: 190 },  
+            { x: 800, y: 780, w: 180, h: 190 },  
+            { x: 220, y: 550, w: 180, h: 190 },  
+            { x: 450, y: 580, w: 180, h: 190 },  
+            { x: 680, y: 550, w: 180, h: 190 },  
+            { x: 150, y: 300, w: 220, h: 230 },  
+            { x: 430, y: 240, w: 220, h: 230 },  
+            { x: 710, y: 300, w: 220, h: 230 }   
         ];
     }
     
@@ -3519,20 +3519,6 @@ async function generateMatchdayPoster() {
             ctx.strokeStyle = "rgba(255,255,255,0.3)";
             ctx.setLineDash([5, 5]);
             ctx.strokeRect(p.x, p.y, p.w, p.h);
-        }
-        
-        // Numero y Apellido
-        const pData = starters[i];
-        if (pData) {
-            const num = teamNums[i] || "";
-            const name = getLastName(pData.name);
-            ctx.shadowBlur = 5;
-            ctx.fillStyle = "white";
-            ctx.textAlign = "center";
-            ctx.font = "900 42px Oswald";
-            ctx.fillText(num, p.x + p.w/2, p.y + p.h + 45);
-            ctx.font = "700 28px Outfit";
-            ctx.fillText(name.toUpperCase(), p.x + p.w/2, p.y + p.h + 80);
         }
         ctx.restore();
     });
