@@ -1,4 +1,4 @@
-console.log("Sports Hub Pro v3.1.7 - STABLE OK");
+console.log("Sports Hub Pro v3.1.8 - STABLE OK");
 
 // --- CONFIGURACIÓN DE RENDIMIENTO ---
 const CONFIG = {
@@ -264,11 +264,12 @@ function addPlayerToRoster() {
         isCaptain: isCap
     };
 
-    document.getElementById('teamEditor')._tempRoster = tempRoster;
+    document.getElementById('teamEditor')._tempRoster = roster;
     document.getElementById('playerNum').value = '';
     document.getElementById('playerName').value = '';
-    document.getElementById('isCaptain').checked = false;
-    renderRosterList(tempRoster);
+    const capBtn = document.getElementById('rosterCapBtn');
+    if (capBtn) capBtn.classList.remove('active');
+    renderRosterList(roster);
 }
 
 function removePlayer(num) {
