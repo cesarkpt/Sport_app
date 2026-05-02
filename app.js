@@ -3502,7 +3502,8 @@ async function generateMatchdayPoster() {
             ctx.shadowColor = "rgba(0,0,0,0.6)";
             ctx.shadowBlur = 20;
             ctx.shadowOffsetY = 15;
-            drawImageProp(ctx, img, p.x, p.y, p.w, p.h);
+            // v3.3.4: USAR drawImageContain para evitar recortes
+            drawImageContain(ctx, img, p.x, p.y, p.w, p.h);
         } else if (!matchdayLocked) {
             ctx.fillStyle = "rgba(255,255,255,0.1)";
             ctx.fillRect(p.x, p.y, p.w, p.h);
@@ -3548,13 +3549,13 @@ async function generateMatchdayPoster() {
         } catch(e) {}
     }
 
-    // 3. Suplentes (Automático v3.3.3)
+    // 3. Suplentes (Automático v3.3.4 - Solo Números)
     if (team && team.roster) {
         const subsArray = Object.entries(team.roster)
             .filter(([num, p]) => p.isCalled && !p.isStarter)
-            .map(([num, p]) => `#${num} ${getLastName(p.name).toUpperCase()}`);
+            .map(([num, p]) => `#${num}`);
         
-        const subsText = subsArray.join("  -  ");
+        const subsText = subsArray.join("   ");
         
         if (subsText) {
             ctx.save();
@@ -3632,6 +3633,42 @@ function setupMatchdayEvents() {
     window.ontouchmove = moveDrag;
     window.onmouseup = endDrag;
     window.ontouchend = endDrag;
+}
+
+function changeMatchdayFormation(val) {
+    // Escala 2/3 (aprox 0.66) aplicada a las bases
+    const formations = {
+        '4-3-3': [
+            { x: 470, y: 1050, w: 133, h: 166 }, // POR
+            { x: 100, y: 820, w: 120, h: 146 }, { x: 350, y: 850, w: 120, h: 146 }, { x: 600, y: 850, w: 120, h: 146 }, { x: 850, y: 820, w: 120, h: 146 }, // DEF
+            { x: 250, y: 600, w: 120, h: 146 }, { x: 480, y: 630, w: 120, h: 146 }, { x: 710, y: 600, w: 120, h: 146 }, // VOL
+            { x: 180, y: 350, w: 146, h: 186 }, { x: 470, y: 280, w: 146, h: 186 }, { x: 760, y: 350, w: 146, h: 186 }  // DEL
+        ],
+        '4-4-2': [
+            { x: 470, y: 1050, w: 133, h: 166 }, // POR
+            { x: 100, y: 820, w: 120, h: 146 }, { x: 350, y: 850, w: 120, h: 146 }, { x: 600, y: 850, w: 120, h: 146 }, { x: 850, y: 820, w: 120, h: 146 }, // DEF
+            { x: 100, y: 600, w: 120, h: 146 }, { x: 350, y: 620, w: 120, h: 146 }, { x: 600, y: 620, w: 120, h: 146 }, { x: 850, y: 600, w: 120, h: 146 }, // VOL
+            { x: 350, y: 320, w: 146, h: 186 }, { x: 600, y: 320, w: 146, h: 186 }, // DEL
+            { x: 0, y: 0, w: 0, h: 0 } // Filler for index safety
+        ],
+        '3-5-2': [
+            { x: 470, y: 1050, w: 133, h: 166 }, // POR
+            { x: 250, y: 850, w: 120, h: 146 }, { x: 480, y: 870, w: 120, h: 146 }, { x: 710, y: 850, w: 120, h: 146 }, // DEF
+            { x: 80, y: 600, w: 120, h: 146 }, { x: 280, y: 630, w: 120, h: 146 }, { x: 480, y: 650, w: 120, h: 146 }, { x: 680, y: 630, w: 120, h: 146 }, { x: 880, y: 600, w: 120, h: 146 }, // VOL
+            { x: 350, y: 320, w: 146, h: 186 }, { x: 600, y: 320, w: 146, h: 186 } // DEL
+        ],
+        '5-4-1': [
+            { x: 470, y: 1050, w: 133, h: 166 }, // POR
+            { x: 80, y: 820, w: 120, h: 146 }, { x: 280, y: 850, w: 120, h: 146 }, { x: 480, y: 870, w: 120, h: 146 }, { x: 680, y: 850, w: 120, h: 146 }, { x: 880, y: 820, w: 120, h: 146 }, // DEF
+            { x: 150, y: 600, w: 120, h: 146 }, { x: 370, y: 630, w: 120, h: 146 }, { x: 590, y: 630, w: 120, h: 146 }, { x: 810, y: 600, w: 120, h: 146 }, // VOL
+            { x: 470, y: 320, w: 146, h: 186 } // DEL
+        ]
+    };
+    
+    if (formations[val]) {
+        matchdayPositions = JSON.parse(JSON.stringify(formations[val]));
+        generateMatchdayPoster();
+    }
 }
 
 
